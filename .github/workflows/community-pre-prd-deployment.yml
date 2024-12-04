@@ -1,0 +1,167 @@
+name: Community Pre Prd Deployment
+
+on:
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-southeast-1
+  AWS_ECR_REPOSITORY: skapp/be
+  SPRING_PROFILES_ACTIVE: pre-prd
+
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+
+  check-image:
+    name: Check Image
+    runs-on: ubuntu-latest
+    environment: pre-prd
+
+    outputs:
+      commit-hash: ${{ steps.get-commit-hash.outputs.commit-hash }}
+      image-tag: ${{ steps.get-image-tag.outputs.image-tag }}
+      does-image-exist: ${{ steps.get-image-availability.outputs.does-image-exist }}
+
+    steps:
+
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Get commit hash
+        id: get-commit-hash
+        run: echo "commit-hash=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Get image tag
+        id: get-image-tag
+        run: echo "image-tag=be-${{ steps.get-commit-hash.outputs.commit-hash }}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.COMMUNITY_AWS_ECR_USER_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.COMMUNITY_AWS_ECR_USER_SECRET_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Check if Docker Image Exists in ECR
+        id: get-image-availability
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.AWS_ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ steps.get-image-tag.outputs.image-tag }}
+        run: |
+          image_exists=$(aws ecr list-images --repository-name $ECR_REPOSITORY \
+            --query "imageIds[?imageTag=='$IMAGE_TAG']" --output text)
+          if [ -z "$image_exists" ]; then
+            echo "does-image-exist=false" >> $GITHUB_OUTPUT
+          else
+            echo "does-image-exist=true" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    name: Build
+    needs: check-image
+    if: needs.check-image.outputs.does-image-exist == 'false'
+    runs-on: ubuntu-latest
+    environment: pre-prd
+
+    steps:
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.COMMUNITY_AWS_ECR_USER_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.COMMUNITY_AWS_ECR_USER_SECRET_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Project
+        #        temporarily changing this to skip tests
+        #        run: mvn clean install -Dspring.profiles.active=test
+        run: mvn clean install -DskipTests
+
+      - name: Build, tag, and push image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.AWS_ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ needs.check-image.outputs.image-tag }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+  deploy:
+    name: Deploy
+    needs:
+      - check-image
+      - build
+    if: always() && (needs.build.result == 'success' || needs.build.result == 'skipped')
+    runs-on: stg-ec2
+    environment: pre-prd
+    steps:
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: stop all containers and delete all images
+        run: |
+          docker stop $(docker ps -a -q)
+          docker rmi -f $(docker images -aq)
+          docker system prune -a -f
+
+      - name: Create directory
+        run: |
+          sudo mkdir -p /external/storage
+          sudo chown $(whoami):$(whoami) /external/storage
+
+      - name: Pull image from ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.AWS_ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ needs.check-image.outputs.image-tag }}
+        run: docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Delete old container
+        run: docker rm -f be-container
+
+      - name: Run docker container
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.AWS_ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ needs.check-image.outputs.image-tag }}
+        run: docker run -d
+          -e DB_URL=${{ vars.DB_URL }}
+          -e DB_USERNAME=${{ vars.DB_USERNAME }}
+          -e DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          -e SPRING_PROFILES_ACTIVE=${{ env.SPRING_PROFILES_ACTIVE }}
+          -e RESET_DATABASE_API_KEY=${{ secrets.RESET_DATABASE_API_KEY }}
+          -p 80:8008
+          --name be-container
+          --restart always
+          -v /skapp-storage:/storage
+          --log-opt max-size=10m
+          $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+

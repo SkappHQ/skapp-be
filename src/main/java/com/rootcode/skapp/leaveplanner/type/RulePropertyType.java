@@ -1,0 +1,7 @@
+package com.rootcode.skapp.leaveplanner.type;
+
+public enum RulePropertyType {
+
+	PROBATION_PERIOD, AFTER_PROBATION_PERIOD, DIRECT_ALLOWANCE_PERIOD, PERMANENT_ENTITLEMENT_PERIOD, CONTRACT_PERIOD
+
+}

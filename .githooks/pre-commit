@@ -1,0 +1,72 @@
+#!/bin/sh
+
+# Descriptive information about the hook
+echo "=============================================="
+echo "Running Pre-Commit Checks"
+echo "=============================================="
+echo "This process will check the following:"
+echo "1. Checkstyle: Ensuring your code follows the project's style guidelines."
+echo "2. Spring Java Formatter: Verifying the code formatting adheres to Spring standards."
+echo "=============================================="
+
+# Step 0: Check if Maven is installed
+echo "------------------------------------------------"
+echo "Step 0: Checking if Maven is installed..."
+
+# Check if mvn is available
+if [ -x "$(command -v mvn)" ]; then
+  echo "Maven is installed. Proceeding with the checks..."
+else
+  echo "=============================================="
+  echo "Error: Maven (mvn) is not installed or not available in the system's PATH."
+  echo "Please install Maven before committing or ensure that it is available in your PATH."
+  echo "Commit has been blocked."
+  echo "=============================================="
+  exit 1
+fi
+
+# Step 1: Running Checkstyle validation
+echo "------------------------------------------------"
+echo "Step 1: Running Checkstyle to check for coding style violations..."
+mvn checkstyle:check
+CHECKSTYLE_EXIT_CODE=$?
+
+if [ $CHECKSTYLE_EXIT_CODE -ne 0 ]; then
+  echo "=============================================="
+  echo "Checkstyle validation failed."
+  echo "Please review the Checkstyle errors and fix them before committing."
+  echo "You can run 'mvn checkstyle:check' locally to see the errors."
+  echo "Commit has been blocked to maintain code quality."
+  echo "=============================================="
+  exit 1
+else
+  echo "Checkstyle passed. No violations found."
+fi
+
+# Step 2: Running Spring Java Formatter validation
+echo "------------------------------------------------"
+echo "Step 2: Running Spring Java Formatter validation to check for formatting issues..."
+mvn spring-javaformat:validate
+FORMATTER_EXIT_CODE=$?
+
+if [ $FORMATTER_EXIT_CODE -ne 0 ]; then
+  echo "=============================================="
+  echo "Spring Java Formatter validation failed."
+  echo "There are formatting issues that need to be fixed before committing."
+  echo "Please reformat the code using the Spring Java Formatter or run:"
+  echo "'mvn spring-javaformat:apply' to automatically fix the issues."
+  echo "Commit has been blocked to maintain consistent formatting."
+  echo "=============================================="
+  exit 1
+else
+  echo "Spring Java Formatter passed. No formatting issues detected."
+fi
+
+# If both checks passed
+echo "------------------------------------------------"
+echo "All checks passed. Your code is ready to be committed."
+echo "================================================"
+
+# Cross-platform considerations:
+# 1. `command -v mvn`: This works on most Unix-like environments, including Linux, macOS, and WSL (Windows Subsystem for Linux).
+# 2. Ensure that Maven is properly installed and accessible in the PATH on all platforms.

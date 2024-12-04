@@ -1,0 +1,62 @@
+server:
+  port: 8008
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          time_zone: UTC
+    show-sql: false
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog.yml
+    enabled: true
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+  messages:
+    basename: messages/common-messages, messages/leave-messages, messages/people-messages, messages/time-messages
+
+file:
+  storage:
+    folders:
+      - organization-logos
+      - user-image
+      - leave-attachments
+    base:
+      storage
+    encryption-key: FileStorageKey12
+
+logging:
+  level:
+    ROOT: WARN
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+
+jwt:
+  access-token:
+    signing-key: ajsfjkHJKHKHFKDJsafadsfnkjdhkfhadsHJKHkjsadf
+    expiration-time: 3600000 # Expiration time in milliseconds (1 hour)
+  refresh-token:
+    expiration-time: 86400000 # Expiration time in milliseconds (1 day)
+
+encryptDecryptAlgorithm:
+  secret: EncryptKey456123
