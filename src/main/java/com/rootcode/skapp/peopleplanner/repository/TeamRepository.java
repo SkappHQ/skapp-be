@@ -1,5 +1,7 @@
 package com.rootcode.skapp.peopleplanner.repository;
 
+import com.rootcode.skapp.common.model.User;
+import com.rootcode.skapp.common.type.Role;
 import com.rootcode.skapp.peopleplanner.model.Employee;
 import com.rootcode.skapp.peopleplanner.model.EmployeeTeam;
 import com.rootcode.skapp.peopleplanner.model.Team;
@@ -22,7 +24,7 @@ public interface TeamRepository {
 
 	List<Team> findLeadingTeamsByManagerId(Long employeeId);
 
-	Page<Employee> findEmployeesInManagerLeadingTeams(List<Long> teamIds, Pageable page);
+	Page<Employee> findEmployeesInManagerLeadingTeams(List<Long> teamIds, Pageable page, User currentUser);
 
 	List<Employee> findEmployeesInTeamByTeamId(Long teamId, Pageable page);
 
