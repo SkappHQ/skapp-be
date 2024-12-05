@@ -2,7 +2,7 @@
 
 ## PR checklist
 
-### Issue ID: [#](https://github.com/rootcodelabs/skapp/issues/)
+### Issue ID: [#](https://github.com/skappHQ/skapp-be/issues/)
 
 ### Summary
 
