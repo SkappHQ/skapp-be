@@ -1,4 +1,4 @@
-## I have read the [CONTRIBUTING.md](https://github.com/rootcodelabs/skapp-be/blob/community-starter/CONTRIBUTING.md) file - YES/NO
+## I have read the [CONTRIBUTING.md](https://github.com/skappHQ/skapp-be/blob/main/CONTRIBUTING.md) file - YES/NO
 
 ## PR checklist
 
