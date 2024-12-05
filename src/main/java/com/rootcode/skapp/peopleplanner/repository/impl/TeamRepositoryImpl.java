@@ -2,23 +2,13 @@ package com.rootcode.skapp.peopleplanner.repository.impl;
 
 import com.rootcode.skapp.common.model.User;
 import com.rootcode.skapp.common.model.User_;
-import com.rootcode.skapp.peopleplanner.model.Employee;
-import com.rootcode.skapp.peopleplanner.model.EmployeeTeam;
-import com.rootcode.skapp.peopleplanner.model.EmployeeTeam_;
-import com.rootcode.skapp.peopleplanner.model.Employee_;
-import com.rootcode.skapp.peopleplanner.model.Team;
-import com.rootcode.skapp.peopleplanner.model.Team_;
+import com.rootcode.skapp.common.type.Role;
+import com.rootcode.skapp.peopleplanner.model.*;
 import com.rootcode.skapp.peopleplanner.repository.TeamRepository;
 import com.rootcode.skapp.peopleplanner.type.AccountStatus;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -113,7 +103,7 @@ public class TeamRepositoryImpl implements TeamRepository {
 	}
 
 	@Override
-	public Page<Employee> findEmployeesInManagerLeadingTeams(List<Long> teamIds, Pageable page) {
+	public Page<Employee> findEmployeesInManagerLeadingTeams(List<Long> teamIds, Pageable page, User currentUser) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
 		Root<Employee> root = criteriaQuery.from(Employee.class);
@@ -122,6 +112,29 @@ public class TeamRepositoryImpl implements TeamRepository {
 		List<Predicate> predicates = new ArrayList<>();
 		predicates.add(criteriaBuilder.equal(user.get(User_.isActive), Boolean.TRUE));
 		predicates.add(criteriaBuilder.equal(root.get(Employee_.ACCOUNT_STATUS), AccountStatus.ACTIVE));
+
+		if (currentUser.getEmployee().getEmployeeRole().getAttendanceRole() == Role.ATTENDANCE_MANAGER) {
+			Subquery<Long> managedEmployeesSubquery = criteriaQuery.subquery(Long.class);
+			Root<EmployeeManager> managerRoot = managedEmployeesSubquery.from(EmployeeManager.class);
+			managedEmployeesSubquery.select(managerRoot.get(EmployeeManager_.employee).get(Employee_.employeeId))
+				.where(criteriaBuilder.equal(managerRoot.get(EmployeeManager_.manager).get(Employee_.employeeId),
+						currentUser.getEmployee().getEmployeeId()));
+
+			Subquery<Long> supervisedTeamsSubquery = criteriaQuery.subquery(Long.class);
+			Root<EmployeeTeam> supervisorTeamRoot = supervisedTeamsSubquery.from(EmployeeTeam.class);
+			supervisedTeamsSubquery.select(supervisorTeamRoot.get(EmployeeTeam_.team).get(Team_.teamId))
+				.where(criteriaBuilder.equal(supervisorTeamRoot.get(EmployeeTeam_.employee).get(Employee_.employeeId),
+						currentUser.getEmployee().getEmployeeId()));
+
+			Subquery<Long> teamMembersSubquery = criteriaQuery.subquery(Long.class);
+			Root<EmployeeTeam> teamRoot = teamMembersSubquery.from(EmployeeTeam.class);
+			teamMembersSubquery.select(teamRoot.get(EmployeeTeam_.employee).get(Employee_.employeeId))
+				.where(teamRoot.get(EmployeeTeam_.team).get(Team_.teamId).in(supervisedTeamsSubquery));
+
+			predicates.add(criteriaBuilder.or(root.get(Employee_.employeeId).in(managedEmployeesSubquery),
+					root.get(Employee_.employeeId).in(teamMembersSubquery)));
+		}
+
 		if (!teamIds.isEmpty() && !teamIds.contains(-1L)) {
 			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));

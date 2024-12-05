@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public enum TimeRecordSort {
 
-	NAME("name"), DATE("date");
+	NAME("firstName"), DATE("date");
 
 	private final String sortField;
 

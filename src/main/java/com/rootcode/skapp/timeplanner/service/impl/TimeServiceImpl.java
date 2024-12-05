@@ -946,8 +946,12 @@ public class TimeServiceImpl implements TimeService {
 			throw new ModuleException(TimeMessageConstant.TIME_ERROR_START_DATE_END_DATE_NOT_VALID);
 		}
 
-		List<Long> teamIdsToFilter = validateFilteringTeamsByManager(managerTimeRecordFilterDto.getTeamIds(),
-				userService.getCurrentUser().getEmployee().getEmployeeId());
+		List<Long> teamIdsToFilter = managerTimeRecordFilterDto.getTeamIds();
+
+		if (userService.getCurrentUser().getEmployee().getEmployeeRole().getAttendanceRole() != Role.ATTENDANCE_ADMIN) {
+			teamIdsToFilter = validateFilteringTeamsByManager(managerTimeRecordFilterDto.getTeamIds(),
+					userService.getCurrentUser().getEmployee().getEmployeeId());
+		}
 
 		int pageSize = managerTimeRecordFilterDto.getSize();
 		boolean isExport = managerTimeRecordFilterDto.getIsExport();
@@ -958,7 +962,8 @@ public class TimeServiceImpl implements TimeService {
 		Pageable pageable = PageRequest.of(managerTimeRecordFilterDto.getPage(), pageSize,
 				managerTimeRecordFilterDto.getSortOrder(), managerTimeRecordFilterDto.getSortKey().toString());
 
-		Page<Employee> employees = teamDao.findEmployeesInManagerLeadingTeams(teamIdsToFilter, pageable);
+		Page<Employee> employees = teamDao.findEmployeesInManagerLeadingTeams(teamIdsToFilter, pageable,
+				userService.getCurrentUser());
 
 		List<Long> employeeIds = employees.stream().map(Employee::getEmployeeId).toList();
 
