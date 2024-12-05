@@ -158,6 +158,9 @@ jobs:
           -e DB_PASSWORD=${{ secrets.DB_PASSWORD }}
           -e SPRING_PROFILES_ACTIVE=${{ env.SPRING_PROFILES_ACTIVE }}
           -e RESET_DATABASE_API_KEY=${{ secrets.RESET_DATABASE_API_KEY }}
+          -e FILE_ENCRYPT_KEY=${{ secrets.FILE_ENCRYPT_KEY }}
+          -e SIGN_IN_KEY=${{ secrets.SIGN_IN_KEY }}
+          -e ENCRYPT_DECRYPT_SECRET=${{ secrets.ENCRYPT_DECRYPT_SECRET }}
           -p 80:8008
           --name be-container
           --restart always

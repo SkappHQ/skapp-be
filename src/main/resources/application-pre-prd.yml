@@ -40,7 +40,7 @@ file:
       - leave-attachments
     base:
       storage
-    encryption-key: FileStorageKey12
+    encryption-key: ${FILE_ENCRYPT_KEY}
 
 logging:
   level:
@@ -59,10 +59,10 @@ springdoc:
 
 jwt:
   access-token:
-    signing-key: ajsfjkHJKHKHFKDJsafadsfnkjdhkfhadsHJKHkjsadf
+    signing-key: ${SIGN_IN_KEY}
     expiration-time: 86400000 # Expiration time in milliseconds (1 day)
   refresh-token:
     expiration-time: 86400000 # Expiration time in milliseconds (1 day)
 
 encryptDecryptAlgorithm:
-  secret: EncryptKey123456
+  secret: ${ENCRYPT_DECRYPT_SECRET}
