@@ -35,4 +35,6 @@ public class CustomEntitlementsFilterDto {
 
 	private EmployeeSort sortKeySearch = EmployeeSort.NAME;
 
+	private Long leaveTypeId;
+
 }

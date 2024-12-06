@@ -228,7 +228,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 	}
 
 	@Override
-	public Page<LeaveEntitlement> findAllCustomEntitlements(String search, Pageable page, int year) {
+	public Page<LeaveEntitlement> findAllCustomEntitlements(String search, Pageable page, int year, Long leaveTypeId) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 
 		CriteriaQuery<LeaveEntitlement> criteriaQuery = criteriaBuilder.createQuery(LeaveEntitlement.class);
@@ -271,6 +271,10 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 						criteriaBuilder.equal(
 								criteriaBuilder.function("YEAR", Integer.class, root.get(LeaveEntitlement_.validTo)),
 								year)));
+		}
+
+		if (leaveTypeId != null && leaveTypeId > 0) {
+			predicates.add(criteriaBuilder.equal(root.get(LeaveEntitlement_.LEAVE_TYPE).get(TYPE_ID), leaveTypeId));
 		}
 
 		Predicate[] predArray = new Predicate[predicates.size()];
