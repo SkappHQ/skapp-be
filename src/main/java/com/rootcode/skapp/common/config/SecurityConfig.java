@@ -8,6 +8,7 @@ import com.rootcode.skapp.common.constant.AuthConstants;
 import com.rootcode.skapp.common.service.UserService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,6 +35,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @Configuration
 @RequiredArgsConstructor
 @EnableMethodSecurity
+@ConditionalOnMissingBean(name = "EPSecurityConfig")
 public class SecurityConfig {
 
 	@NonNull
