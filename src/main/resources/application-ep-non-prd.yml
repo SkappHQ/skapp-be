@@ -1,0 +1,69 @@
+server:
+  port: 8008
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/master?createDatabaseIfNotExist=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        multiTenancy: DATABASE
+        tenant_identifier_resolver: com.rootcode.skapp.enterprise.common.config.TenantContext
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          time_zone: UTC
+    show-sql: true
+
+  liquibase:
+    change-log: classpath:enterprise/db/changelog/master-db.changelog.yml
+    enabled: true
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+
+  messages:
+    basename: community/messages/common-messages, community/messages/leave-messages, community/messages/people-messages, community/messages/time-messages, enterprise/messages/ep-common-messages
+
+file:
+  storage:
+    folders:
+      - organization-logos
+      - user-image
+      - leave-attachments
+    base:
+      storage
+    encryption-key: ${FILE_ENCRYPT_KEY}
+
+logging:
+  level:
+    ROOT: INFO
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  show-actuator: true
+  packages-to-scan: com.rootcode.skapp
+
+jwt:
+  access-token:
+    signing-key: ${SIGN_IN_KEY}
+    expiration-time: 86400000 # Expiration time in milliseconds (1 day)
+  refresh-token:
+    expiration-time: 86400000 # Expiration time in milliseconds (1 day)
+
+encryptDecryptAlgorithm:
+  secret: ${ENCRYPT_DECRYPT_SECRET}

@@ -1,3 +1,0 @@
-databaseChangeLog:
-  - include:
-      file: classpath:db/changelog/ddl-script/common-ddl-script-v1-create-tables.sql

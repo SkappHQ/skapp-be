@@ -1,7 +1,0 @@
-package com.rootcode.skapp.timeplanner.type;
-
-public enum ClockInType {
-
-	LATE_CLOCK_INS, NOT_CLOCKED_INS, ALL_CLOCK_INS
-
-}

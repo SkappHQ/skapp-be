@@ -8,6 +8,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
+      auto-commit: true
 
   jpa:
     hibernate:
@@ -21,14 +22,14 @@ spring:
     show-sql: false
 
   liquibase:
-    change-log: classpath:db/changelog/db.changelog.yml
+    change-log: classpath:community/db/changelog/db.changelog.yml
     enabled: true
 
   servlet:
     multipart:
       max-file-size: 5MB
   messages:
-    basename: messages/common-messages, messages/leave-messages, messages/people-messages, messages/time-messages
+    basename: community/messages/common-messages, community/messages/leave-messages, community/messages/people-messages, community/messages/time-messages
 
 file:
   storage:
