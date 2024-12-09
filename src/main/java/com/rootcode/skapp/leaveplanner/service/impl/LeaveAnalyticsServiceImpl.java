@@ -322,8 +322,15 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 				? cycleEndYear : cycleEndYear - 1, leaveCycleDetail.getStartMonth(), leaveCycleDetail.getStartDate());
 		LocalDate endDate = LocalDate.of(cycleEndYear, leaveCycleDetail.getEndMonth(), leaveCycleDetail.getEndDate());
 
+		List<Long> employeeList = new ArrayList<>();
+
+		if(currentUser.getEmployee().getEmployeeRole().getAttendanceRole().equals(Role.ATTENDANCE_MANAGER)){
+			Pageable defaultPageable = PageRequest.of(0, Integer.MAX_VALUE);
+			employeeList = employeeDao.findEmployeesByManagerId(currentUser.getEmployee().getEmployeeId(), defaultPageable).getContent().stream().map(employee -> employee.getEmployeeId()).collect(Collectors.toList());
+		}
+
 		var list = leaveRequestDao.findLeaveTypeBreakDown(getWorkingDaysIndex(), holidayDates, startDate, endDate,
-				typeIds.contains(-1L) ? null : typeIds, teamIds.contains(-1L) ? null : teamIds);
+				typeIds.contains(-1L) ? null : typeIds, teamIds.contains(-1L) ? null : teamIds, employeeList.isEmpty() ? null : employeeList);
 		Map<Integer, Double> totalLeavesWithMonths = list.stream()
 			.collect(Collectors.groupingBy(LeaveTypeBreakDown::getKeyValue,
 					Collectors.summingDouble(LeaveTypeBreakDown::getLeaveCount)));
@@ -537,7 +544,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		Optional<Employee> employeeOptional = employeeDao.findEmployeeByEmployeeIdAndUserActiveNot(employeeId, false);
 		List<Long> leaveTypeIds = leaveUtilizationFilterDto.getLeaveTypeIds();
 		List<LeaveType> leaveTypes = getLeaveTypes(leaveUtilizationFilterDto.getLeaveTypeIds());
-		if (leaveTypeIds.getFirst() == -1) {
+		if (leaveTypeIds.get(0) == -1) {
 			leaveTypeIds = leaveTypes.stream().map(LeaveType::getTypeId).toList();
 		}
 
@@ -601,7 +608,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 
 		List<Long> leaveTypeIds = organizationLeaveTrendForTheYearFilterDto.getLeaveTypeIds();
 		List<LeaveType> leaveTypes = getLeaveTypes(organizationLeaveTrendForTheYearFilterDto.getLeaveTypeIds());
-		if (leaveTypeIds.getFirst() == -1) {
+		if (leaveTypeIds.get(0) == -1) {
 			leaveTypeIds = leaveTypes.stream().map(LeaveType::getTypeId).toList();
 		}
 
@@ -646,7 +653,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 
 		List<Long> leaveTypeIds = teamLeaveTrendForTheYearFilterDto.getLeaveTypeIds();
 		List<LeaveType> leaveTypes = getLeaveTypes(teamLeaveTrendForTheYearFilterDto.getLeaveTypeIds());
-		if (leaveTypeIds.getFirst() == -1) {
+		if (leaveTypeIds.get(0) == -1) {
 			leaveTypeIds = leaveTypes.stream().map(LeaveType::getTypeId).toList();
 		}
 
@@ -705,7 +712,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 
 		List<Long> leaveTypeIds = managerLeaveTrendFilterDto.getLeaveTypeIds();
 		List<LeaveType> leaveTypes = getLeaveTypes(managerLeaveTrendFilterDto.getLeaveTypeIds());
-		if (leaveTypeIds.getFirst() == -1) {
+		if (leaveTypeIds.get(0) == -1) {
 
 			leaveTypeIds = leaveTypes.stream().map(LeaveType::getTypeId).toList();
 		}
@@ -748,7 +755,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 
 	private List<LeaveType> getLeaveTypes(List<Long> leaveTypeIds) {
 		List<LeaveType> leaveTypes;
-		if (leaveTypeIds.getFirst() == -1) {
+		if (leaveTypeIds.get(0) == -1) {
 			leaveTypes = leaveTypeDao.findAll();
 		}
 		else {
@@ -1597,7 +1604,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 
 		List<Long> leaveTypeIds = leaveEntitlementEmployeeDto.getLeaveTypeId();
 		List<LeaveType> leaveTypes = getLeaveTypes(leaveEntitlementEmployeeDto.getLeaveTypeId());
-		if (leaveTypeIds.getFirst() == -1) {
+		if (leaveTypeIds.get(0) == -1) {
 			leaveTypeIds = leaveTypes.stream().map(LeaveType::getTypeId).toList();
 		}
 
@@ -1951,7 +1958,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 	}
 
 	private List<Long> getValidatedLeaveTypes(List<Long> leaveTypeIds) {
-		if (leaveTypeIds != null && !leaveTypeIds.isEmpty() && leaveTypeIds.getFirst() == -1) {
+		if (leaveTypeIds != null && !leaveTypeIds.isEmpty() && leaveTypeIds.get(0) == -1) {
 			return getLeaveTypes(leaveTypeIds).stream().map(LeaveType::getTypeId).toList();
 		}
 		return leaveTypeIds;

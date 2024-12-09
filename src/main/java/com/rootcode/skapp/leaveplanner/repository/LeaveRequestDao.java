@@ -89,12 +89,13 @@ public interface LeaveRequestDao
 					WHERE (leave_date BETWEEN ?3 AND ?4) and (leave_date BETWEEN lr.start_date AND lr.end_date) AND ((WEEKDAY(leave_date) IN ?1) OR (NOT EXISTS (SELECT 1 FROM time_config))) AND ((leave_date NOT IN ?2) OR (NOT EXISTS (SELECT 1 FROM holiday WHERE is_active=1))) AND lr.`status` IN ('APPROVED', 'PENDING')
 					AND (lr.type_id IN (?5) OR concat(?5) IS NULL)
 					AND (et.team_id IN (?6) OR concat(?6) IS NULL)
+					AND (lr.employee_id IN (?7) OR concat(?7) IS NULL)
 					AND lr.type_id = lt.type_id AND lt.`is_active` = 1  AND (NOT (user.`is_active` = '0'))
 					GROUP BY keyValue, leaveType
 					ORDER BY keyValue, leaveType;
 					""")
 	List<LeaveTypeBreakDown> findLeaveTypeBreakDown(List<Integer> workingDaysIndex, List<LocalDate> holidayDates,
-			LocalDate startDate, LocalDate endDate, List<Long> typeIds, List<Long> teamIds);
+			LocalDate startDate, LocalDate endDate, List<Long> typeIds, List<Long> teamIds, List<Long> employeeIds);
 
 	/**
 	 * The Following query will return the approved and pending leave request count of the
