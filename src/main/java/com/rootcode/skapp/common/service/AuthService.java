@@ -1,6 +1,11 @@
 package com.rootcode.skapp.common.service;
 
-import com.rootcode.skapp.common.payload.request.*;
+import com.rootcode.skapp.common.payload.request.ChangePasswordRequestDto;
+import com.rootcode.skapp.common.payload.request.ForgotPasswordRequestDto;
+import com.rootcode.skapp.common.payload.request.RefreshTokenRequestDto;
+import com.rootcode.skapp.common.payload.request.ResetPasswordRequestDto;
+import com.rootcode.skapp.common.payload.request.SignInRequestDto;
+import com.rootcode.skapp.common.payload.request.SuperAdminSignUpRequestDto;
 import com.rootcode.skapp.common.payload.response.ResponseEntityDto;
 
 public interface AuthService {

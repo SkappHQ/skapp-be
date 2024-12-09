@@ -1,7 +1,6 @@
 package com.rootcode.skapp.peopleplanner.repository;
 
 import com.rootcode.skapp.common.model.User;
-import com.rootcode.skapp.common.type.Role;
 import com.rootcode.skapp.peopleplanner.model.Employee;
 import com.rootcode.skapp.peopleplanner.model.EmployeeTeam;
 import com.rootcode.skapp.peopleplanner.model.Team;
