@@ -49,11 +49,14 @@ logging:
     ROOT: INFO
 
 springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
   swagger-ui:
     path: /swagger-ui.html
-  api-docs:
     enabled: true
-    path: /v3/api-docs
+  show-actuator: true
+  packages-to-scan: com.rootcode.skapp
 
 jwt:
   access-token:
