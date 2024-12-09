@@ -761,7 +761,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 
 	private List<LeaveType> getLeaveTypes(List<Long> leaveTypeIds) {
 		List<LeaveType> leaveTypes;
-		if (leaveTypeIds.get(0) == -1) {
+		if (leaveTypeIds.getFirst() == -1) {
 			leaveTypes = leaveTypeDao.findAll();
 		}
 		else {
