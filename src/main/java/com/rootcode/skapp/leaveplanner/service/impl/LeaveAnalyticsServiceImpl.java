@@ -550,7 +550,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		Optional<Employee> employeeOptional = employeeDao.findEmployeeByEmployeeIdAndUserActiveNot(employeeId, false);
 		List<Long> leaveTypeIds = leaveUtilizationFilterDto.getLeaveTypeIds();
 		List<LeaveType> leaveTypes = getLeaveTypes(leaveUtilizationFilterDto.getLeaveTypeIds());
-		if (leaveTypeIds.get(0) == -1) {
+		if (leaveTypeIds.getFirst() == -1) {
 			leaveTypeIds = leaveTypes.stream().map(LeaveType::getTypeId).toList();
 		}
 
@@ -614,7 +614,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 
 		List<Long> leaveTypeIds = organizationLeaveTrendForTheYearFilterDto.getLeaveTypeIds();
 		List<LeaveType> leaveTypes = getLeaveTypes(organizationLeaveTrendForTheYearFilterDto.getLeaveTypeIds());
-		if (leaveTypeIds.get(0) == -1) {
+		if (leaveTypeIds.getFirst() == -1) {
 			leaveTypeIds = leaveTypes.stream().map(LeaveType::getTypeId).toList();
 		}
 
@@ -659,7 +659,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 
 		List<Long> leaveTypeIds = teamLeaveTrendForTheYearFilterDto.getLeaveTypeIds();
 		List<LeaveType> leaveTypes = getLeaveTypes(teamLeaveTrendForTheYearFilterDto.getLeaveTypeIds());
-		if (leaveTypeIds.get(0) == -1) {
+		if (leaveTypeIds.getFirst() == -1) {
 			leaveTypeIds = leaveTypes.stream().map(LeaveType::getTypeId).toList();
 		}
 
@@ -718,7 +718,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 
 		List<Long> leaveTypeIds = managerLeaveTrendFilterDto.getLeaveTypeIds();
 		List<LeaveType> leaveTypes = getLeaveTypes(managerLeaveTrendFilterDto.getLeaveTypeIds());
-		if (leaveTypeIds.get(0) == -1) {
+		if (leaveTypeIds.getFirst() == -1) {
 
 			leaveTypeIds = leaveTypes.stream().map(LeaveType::getTypeId).toList();
 		}
@@ -1610,7 +1610,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 
 		List<Long> leaveTypeIds = leaveEntitlementEmployeeDto.getLeaveTypeId();
 		List<LeaveType> leaveTypes = getLeaveTypes(leaveEntitlementEmployeeDto.getLeaveTypeId());
-		if (leaveTypeIds.get(0) == -1) {
+		if (leaveTypeIds.getFirst() == -1) {
 			leaveTypeIds = leaveTypes.stream().map(LeaveType::getTypeId).toList();
 		}
 
@@ -1964,7 +1964,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 	}
 
 	private List<Long> getValidatedLeaveTypes(List<Long> leaveTypeIds) {
-		if (leaveTypeIds != null && !leaveTypeIds.isEmpty() && leaveTypeIds.get(0) == -1) {
+		if (leaveTypeIds != null && !leaveTypeIds.isEmpty() && leaveTypeIds.getFirst() == -1) {
 			return getLeaveTypes(leaveTypeIds).stream().map(LeaveType::getTypeId).toList();
 		}
 		return leaveTypeIds;
