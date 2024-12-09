@@ -324,13 +324,19 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 
 		List<Long> employeeList = new ArrayList<>();
 
-		if(currentUser.getEmployee().getEmployeeRole().getAttendanceRole().equals(Role.ATTENDANCE_MANAGER)){
+		if (currentUser.getEmployee().getEmployeeRole().getAttendanceRole().equals(Role.ATTENDANCE_MANAGER)) {
 			Pageable defaultPageable = PageRequest.of(0, Integer.MAX_VALUE);
-			employeeList = employeeDao.findEmployeesByManagerId(currentUser.getEmployee().getEmployeeId(), defaultPageable).getContent().stream().map(employee -> employee.getEmployeeId()).collect(Collectors.toList());
+			employeeList = employeeDao
+				.findEmployeesByManagerId(currentUser.getEmployee().getEmployeeId(), defaultPageable)
+				.getContent()
+				.stream()
+				.map(employee -> employee.getEmployeeId())
+				.collect(Collectors.toList());
 		}
 
 		var list = leaveRequestDao.findLeaveTypeBreakDown(getWorkingDaysIndex(), holidayDates, startDate, endDate,
-				typeIds.contains(-1L) ? null : typeIds, teamIds.contains(-1L) ? null : teamIds, employeeList.isEmpty() ? null : employeeList);
+				typeIds.contains(-1L) ? null : typeIds, teamIds.contains(-1L) ? null : teamIds,
+				employeeList.isEmpty() ? null : employeeList);
 		Map<Integer, Double> totalLeavesWithMonths = list.stream()
 			.collect(Collectors.groupingBy(LeaveTypeBreakDown::getKeyValue,
 					Collectors.summingDouble(LeaveTypeBreakDown::getLeaveCount)));
