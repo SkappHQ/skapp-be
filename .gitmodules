@@ -1,3 +1,3 @@
-[submodule "src/main/java/com/rootcode/skapp/enterprise"]
-	path = src/main/java/com/rootcode/skapp/enterprise
-	url = https://github.com/SkappHQ/skapp-ep-be.git
+[submodule "src/main/java/com/skapp/enterprise"]
+	path = src/main/java/com/skapp/enterprise
+	url = https://github.com/SkappHQ/skapp-ep-be-src.git
