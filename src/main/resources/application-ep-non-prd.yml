@@ -56,7 +56,7 @@ springdoc:
     path: /swagger-ui.html
     enabled: true
   show-actuator: true
-  packages-to-scan: com.rootcode.skapp
+  packages-to-scan: com.skapp
 
 jwt:
   access-token:
