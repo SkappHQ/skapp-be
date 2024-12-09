@@ -89,7 +89,7 @@ public class EmailServiceImpl implements EmailService {
 
 	private void loadTemplateDetails() {
 		if (templateDetailsMap == null) {
-			try (InputStream inputStream = new ClassPathResource("templates/email/email-templates.yml")
+			try (InputStream inputStream = new ClassPathResource("community/templates/email/email-templates.yml")
 				.getInputStream()) {
 				templateDetailsMap = yamlMapper.readValue(inputStream, new TypeReference<>() {
 				});
@@ -103,7 +103,7 @@ public class EmailServiceImpl implements EmailService {
 
 	private void loadEnumTranslations() {
 		if (enumTranslationsMap == null) {
-			try (InputStream inputStream = new ClassPathResource("templates/common/enum-translations.yml")
+			try (InputStream inputStream = new ClassPathResource("community/templates/common/enum-translations.yml")
 				.getInputStream()) {
 				enumTranslationsMap = yamlMapper.readValue(inputStream, new TypeReference<>() {
 				});
@@ -147,10 +147,10 @@ public class EmailServiceImpl implements EmailService {
 
 	private String buildEmailBody(EmailTemplateMetadata templateDetails, String module,
 			Map<String, String> placeholders) throws IOException {
-		String templatePath = String.format("templates/email/%s/%s/%s.html", EMAIL_LANGUAGE, module,
+		String templatePath = String.format("community/templates/email/%s/%s/%s.html", EMAIL_LANGUAGE, module,
 				templateDetails.getId());
 		String body = replaceValuesToTemplate(templatePath, placeholders);
-		String mainTemplatePath = String.format("templates/email/%s/%s.html", EMAIL_LANGUAGE,
+		String mainTemplatePath = String.format("community/templates/email/%s/%s.html", EMAIL_LANGUAGE,
 				EmailMainTemplates.MAIN_TEMPLATE_V1.getTemplateId());
 		placeholders.put("body", body);
 		return replaceValuesToTemplate(mainTemplatePath, placeholders);

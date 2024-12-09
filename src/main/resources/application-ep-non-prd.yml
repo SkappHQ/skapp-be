@@ -32,7 +32,7 @@ spring:
       max-file-size: 5MB
 
   messages:
-    basename: messages/common-messages, messages/leave-messages, messages/people-messages, messages/time-messages, enterprise/messages/ep-common-messages
+    basename: community/messages/common-messages, community/messages/leave-messages, community/messages/people-messages, community/messages/time-messages, enterprise/messages/ep-common-messages
 
 file:
   storage:

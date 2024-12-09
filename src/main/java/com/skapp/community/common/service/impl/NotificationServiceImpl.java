@@ -153,7 +153,7 @@ public class NotificationServiceImpl implements NotificationService {
 
 		File file;
 		try {
-			file = new ClassPathResource("templates/notification/notification-templates.json").getFile();
+			file = new ClassPathResource("community/templates/notification/notification-templates.json").getFile();
 		}
 		catch (IOException exception) {
 			log.error("Unable to find notification-templates.json file", exception);
@@ -197,7 +197,7 @@ public class NotificationServiceImpl implements NotificationService {
 
 	private Map<String, Map<String, Map<String, String>>> loadEnumTranslations() {
 		ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
-		try (InputStream inputStream = new ClassPathResource("templates/common/enum-translations.yml")
+		try (InputStream inputStream = new ClassPathResource("community/templates/common/enum-translations.yml")
 			.getInputStream()) {
 			return yamlMapper.readValue(inputStream, new TypeReference<>() {
 			});
