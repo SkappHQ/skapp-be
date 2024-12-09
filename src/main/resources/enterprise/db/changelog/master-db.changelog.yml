@@ -1,3 +1,0 @@
-databaseChangeLog:
-  - include:
-      file: classpath:enterprise/db/changelog/master/ddl-script/multi-tenant-init-script-v1.sql

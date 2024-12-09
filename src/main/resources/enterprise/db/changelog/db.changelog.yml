@@ -1,5 +1,0 @@
-databaseChangeLog:
-  - include:
-      file: community/db/changelog/ddl-script/common-ddl-script-v1-create-tables.sql
-  - include:
-      file: enterprise/db/changelog/ddl-script/common-ddl-script-v1-add-column-user.sql
