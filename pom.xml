@@ -9,9 +9,9 @@
 		<version>3.4.0</version>
 		<relativePath/>
 	</parent>
-	<groupId>com.rootcode</groupId>
+	<groupId>com</groupId>
 	<artifactId>skapp</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>skapp</name>
 	<description>Skapp open source</description>
 
