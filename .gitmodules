@@ -7,3 +7,6 @@
 [submodule "src/test/java/com/skapp/enterprise"]
 	path = src/test/java/com/skapp/enterprise
 	url = https://github.com/SkappHQ/skapp-ep-be-tests.git
+[submodule "src/main/resources/config"]
+	path = src/main/resources/config
+	url = https://github.com/SkappHQ/skapp-ep-be-resources-config.git

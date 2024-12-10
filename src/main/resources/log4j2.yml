@@ -10,7 +10,7 @@ Configuration:
 
   Loggers:
     AsyncLogger:
-      - name: com.rootcode.skapp
+      - name: com.skapp
         level: DEBUG
         additivity: false
         AppenderRef:
