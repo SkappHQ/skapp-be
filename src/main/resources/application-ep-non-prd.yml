@@ -9,6 +9,13 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
+      minimum-idle: 5
+      pool-name: HikariPool-Master
+      auto-commit: true
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      validation-timeout: 5000
 
   jpa:
     hibernate:
@@ -16,12 +23,12 @@ spring:
     properties:
       hibernate:
         multiTenancy: DATABASE
-        tenant_identifier_resolver: com.rootcode.skapp.enterprise.common.config.TenantContext
+        tenant_identifier_resolver: com.skapp.enterprise.common.config.TenantContext
         format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
         jdbc:
           time_zone: UTC
     show-sql: true
+    open-in-view: false
 
   liquibase:
     change-log: classpath:enterprise/db/changelog/master-db.changelog.yml
@@ -56,7 +63,7 @@ springdoc:
     path: /swagger-ui.html
     enabled: true
   show-actuator: true
-  packages-to-scan: com.rootcode.skapp
+  packages-to-scan: com.skapp
 
 jwt:
   access-token:
@@ -67,3 +74,13 @@ jwt:
 
 encryptDecryptAlgorithm:
   secret: ${ENCRYPT_DECRYPT_SECRET}
+
+aws:
+  access-key: ${AWS_ACCESS_KEY}
+  secret-key: ${AWS_SECRET_KEY}
+  route53:
+    parent-domain: ${AWS_ROUTE53_PARENT_DOMAIN}
+    load-balancer:
+      alias-dns-name: ${AWS_ROUTE53_LOAD_BALANCER_ALIAS_DNS_NAME}
+      hosted-zone: ${AWS_ROUTE53_LOAD_BALANCER_HOSTED_ZONE}
+
