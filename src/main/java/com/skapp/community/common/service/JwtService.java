@@ -1,6 +1,10 @@
 package com.skapp.community.common.service;
 
+import io.jsonwebtoken.Claims;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.security.Key;
+import java.util.function.Function;
 
 public interface JwtService {
 
@@ -19,5 +23,9 @@ public interface JwtService {
 	boolean isTokenExpired(String token);
 
 	Long extractUserId(String token);
+
+	Key getSigningKey();
+
+	<T> T extractClaim(String token, Function<Claims, T> claimsResolvers);
 
 }

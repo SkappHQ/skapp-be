@@ -97,7 +97,8 @@ public enum EmailBodyTemplates {
 	LEAVE_MODULE_MANAGER_NUDGE_SINGLE_DAY_LEAVE("leave-module-manager-nudge-single-day-leave"),
 	LEAVE_MODULE_MANAGER_NUDGE_MULTI_DAY_LEAVE("leave-module-manager-nudge-multi-day-leave"),
 	LEAVE_MODULE_MANAGER_AUTO_APPROVED_SINGLE_DAY_LEAVE("leave-module-manager-auto-approved-single-day-leave"),
-	LEAVE_MODULE_MANAGER_AUTO_APPROVED_MULTI_DAY_LEAVE("leave-module-manager-auto-approved-multi-day-leave");
+	LEAVE_MODULE_MANAGER_AUTO_APPROVED_MULTI_DAY_LEAVE("leave-module-manager-auto-approved-multi-day-leave"),
+	COMMON_MODULE_EMAIL_VERIFY("leave-module-email-verify"),;
 
 	private final String templateId;
 

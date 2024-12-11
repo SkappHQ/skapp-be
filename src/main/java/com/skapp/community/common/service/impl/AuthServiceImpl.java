@@ -342,7 +342,8 @@ public class AuthServiceImpl implements AuthService {
 		return new ResponseEntityDto(false, "User password changed successfully");
 	}
 
-	private void saveEmployeeRoles(Employee employee) {
+	@Override
+	public void saveEmployeeRoles(Employee employee) {
 		log.info("saveEmployeeRoles: execution started");
 
 		EmployeeRole superAdminRoles = new EmployeeRole();
