@@ -7,6 +7,7 @@ import com.skapp.community.common.util.MessageUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -18,6 +19,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.NoHandlerFoundException;
+
+import java.sql.SQLException;
 
 @Slf4j
 @ControllerAdvice
@@ -138,6 +141,26 @@ public class GlobalExceptionHandler {
 				status);
 	}
 
+	@ExceptionHandler(SQLException.class)
+	public ResponseEntity<ResponseEntityDto> handleSQLException(SQLException e) {
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+		String message = messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_DATABASE_ERROR);
+		logDetailedException(e, CommonMessageConstant.COMMON_ERROR_DATABASE_ERROR.name(), message, status);
+
+		return new ResponseEntity<>(new ResponseEntityDto(true,
+				new ErrorResponse(status, message, CommonMessageConstant.COMMON_ERROR_DATABASE_ERROR)), status);
+	}
+
+	@ExceptionHandler(DataAccessException.class)
+	public ResponseEntity<ResponseEntityDto> handleDataAccessException(DataAccessException e) {
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+		String message = messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_DATABASE_ERROR);
+		logDetailedException(e, CommonMessageConstant.COMMON_ERROR_DATABASE_ERROR.name(), message, status);
+
+		return new ResponseEntity<>(new ResponseEntityDto(true,
+				new ErrorResponse(status, message, CommonMessageConstant.COMMON_ERROR_DATABASE_ERROR)), status);
+	}
+
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ResponseEntityDto> handleExceptions(Exception e) {
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -152,17 +175,19 @@ public class GlobalExceptionHandler {
 
 	private void logDetailedException(Exception e, String messageKey, String message, HttpStatus status) {
 		String apiPath = request.getRequestURI();
+		String method = request.getMethod();
 		String redColor = "\u001B[31m";
 		String resetColor = "\u001B[0m";
 
-		String errorLog = "\n" + redColor + "==================== Exception Occurred ====================\n"
+		String errorLog = "\n" + redColor + "==================== Database Exception Occurred ====================\n"
+				+ String.format("Method:              %s%n", method)
 				+ String.format("API Path:            %s%n", apiPath)
 				+ String.format("Exception Type:      %s%n", e.getClass().getSimpleName())
 				+ String.format("Status Code:         %d%n", status.value())
 				+ String.format("Key:                 %s%n", messageKey)
-				+ String.format("Message:             %s%n", message)
-				+ String.format("Additional Info:     %s%n", e.getMessage())
-				+ "============================================================" + resetColor;
+				+ String.format("Message:             %s%n", message);
+
+		errorLog += "=================================================================" + resetColor;
 
 		log.error(errorLog);
 	}
