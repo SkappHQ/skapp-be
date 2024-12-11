@@ -169,16 +169,16 @@ public class EmployeeTimelineServiceImpl implements EmployeeTimelineService {
 			List<EmployeeTimeline> employeeTimelines) {
 		if (employeeDetailsDto.getEmployeeProgressions() != null
 				&& !employeeDetailsDto.getEmployeeProgressions().isEmpty()) {
-			if (employeeDetailsDto.getEmployeeProgressions().get(0).getJobTitleId() != null) {
+			if (employeeDetailsDto.getEmployeeProgressions().getFirst().getJobTitleId() != null) {
 				Optional<JobTitle> jobTitle = jobTitleDao
-					.findById(employeeDetailsDto.getEmployeeProgressions().get(0).getJobTitleId());
+					.findById(employeeDetailsDto.getEmployeeProgressions().getFirst().getJobTitleId());
 				jobTitle.ifPresent(title -> employeeTimelines.add(getEmployeeTimeline(employee,
 						EmployeeTimelineType.JOB_LEVEL_ASSIGNED, TITLE_JOB_TITLE_ASSIGNED, null, title.getName())));
 
 			}
-			if (employeeDetailsDto.getEmployeeProgressions().get(0).getJobFamilyId() != null) {
+			if (employeeDetailsDto.getEmployeeProgressions().getFirst().getJobFamilyId() != null) {
 				Optional<JobFamily> jobFamily = jobFamilyDao
-					.findById(employeeDetailsDto.getEmployeeProgressions().get(0).getJobFamilyId());
+					.findById(employeeDetailsDto.getEmployeeProgressions().getFirst().getJobFamilyId());
 				jobFamily.ifPresent(family -> employeeTimelines.add(getEmployeeTimeline(employee,
 						EmployeeTimelineType.JOB_FAMILY_ASSIGNED, TITLE_JOB_FAMILY_ASSIGNED, null, family.getName())));
 
@@ -202,11 +202,11 @@ public class EmployeeTimelineServiceImpl implements EmployeeTimelineService {
 			List<EmployeeTimeline> employeeTimelines) {
 		if (employeeDetailsDto != null && employeeDetailsDto.getEmployeeProgressions() != null
 				&& !employeeDetailsDto.getEmployeeProgressions().isEmpty()
-				&& employeeDetailsDto.getEmployeeProgressions().get(0).getEmployeeType() != null) {
+				&& employeeDetailsDto.getEmployeeProgressions().getFirst().getEmployeeType() != null) {
 
 			EmployeeTimeline employmentAllocationRecord = getEmployeeTimeline(employee,
 					EmployeeTimelineType.EMPLOYMENT_TYPE_ADDED, TITLE_EMPLOYMENT_TYPE_ADDED, null,
-					employeeDetailsDto.getEmployeeProgressions().get(0).getEmployeeType().toString());
+					employeeDetailsDto.getEmployeeProgressions().getFirst().getEmployeeType().toString());
 			employeeTimelines.add(employmentAllocationRecord);
 		}
 	}
