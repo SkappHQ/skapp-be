@@ -345,7 +345,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		TypedQuery<Employee> typedQuery = entityManager.createQuery(criteriaQuery);
 
 		List<Employee> results = typedQuery.getResultList();
-		return results.isEmpty() ? null : results.getFirst();
+		return results.isEmpty() ? null : results.get(0);
 	}
 
 	@Override

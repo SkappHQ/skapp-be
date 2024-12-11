@@ -41,7 +41,7 @@ public class User implements UserDetails {
 	@Column(name = "email", nullable = false, unique = true)
 	private String email;
 
-	@Column(name = "password", nullable = false)
+	@Column(name = "password")
 	private String password;
 
 	@Column(name = "temp_password")
@@ -55,6 +55,9 @@ public class User implements UserDetails {
 
 	@Column(name = "previous_passwords")
 	private String previousPasswords;
+
+	@Column(name = "is_google_user", unique = true)
+	private Boolean isGoogleUser;
 
 	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
 	@PrimaryKeyJoinColumn
