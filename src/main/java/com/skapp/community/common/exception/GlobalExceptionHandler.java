@@ -4,6 +4,7 @@ import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.payload.response.ErrorResponse;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.util.MessageUtil;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import java.io.IOException;
 import java.sql.SQLException;
 
 @Slf4j
@@ -173,11 +175,49 @@ public class GlobalExceptionHandler {
 				status);
 	}
 
+	@ExceptionHandler(ServletException.class)
+	public ResponseEntity<ResponseEntityDto> handleServletException(ServletException e) {
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+		String message = messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_SERVLET_EXCEPTION);
+		logDetailedException(e, CommonMessageConstant.COMMON_ERROR_SERVLET_EXCEPTION.name(), message, status);
+
+		return new ResponseEntity<>(
+				new ResponseEntityDto(true,
+						new ErrorResponse(status, message, CommonMessageConstant.COMMON_ERROR_SERVLET_EXCEPTION)),
+				status);
+	}
+
+	@ExceptionHandler(IOException.class)
+	public ResponseEntity<ResponseEntityDto> handleIOException(IOException e) {
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+		String message = messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_IO_EXCEPTION);
+		logDetailedException(e, CommonMessageConstant.COMMON_ERROR_IO_EXCEPTION.name(), message, status);
+
+		return new ResponseEntity<>(new ResponseEntityDto(true,
+				new ErrorResponse(status, message, CommonMessageConstant.COMMON_ERROR_IO_EXCEPTION)), status);
+	}
+
 	private void logDetailedException(Exception e, String messageKey, String message, HttpStatus status) {
 		String apiPath = request.getRequestURI();
 		String method = request.getMethod();
 		String redColor = "\u001B[31m";
 		String resetColor = "\u001B[0m";
+
+		StringBuilder errorMessage = new StringBuilder();
+		errorMessage.append(e.getMessage());
+
+		if (e.getCause() != null) {
+			errorMessage.append(" - ").append(e.getCause().getMessage());
+		}
+		if (e.getSuppressed().length > 0) {
+			errorMessage.append(" - ").append(e.getSuppressed()[0].getMessage());
+		}
+		if (e.getStackTrace().length > 0) {
+			errorMessage.append(" - ")
+				.append(e.getStackTrace()[0].getClassName())
+				.append(" - ")
+				.append(e.getStackTrace()[0].getMethodName());
+		}
 
 		String errorLog = "\n" + redColor + "==================== Database Exception Occurred ====================\n"
 				+ String.format("Method:              %s%n", method)
@@ -185,9 +225,9 @@ public class GlobalExceptionHandler {
 				+ String.format("Exception Type:      %s%n", e.getClass().getSimpleName())
 				+ String.format("Status Code:         %d%n", status.value())
 				+ String.format("Key:                 %s%n", messageKey)
-				+ String.format("Message:             %s%n", message);
-
-		errorLog += "=================================================================" + resetColor;
+				+ String.format("Message:             %s%n", message)
+				+ String.format("Exception Message:   %s%n", errorMessage)
+				+ "=====================================================================" + resetColor;
 
 		log.error(errorLog);
 	}
