@@ -6,10 +6,6 @@ public class ApiUriConstants {
 		throw new IllegalStateException("Illegal instantiate");
 	}
 
-	public static final String FILE_BASE_API = "/v1/file";
-
-	public static final String FILE_UPLOAD = "/upload";
-
 	public static final String AUTH_BASE_API = "/v1/auth";
 
 	public static final String AUTH_SUPER_ADMIN_SIGNUP = "/signup/super-admin";
