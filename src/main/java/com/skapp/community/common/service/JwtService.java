@@ -28,4 +28,6 @@ public interface JwtService {
 
 	<T> T extractClaim(String token, Function<Claims, T> claimsResolvers);
 
+	String generateAccessTokenWithExpiration(UserDetails userDetails, Long userId, Long expirationTime);
+
 }
