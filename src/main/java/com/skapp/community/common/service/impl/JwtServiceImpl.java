@@ -101,6 +101,14 @@ public class JwtServiceImpl implements JwtService {
 		return claimsResolvers.apply(claims);
 	}
 
+	@Override
+	public String generateAccessTokenWithExpiration(UserDetails userDetails, Long userId, Long expirationTime) {
+		Map<String, Object> claims = new HashMap<>();
+		claims.put(AuthConstants.TOKEN_TYPE, TokenType.ACCESS);
+		claims.put(AuthConstants.USER_ID, userId);
+		return generateToken(claims, userDetails, expirationTime);
+	}
+
 	private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails, Long expirationTime) {
 		List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
 
