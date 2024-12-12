@@ -367,6 +367,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getEmployees(EmployeeFilterDto employeeFilterDto) {
 		User currentUser = userService.getCurrentUser();
 		log.info("getEmployees: execution started by user: {}", currentUser.getUserId());

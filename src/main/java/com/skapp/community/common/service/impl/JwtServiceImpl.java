@@ -95,7 +95,8 @@ public class JwtServiceImpl implements JwtService {
 		return extractClaim(token, claims -> claims.get(AuthConstants.USER_ID, Long.class));
 	}
 
-	private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers) {
+	@Override
+	public <T> T extractClaim(String token, Function<Claims, T> claimsResolvers) {
 		final Claims claims = extractAllClaims(token);
 		return claimsResolvers.apply(claims);
 	}
@@ -131,7 +132,7 @@ public class JwtServiceImpl implements JwtService {
 		return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
 	}
 
-	private Key getSigningKey() {
+	public Key getSigningKey() {
 		byte[] keyBytes = Decoders.BASE64.decode(jwtSigningKey);
 		return Keys.hmacShaKeyFor(keyBytes);
 	}
