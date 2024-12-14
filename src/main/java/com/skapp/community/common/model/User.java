@@ -2,7 +2,7 @@ package com.skapp.community.common.model;
 
 import com.skapp.community.common.constant.AuthConstants;
 import com.skapp.community.common.type.Role;
-import com.skapp.community.common.util.LoginMethod;
+import com.skapp.community.common.type.LoginMethod;
 import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
 import jakarta.persistence.CascadeType;

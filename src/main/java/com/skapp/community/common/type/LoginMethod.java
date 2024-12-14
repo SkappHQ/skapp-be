@@ -1,4 +1,4 @@
-package com.skapp.community.common.util;
+package com.skapp.community.common.type;
 
 public enum LoginMethod {
 
