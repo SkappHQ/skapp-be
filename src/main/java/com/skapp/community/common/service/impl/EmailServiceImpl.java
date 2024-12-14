@@ -11,6 +11,7 @@ import com.skapp.community.common.repository.OrganizationDao;
 import com.skapp.community.common.service.EmailService;
 import com.skapp.community.common.type.EmailBodyTemplates;
 import com.skapp.community.common.type.EmailMainTemplates;
+import com.skapp.enterprise.common.config.TenantContext;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -80,6 +81,7 @@ public class EmailServiceImpl implements EmailService {
 			organization.ifPresent(value -> placeholders.put("appUrl", value.getAppUrl()));
 
 			String emailBody = buildEmailBody(templateDetails, module, placeholders);
+			String tenantId = TenantContext.getCurrentTenant();
 			asyncEmailSender.sendMail(recipient, templateDetails.getSubject(), emailBody);
 		}
 		catch (Exception e) {
