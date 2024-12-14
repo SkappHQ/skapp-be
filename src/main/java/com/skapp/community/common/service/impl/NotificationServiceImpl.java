@@ -19,7 +19,6 @@ import com.skapp.community.common.service.UserService;
 import com.skapp.community.common.type.EmailBodyTemplates;
 import com.skapp.community.common.type.NotificationCategory;
 import com.skapp.community.common.type.NotificationType;
-import com.skapp.community.common.util.MessageUtil;
 import com.skapp.community.common.util.transformer.PageTransformer;
 import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.repository.EmployeeDao;
@@ -61,9 +60,6 @@ public class NotificationServiceImpl implements NotificationService {
 
 	@NonNull
 	private final PageTransformer pageTransformer;
-
-	@NonNull
-	private final MessageUtil messageUtil;
 
 	private static final String NOTIFICATION_LANGUAGE = "en";
 
