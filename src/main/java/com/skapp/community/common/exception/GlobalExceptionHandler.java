@@ -149,8 +149,10 @@ public class GlobalExceptionHandler {
 		String message = messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_DATABASE_ERROR);
 		logDetailedException(e, CommonMessageConstant.COMMON_ERROR_DATABASE_ERROR.name(), message, status);
 
-		return new ResponseEntity<>(new ResponseEntityDto(true,
-				new ErrorResponse(status, message, CommonMessageConstant.COMMON_ERROR_DATABASE_ERROR)), status);
+		return new ResponseEntity<>(
+				new ResponseEntityDto(true,
+						new ErrorResponse(status, e.getMessage(), CommonMessageConstant.COMMON_ERROR_DATABASE_ERROR)),
+				status);
 	}
 
 	@ExceptionHandler(DataAccessException.class)
@@ -159,8 +161,10 @@ public class GlobalExceptionHandler {
 		String message = messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_DATABASE_ERROR);
 		logDetailedException(e, CommonMessageConstant.COMMON_ERROR_DATABASE_ERROR.name(), message, status);
 
-		return new ResponseEntity<>(new ResponseEntityDto(true,
-				new ErrorResponse(status, message, CommonMessageConstant.COMMON_ERROR_DATABASE_ERROR)), status);
+		return new ResponseEntity<>(
+				new ResponseEntityDto(true,
+						new ErrorResponse(status, e.getMessage(), CommonMessageConstant.COMMON_ERROR_DATABASE_ERROR)),
+				status);
 	}
 
 	@ExceptionHandler(Exception.class)
