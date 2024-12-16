@@ -176,6 +176,16 @@ en:
     - id: "leave-module-manager-declined-single-day-leave"
       subject: "A leave request has been declined!"
 
+  common:
+    - id: "common-module-email-verify"
+      subject: "Verify your account!"
+
+    - id: "common-module-sso-creation-tenant-url"
+      subject: "Welcome to Skapp!"
+
+    - id: "common-module-credential-based-creation-tenant-url"
+      subject: "Welcome to Skapp!"
+
 sv:
   people:
     - id: "people-module-user-invitation"
