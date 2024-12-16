@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.skapp.community.common.component.AsyncEmailSender;
+import com.skapp.community.common.component.impl.AsyncEmailSenderImpl;
 import com.skapp.community.common.model.Organization;
 import com.skapp.community.common.payload.email.EmailTemplateMetadata;
 import com.skapp.community.common.payload.request.TestEmailServerRequestDto;
@@ -49,7 +50,7 @@ public class EmailServiceImpl implements EmailService {
 	@Override
 	public void testEmailServer(TestEmailServerRequestDto testEmailServerRequestDto) {
 		asyncEmailSender.sendMail(testEmailServerRequestDto.getEmail(), testEmailServerRequestDto.getSubject(),
-				testEmailServerRequestDto.getBody());
+				testEmailServerRequestDto.getBody(), null, null);
 	}
 
 	@Override
@@ -80,7 +81,7 @@ public class EmailServiceImpl implements EmailService {
 			organization.ifPresent(value -> placeholders.put("appUrl", value.getAppUrl()));
 
 			String emailBody = buildEmailBody(templateDetails, module, placeholders);
-			asyncEmailSender.sendMail(recipient, templateDetails.getSubject(), emailBody);
+			asyncEmailSender.sendMail(recipient, templateDetails.getSubject(), emailBody, emailTemplate, placeholders);
 		}
 		catch (Exception e) {
 			log.error("Unexpected error in email sending process: {}", e.getMessage(), e);
