@@ -111,6 +111,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
@@ -951,6 +952,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getOrganizationalAbsenceRate(List<Long> teamIds) {
 		if (teamIds == null || teamIds.isEmpty()) {
 			OrganizationalAbsenceRateAnalyticsDto absenceRateAnalyticsDto = new OrganizationalAbsenceRateAnalyticsDto();
@@ -1162,6 +1164,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntityDto getTeamLeaveHistory(Long id, TeamLeaveHistoryFilterDto teamLeaveHistoryFilterDto) {
 		User currentUser = userService.getCurrentUser();
 		log.info("getTeamLeaveHistory: execution started by user: {}", currentUser.getUserId());
@@ -1344,6 +1347,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getEmployeeLeaveHistory(@NonNull Long id,
 			EmployeeLeaveHistoryFilterDto employeeLeaveHistoryFilterDto) {
 		User currentUser = userService.getCurrentUser();

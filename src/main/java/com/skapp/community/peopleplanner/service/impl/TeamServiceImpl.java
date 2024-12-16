@@ -283,6 +283,7 @@ public class TeamServiceImpl implements TeamService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getManagerTeams() {
 		log.info("getManagerTeams: execution started");
 
@@ -302,8 +303,8 @@ public class TeamServiceImpl implements TeamService {
 		return new ResponseEntityDto(false, response);
 	}
 
-	@Transactional
 	@Override
+	@Transactional
 	public ResponseEntityDto getTeamsForCurrentUser() {
 		log.info("getTeamsForCurrentUser: execution started");
 

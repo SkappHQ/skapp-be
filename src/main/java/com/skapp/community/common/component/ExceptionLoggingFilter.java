@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.payload.response.ErrorResponse;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
-import com.skapp.community.common.util.MessageUtil;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,8 +25,6 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class ExceptionLoggingFilter implements Filter {
-
-	private final MessageUtil messageUtil;
 
 	private final ObjectMapper objectMapper;
 
@@ -52,9 +49,10 @@ public class ExceptionLoggingFilter implements Filter {
 	private void handleException(Exception e, HttpServletResponse response) throws IOException {
 		HttpStatus status;
 		CommonMessageConstant messageKey;
+		String message;
 
 		if (e instanceof ServletException) {
-			status = HttpStatus.INTERNAL_SERVER_ERROR;
+			status = HttpStatus.BAD_REQUEST;
 			messageKey = CommonMessageConstant.COMMON_ERROR_SERVLET_EXCEPTION;
 		}
 		else if (e instanceof IOException) {
@@ -62,11 +60,11 @@ public class ExceptionLoggingFilter implements Filter {
 			messageKey = CommonMessageConstant.COMMON_ERROR_IO_EXCEPTION;
 		}
 		else {
-			status = HttpStatus.INTERNAL_SERVER_ERROR;
+			status = HttpStatus.NOT_FOUND;
 			messageKey = CommonMessageConstant.COMMON_ERROR_MODULE_EXCEPTION;
 		}
 
-		String message = messageUtil.getMessage(messageKey);
+		message = e.getMessage();
 		ErrorResponse errorResponse = new ErrorResponse(status, message, messageKey);
 		ResponseEntityDto responseDto = new ResponseEntityDto(true, errorResponse);
 
