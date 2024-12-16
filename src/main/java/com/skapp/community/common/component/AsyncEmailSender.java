@@ -20,6 +20,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.Properties;
@@ -42,6 +43,7 @@ public class AsyncEmailSender {
 	private String encryptSecret;
 
 	@Async
+	@Transactional
 	public void sendMail(String to, String subject, String htmlBody) {
 		try {
 			JavaMailSender emailSender = createJavaMailSender();

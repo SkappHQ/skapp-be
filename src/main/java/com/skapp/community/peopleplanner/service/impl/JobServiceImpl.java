@@ -69,6 +69,7 @@ public class JobServiceImpl implements JobService {
 	private final EmployeeTimelineService employeeTimelineService;
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getAllJobFamilies() {
 		log.info("getAllJobFamilies: execution started");
 
@@ -85,6 +86,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getJobFamilyById(Long id) {
 		log.info("getJobFamilyById: execution started");
 
@@ -103,6 +105,7 @@ public class JobServiceImpl implements JobService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getJobTitleById(Long id) {
 		log.info("getJobTitleById: execution started");
 
