@@ -14,7 +14,7 @@ public class HealthController {
 
 	@GetMapping("/health")
 	public ResponseEntity<HealthResponse> healthCheck() {
-		String formattedTimestamp = DateTimeUtils.DATE_TIME_FORMATTER.format(Instant.now());
+		String formattedTimestamp = DateTimeUtils.DATE_TIME_FORMATTER.format(Instant.now()) + " ***";
 
 		HealthResponse health = new HealthResponse(HealthStatus.HEALTHY, formattedTimestamp);
 
