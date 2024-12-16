@@ -20,4 +20,6 @@ public class PeopleEmailDynamicFields extends CommonEmailDynamicFields {
 
 	private String requestDateTime;
 
+	private String otp;
+
 }

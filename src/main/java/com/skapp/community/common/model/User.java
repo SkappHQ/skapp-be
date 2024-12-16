@@ -2,11 +2,14 @@ package com.skapp.community.common.model;
 
 import com.skapp.community.common.constant.AuthConstants;
 import com.skapp.community.common.type.Role;
+import com.skapp.community.common.type.LoginMethod;
 import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -41,11 +44,15 @@ public class User implements UserDetails {
 	@Column(name = "email", nullable = false, unique = true)
 	private String email;
 
-	@Column(name = "password", nullable = false)
+	@Column(name = "password")
 	private String password;
 
 	@Column(name = "temp_password")
 	private String tempPassword;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "login_method", columnDefinition = "varchar(255)")
+	private LoginMethod loginMethod;
 
 	@Column(name = "is_active", nullable = false)
 	private Boolean isActive = true;

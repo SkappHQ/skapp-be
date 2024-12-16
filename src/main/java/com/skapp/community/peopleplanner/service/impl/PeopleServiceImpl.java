@@ -367,6 +367,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getEmployees(EmployeeFilterDto employeeFilterDto) {
 		User currentUser = userService.getCurrentUser();
 		log.info("getEmployees: execution started by user: {}", currentUser.getUserId());
@@ -400,6 +401,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getEmployeeById(Long employeeId) {
 		User currentUser = userService.getCurrentUser();
 
@@ -494,6 +496,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getCurrentEmployee() {
 		User user = userService.getCurrentUser();
 		Optional<Employee> employee = employeeDao.findById(user.getUserId());
@@ -521,6 +524,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto addBulkEmployees(List<EmployeeBulkDto> employeeBulkDtoList) {
 		User currentUser = userService.getCurrentUser();
 		log.info("addEmployeeBulk: execution started by user: {}", currentUser.getUserId());
@@ -538,6 +542,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getLoginPendingEmployeeCount() {
 		User currentUser = userService.getCurrentUser();
 		log.info("getLoginPendingEmployeeCount: execution started by user: {}", currentUser.getUserId());
@@ -550,6 +555,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto searchEmployeesByNameOrEmail(PermissionFilterDto permissionFilterDto) {
 		log.info("searchEmployeesByNameOrEmail: execution started");
 
@@ -563,6 +569,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto searchEmployeesByEmail(String email) {
 		log.info("searchEmployeesByEmail: execution started");
 		Validations.validateEmail(email);
@@ -572,6 +579,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getEmployeeByIdOrEmail(EmployeeDataValidationDto employeeDataValidationDto) {
 		User currentUser = userService.getCurrentUser();
 		log.info("getEmployeeByIdOrEmail: execution started by user: {}", currentUser.getUserId());
@@ -675,6 +683,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	@Override
+	@Transactional
 	public List<EmployeeManagerResponseDto> getCurrentEmployeeManagers() {
 		User user = userService.getCurrentUser();
 
@@ -778,6 +787,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto searchEmployeesAndTeamsByKeyword(String keyword) {
 		User currentUser = userService.getCurrentUser();
 		log.info("searchEmployeesAndTeamsByKeyword: execution started by user: {} to search users by the keyword {}",

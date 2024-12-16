@@ -62,8 +62,8 @@ public class DateTimeUtils {
 	// DateTimeFormatter for parsing and formatting
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter
-		.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+	public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+		.withZone(ZoneId.of("UTC"));
 
 	private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 

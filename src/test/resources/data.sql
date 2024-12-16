@@ -21,12 +21,12 @@ VALUES (1, 1),
        (5, 4),
        (5, 5);
 
-INSERT INTO "user" (user_id,  email, is_active, password)
-VALUES (default, 'user1@gmail.com', true, '$2a$12$tURN2OcCyl6.3sumcOOxo.IZtH7MrKmaPcBWKdlpOo9heUJGBZ80e'),
-       (default, 'user2@gmail.com', true, '$2a$12$Z6/UrecHPvvCBVj/kEeGWezwhMzg46fPSJiAr/sLnBxhDAZfF4/1W'),
-       (default, 'user3@gmail.com', true, '$2a$12$03yE75zn71MowrClg859sOkUWBQv5G7a7myOXF3kIbuQRegv1GrYy'),
-       (default, 'user4@gmail.com', true, '$2a$12$3O4NIedzZEALY1QF9/Ovou5FZjvLbfFpVkMrl5KXhw.Jk7B8Mz9Za'),
-       (default, 'user5@gmail.com', true, '$2a$12$QMvMgRkdu5Gxsv9BepubiuUUMPg6kSMLogv./ZD3sYlYwfljfYBR6');
+INSERT INTO "user" (user_id,  email, is_active, password, login_method)
+VALUES (default, 'user1@gmail.com', true, '$2a$12$tURN2OcCyl6.3sumcOOxo.IZtH7MrKmaPcBWKdlpOo9heUJGBZ80e', 'CREDENTIALS'),
+       (default, 'user2@gmail.com', true, '$2a$12$Z6/UrecHPvvCBVj/kEeGWezwhMzg46fPSJiAr/sLnBxhDAZfF4/1W', 'CREDENTIALS'),
+       (default, 'user3@gmail.com', true, '$2a$12$03yE75zn71MowrClg859sOkUWBQv5G7a7myOXF3kIbuQRegv1GrYy', 'CREDENTIALS'),
+       (default, 'user4@gmail.com', true, '$2a$12$3O4NIedzZEALY1QF9/Ovou5FZjvLbfFpVkMrl5KXhw.Jk7B8Mz9Za', 'CREDENTIALS'),
+       (default, 'user5@gmail.com', true, '$2a$12$QMvMgRkdu5Gxsv9BepubiuUUMPg6kSMLogv./ZD3sYlYwfljfYBR6', 'CREDENTIALS');
 
 INSERT INTO employee (employee_id, employee_type, first_name, last_name, country,
                       personal_email, phone, identification_no, time_zone, work_hour_capacity, join_date,

@@ -935,6 +935,7 @@ public class TimeServiceImpl implements TimeService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto managerAssignUsersTimeRecords(ManagerTimeRecordFilterDto managerTimeRecordFilterDto) {
 		Long currentUser = userService.getCurrentUser().getUserId();
 		log.info("managerAssignUsersTimeRecords: execution started by user: {}", currentUser);
@@ -1012,6 +1013,7 @@ public class TimeServiceImpl implements TimeService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getAllAssignEmployeesTimeRequests(ManagerTimeRequestFilterDto timeRequestFilterDto) {
 		User user = userService.getCurrentUser();
 		log.info("getAllAssignEmployeesTimeRequests: execution started for user: {}", user.getUserId());
@@ -1037,6 +1039,7 @@ public class TimeServiceImpl implements TimeService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto managerTeamTimeRecordSummary(TeamTimeRecordFilterDto timeRecordSummaryDto) {
 		User user = userService.getCurrentUser();
 		log.info("managerTeamTimeRecordSummary: execution started by user: {}", user.getUserId());
@@ -1045,6 +1048,7 @@ public class TimeServiceImpl implements TimeService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getManagerEmployeeDailyLog(ManagerEmployeeLogFilterDto managerEmployeeLogFilterDto) {
 		User currentUser = userService.getCurrentUser();
 		log.info("getManagerEmployeeDailyLog: execution started");
