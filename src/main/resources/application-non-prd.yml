@@ -66,3 +66,7 @@ jwt:
 
 encryptDecryptAlgorithm:
   secret: ${ENCRYPT_DECRYPT_SECRET}
+
+recaptcha:
+  secret: ${RECAPTCHA_SECRET}
+  verify-url: ${RECAPTCHA_VERIFY_URL}
