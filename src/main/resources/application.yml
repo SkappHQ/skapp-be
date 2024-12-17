@@ -8,7 +8,3 @@ spring:
 
 reset-database:
   api-key: ${RESET_DATABASE_API_KEY}
-
-recaptcha:
-  secret: ${RECAPTCHA_SECRET}
-  verify-url: ${RECAPTCHA_VERIFY_URL}
