@@ -1,5 +1,6 @@
-FROM eclipse-temurin:22-jdk-ubi9-minimal
+FROM openjdk:21-jdk-slim
 WORKDIR /app
-COPY target/skapp-0.0.1-SNAPSHOT.jar skapp-0.0.1-SNAPSHOT.jar
+COPY target/skapp-1.0.0.jar skapp.jar
 EXPOSE 8080
-CMD ["java","-jar","skapp-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "skapp.jar"]
+
