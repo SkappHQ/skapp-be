@@ -1374,7 +1374,7 @@ public class TimeServiceImpl implements TimeService {
 		}
 		else {
 			if (timeRequest.getRequestedEndTime() > timeRequest.getInitialClockOut()) {
-				timeSlots.get(timeSlots.size() - 1).setEndTime(timeRequest.getRequestedEndTime());
+				timeSlots.getLast().setEndTime(timeRequest.getRequestedEndTime());
 				timeRecord.setClockOutTime(timeRequest.getRequestedEndTime());
 			}
 		}
@@ -1851,13 +1851,13 @@ public class TimeServiceImpl implements TimeService {
 		if (slotsInsideNewClockInOut.isEmpty())
 			workHoursAfterCap = timeRecord.getWorkedHours();
 		else {
-			boolean isClockInExpanding = (request.getRequestedStartTime() < slotsInsideNewClockInOut.get(0)
+			boolean isClockInExpanding = (request.getRequestedStartTime() < slotsInsideNewClockInOut.getFirst()
 				.getStartTime());
 			boolean isClockOutExpanding = (request.getRequestedEndTime() > slotsInsideNewClockInOut
-				.get(slotsInsideNewClockInOut.size() - 1)
+				.getLast()
 				.getEndTime());
-			TimeSlot firstSlot = slotsInsideNewClockInOut.get(0);
-			TimeSlot lastSlot = slotsInsideNewClockInOut.get(slotsInsideNewClockInOut.size() - 1);
+			TimeSlot firstSlot = slotsInsideNewClockInOut.getFirst();
+			TimeSlot lastSlot = slotsInsideNewClockInOut.getLast();
 			Long initialStartTime = firstSlot.getStartTime();
 			Long initialEndTime = lastSlot.getEndTime();
 
