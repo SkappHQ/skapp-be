@@ -3,6 +3,8 @@ package com.skapp.community.peopleplanner.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.skapp.community.common.component.ProfileActivator;
+import com.skapp.community.common.constant.CommonConstants;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.EntityNotFoundException;
 import com.skapp.community.common.exception.ModuleException;
@@ -223,6 +225,9 @@ public class PeopleServiceImpl implements PeopleService {
 
 	@NonNull
 	private final EncryptionDecryptionService encryptionDecryptionService;
+
+	@NonNull
+	private final ProfileActivator profileActivator;
 
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
@@ -533,11 +538,41 @@ public class PeopleServiceImpl implements PeopleService {
 		List<EmployeeBulkResponseDto> results = Collections.synchronizedList(new ArrayList<>());
 		AtomicReference<ResponseEntityDto> outValues = new AtomicReference<>(new ResponseEntityDto());
 
-		List<CompletableFuture<Void>> tasks = createEmployeeTasks(employeeBulkDtoList, executorService, results);
-		waitForTaskCompletion(tasks, executorService);
+		if (profileActivator.isEpProfile()) {
+			long existingUserCount = userDao.count();
+			long allowedUploadCount = Math.max(0, CommonConstants.EP_FREE_USER_LIMIT - existingUserCount);
+
+			List<EmployeeBulkDto> allowedEmployees = employeeBulkDtoList.stream().limit(allowedUploadCount).toList();
+
+			if (allowedUploadCount < employeeBulkDtoList.size()) {
+				List<EmployeeBulkResponseDto> exceedingUsersErrors = employeeBulkDtoList.stream()
+					.skip(allowedUploadCount)
+					.map(dto -> {
+						EmployeeBulkResponseDto responseDto = new EmployeeBulkResponseDto();
+						responseDto.setEmail(dto.getWorkEmail());
+						responseDto.setStatus(BulkItemStatus.ERROR);
+						responseDto.setMessage(
+								messageUtil.getMessage(PeopleMessageConstant.PEOPLE_ERROR_EXCEEDING_USER_UPLOAD));
+						return responseDto;
+					})
+					.toList();
+				results.addAll(exceedingUsersErrors);
+			}
+
+			if (allowedEmployees.isEmpty()) {
+				generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), results);
+				return outValues.get();
+			}
+
+			List<CompletableFuture<Void>> tasks = createEmployeeTasks(allowedEmployees, executorService, results);
+			waitForTaskCompletion(tasks, executorService);
+		}
+		else {
+			List<CompletableFuture<Void>> tasks = createEmployeeTasks(employeeBulkDtoList, executorService, results);
+			waitForTaskCompletion(tasks, executorService);
+		}
 
 		generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), results);
-
 		return outValues.get();
 	}
 
@@ -1185,8 +1220,7 @@ public class PeopleServiceImpl implements PeopleService {
 	private void handleDataIntegrityException(EmployeeBulkDto employeeBulkDto, DataIntegrityViolationException e,
 			List<EmployeeBulkResponseDto> results) {
 		log.warn("addEmployeeBulk: data integrity violation exception occurred when saving : {}", e.getMessage());
-		EmployeeBulkResponseDto bulkResponseDto = createErrorResponse(employeeBulkDto, e.getMessage(),
-				BulkItemStatus.ERROR);
+		EmployeeBulkResponseDto bulkResponseDto = createErrorResponse(employeeBulkDto, e.getMessage());
 		bulkResponseDto.setMessage(e.getMessage().contains("unique")
 				? messageUtil.getMessage(PeopleMessageConstant.PEOPLE_ERROR_DUPLICATE_IDENTIFICATION_NO)
 				: e.getMessage());
@@ -1196,17 +1230,15 @@ public class PeopleServiceImpl implements PeopleService {
 	private void handleGeneralException(EmployeeBulkDto employeeBulkDto, Exception e,
 			List<EmployeeBulkResponseDto> results) {
 		log.warn("addEmployeeBulk: exception occurred when saving : {}", e.getMessage());
-		EmployeeBulkResponseDto bulkResponseDto = createErrorResponse(employeeBulkDto, e.getMessage(),
-				BulkItemStatus.ERROR);
+		EmployeeBulkResponseDto bulkResponseDto = createErrorResponse(employeeBulkDto, e.getMessage());
 		results.add(bulkResponseDto);
 	}
 
-	private EmployeeBulkResponseDto createErrorResponse(EmployeeBulkDto employeeBulkDto, String message,
-			BulkItemStatus status) {
+	private EmployeeBulkResponseDto createErrorResponse(EmployeeBulkDto employeeBulkDto, String message) {
 		EmployeeBulkResponseDto bulkResponseDto = new EmployeeBulkResponseDto();
 		bulkResponseDto.setEmail(employeeBulkDto.getWorkEmail() != null ? employeeBulkDto.getWorkEmail()
 				: employeeBulkDto.getPersonalEmail());
-		bulkResponseDto.setStatus(status);
+		bulkResponseDto.setStatus(BulkItemStatus.ERROR);
 		bulkResponseDto.setMessage(message);
 		return bulkResponseDto;
 	}
@@ -2019,7 +2051,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 		Long manager = employeeDetailsDto.getPrimaryManager();
 		if (manager != null) {
-			addManagersToEmployee(manager, finalEmployee, employeeManagers, true, true, null);
+			addManagersToEmployee(manager, finalEmployee, employeeManagers, true);
 		}
 
 		Long secondaryManager = employeeDetailsDto.getSecondaryManager();
@@ -2027,21 +2059,19 @@ public class PeopleServiceImpl implements PeopleService {
 			if (manager != null && manager.equals(secondaryManager)) {
 				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SECONDARY_MANAGER_DUPLICATE);
 			}
-			addManagersToEmployee(secondaryManager, finalEmployee, employeeManagers, false, true, null);
+			addManagersToEmployee(secondaryManager, finalEmployee, employeeManagers, false);
 		}
 		return employeeManagers;
 	}
 
 	private void addManagersToEmployee(Long managerId, Employee finalEmployee, Set<EmployeeManager> employeeManagers,
-			boolean directManager, boolean isAddEmp, String previousManager) {
+			boolean directManager) {
 		Employee manager = getManager(managerId);
 
 		EmployeeManager employeeManager = createEmployeeManager(manager, finalEmployee, directManager);
 		employeeManagers.add(employeeManager);
 
-		if (!isAddEmp) {
-			addTimelineRecord(finalEmployee, employeeManager, previousManager, manager);
-		}
+		addTimelineRecord(finalEmployee, employeeManager, manager);
 	}
 
 	private Employee getManager(Long managerId) {
@@ -2058,19 +2088,18 @@ public class PeopleServiceImpl implements PeopleService {
 		return employeeManager;
 	}
 
-	private void addTimelineRecord(Employee employee, EmployeeManager employeeManager, String previousManager,
-			Employee manager) {
+	private void addTimelineRecord(Employee employee, EmployeeManager employeeManager, Employee manager) {
 
 		String managerTypeTitle;
 		if (employeeManager.isPrimaryManager()) {
 			managerTypeTitle = EmployeeTimelineConstant.TITLE_PRIMARY_MANAGER_CHANGED;
 		}
 		else {
-			managerTypeTitle = (previousManager == null) ? EmployeeTimelineConstant.TITLE_SECONDARY_MANAGER_ASSIGNED
-					: EmployeeTimelineConstant.TITLE_SECONDARY_MANAGER_CHANGED;
+			managerTypeTitle = EmployeeTimelineConstant.TITLE_SECONDARY_MANAGER_ASSIGNED;
 		}
+
 		employeeTimelineService.addEmployeeTimelineRecord(employee, EmployeeTimelineType.MANAGER_ASSIGNED,
-				managerTypeTitle, previousManager, manager.getFirstName() + " " + manager.getLastName());
+				managerTypeTitle, null, manager.getFirstName() + " " + manager.getLastName());
 	}
 
 	private void saveCareerProgression(Employee finalEmployee, List<EmployeeProgressionsDto> employeeProgressions) {
