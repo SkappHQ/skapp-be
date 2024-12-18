@@ -115,30 +115,33 @@ public class Validation {
 		}
 	}
 
-	public static boolean ssoTypeMatches(String domainName){
+	public static boolean ssoTypeMatches(String domainName) {
 		ArrayList<String> dnsArr = new ArrayList<>();
 		try {
 			InitialDirContext iDirC = new InitialDirContext();
 			// get the MX records from the default DNS directory service provider
 			// NamingException thrown if no DNS record found for domainName
-			Attributes attributes = iDirC.getAttributes("dns:/" + domainName, new String[]{"MX"});
-			// attributeMX is an attribute ('list') of the Mail Exchange(MX) Resource Records(RR)
+			Attributes attributes = iDirC.getAttributes("dns:/" + domainName, new String[] { "MX" });
+			// attributeMX is an attribute ('list') of the Mail Exchange(MX) Resource
+			// Records(RR)
 			Attribute attributeMX = attributes.get("MX");
-			if(attributeMX != null) {
+			if (attributeMX != null) {
 				String[][] preferredRecords = new String[attributeMX.size()][2];
 				for (int i = 0; i < attributeMX.size(); i++) {
 					preferredRecords[i] = ("" + attributeMX.get(i)).split("\\s+");
 				}
 
 				for (String[] strings : preferredRecords) {
-					String domainString = strings[1].endsWith(".") ?
-							strings[1].substring(0, strings[1].length() - 1) : strings[1];
-					domainString = domainString.substring(domainString.substring(0, domainString.lastIndexOf(".")).lastIndexOf(".") + 1);
+					String domainString = strings[1].endsWith(".") ? strings[1].substring(0, strings[1].length() - 1)
+							: strings[1];
+					domainString = domainString
+						.substring(domainString.substring(0, domainString.lastIndexOf(".")).lastIndexOf(".") + 1);
 					String cleanedString = domainString.substring(0, domainString.indexOf('.'));
 					dnsArr.add(cleanedString);
 				}
 			}
-		} catch (NamingException e) {
+		}
+		catch (NamingException e) {
 			return false;
 		}
 		return dnsArr.contains(LoginMethod.GOOGLE.name().toLowerCase());

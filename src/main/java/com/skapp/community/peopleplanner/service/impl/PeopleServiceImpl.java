@@ -590,7 +590,7 @@ public class PeopleServiceImpl implements PeopleService {
 		List<Employee> newEmployees = employeeDao.findByIdentificationNo(identificationNoCheck);
 		EmployeeDataValidationResponseDto employeeDataValidationResponseDto = new EmployeeDataValidationResponseDto();
 		employeeDataValidationResponseDto.setIsWorkEmailExists(newUser.isPresent());
-		String userDomain = workEmailCheck.substring(workEmailCheck.indexOf("@") +1);
+		String userDomain = workEmailCheck.substring(workEmailCheck.indexOf("@") + 1);
 		employeeDataValidationResponseDto.setIsGoogleDomain(Validation.ssoTypeMatches(userDomain));
 
 		if (!newEmployees.isEmpty()) {
