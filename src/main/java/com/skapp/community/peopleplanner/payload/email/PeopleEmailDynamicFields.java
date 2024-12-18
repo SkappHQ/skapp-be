@@ -22,4 +22,6 @@ public class PeopleEmailDynamicFields extends CommonEmailDynamicFields {
 
 	private String otp;
 
+	private String tenantUrl;
+
 }
