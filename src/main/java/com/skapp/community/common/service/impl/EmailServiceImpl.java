@@ -77,8 +77,12 @@ public class EmailServiceImpl implements EmailService {
 			placeholders.replaceAll(this::getLocalizedEnumValue);
 			placeholders.put("subject", templateDetails.getSubject());
 
-			Optional<Organization> organization = organizationDao.findTopByOrderByOrganizationIdDesc();
-			organization.ifPresent(value -> placeholders.put("appUrl", value.getAppUrl()));
+			if (emailTemplate != EmailBodyTemplates.COMMON_MODULE_EMAIL_VERIFY
+					&& emailTemplate != EmailBodyTemplates.COMMON_MODULE_SSO_CREATION_TENANT_URL
+					&& emailTemplate != EmailBodyTemplates.COMMON_MODULE_CREDENTIAL_BASED_CREATION_TENANT_URL) {
+				Optional<Organization> organization = organizationDao.findTopByOrderByOrganizationIdDesc();
+				organization.ifPresent(value -> placeholders.put("appUrl", value.getAppUrl()));
+			}
 
 			String emailBody = buildEmailBody(templateDetails, module, placeholders);
 			asyncEmailSender.sendMail(recipient, templateDetails.getSubject(), emailBody, emailTemplate, placeholders);
