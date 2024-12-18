@@ -100,7 +100,8 @@ public enum PeopleMessageConstant implements MessageConstant {
 	PEOPLE_ERROR_LOGIN_PENDING_EMPLOYEES_NOT_FOUND("api.error.people.login-pending-employees-not-found"),
 	PEOPLE_ERROR_TEAM_MEMBER_IDS_CANNOT_NULL("api.error.people.team.member.ids.cannot-null"),
 	PEOPLE_ERROR_USER_NOT_BELONGS_TO_SELECTED_TEAMS("api.error.people.user-not-belong-to-selected-teams"),
-	PEOPLE_ERROR_DUPLICATE_EMPLOYEE_ID("api.error.people.duplicate-employee-id");
+	PEOPLE_ERROR_DUPLICATE_EMPLOYEE_ID("api.error.people.duplicate-employee-id"),
+	PEOPLE_ERROR_EXCEEDING_USER_UPLOAD("api.error.people.exceeding-user-upload"),;
 
 	private final String messageKey;
 

@@ -2,10 +2,16 @@ package com.skapp.community.common.util;
 
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.ValidationException;
+import com.skapp.community.common.type.LoginMethod;
 import lombok.experimental.UtilityClass;
 import org.springframework.util.StringUtils;
 
+import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.InitialDirContext;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -107,6 +113,38 @@ public class Validation {
 		else {
 			return Pattern.compile(HEXA_DECIMAL_VALIDATION_PATTERN).matcher(themeColor).matches();
 		}
+	}
+
+	public static boolean ssoTypeMatches(String domainName) {
+		ArrayList<String> dnsArr = new ArrayList<>();
+		try {
+			InitialDirContext iDirC = new InitialDirContext();
+			// get the MX records from the default DNS directory service provider
+			// NamingException thrown if no DNS record found for domainName
+			Attributes attributes = iDirC.getAttributes("dns:/" + domainName, new String[] { "MX" });
+			// attributeMX is an attribute ('list') of the Mail Exchange(MX) Resource
+			// Records(RR)
+			Attribute attributeMX = attributes.get("MX");
+			if (attributeMX != null) {
+				String[][] preferredRecords = new String[attributeMX.size()][2];
+				for (int i = 0; i < attributeMX.size(); i++) {
+					preferredRecords[i] = ("" + attributeMX.get(i)).split("\\s+");
+				}
+
+				for (String[] strings : preferredRecords) {
+					String domainString = strings[1].endsWith(".") ? strings[1].substring(0, strings[1].length() - 1)
+							: strings[1];
+					domainString = domainString
+						.substring(domainString.substring(0, domainString.lastIndexOf(".")).lastIndexOf(".") + 1);
+					String cleanedString = domainString.substring(0, domainString.indexOf('.'));
+					dnsArr.add(cleanedString);
+				}
+			}
+		}
+		catch (NamingException e) {
+			return false;
+		}
+		return dnsArr.contains(LoginMethod.GOOGLE.name().toLowerCase());
 	}
 
 }
