@@ -15,6 +15,7 @@ import com.skapp.community.common.payload.response.PageDto;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.repository.NotificationDao;
 import com.skapp.community.common.service.NotificationService;
+import com.skapp.community.common.service.PushNotificationService;
 import com.skapp.community.common.service.UserService;
 import com.skapp.community.common.type.EmailBodyTemplates;
 import com.skapp.community.common.type.NotificationCategory;
@@ -50,7 +51,7 @@ import java.util.stream.Collectors;
 public class NotificationServiceImpl implements NotificationService {
 
 	@NonNull
-	private final WebSocketHandler webSocketHandler;
+	private final PushNotificationService pushNotificationService;
 
 	@NonNull
 	private final NotificationDao notificationDao;
@@ -79,8 +80,7 @@ public class NotificationServiceImpl implements NotificationService {
 			notification.setNotificationType(notificationType);
 			notificationDao.save(notification);
 
-			webSocketHandler.sendNotificationToUser(notification.getEmployee().getEmployeeId().toString(),
-					notification.getBody());
+			pushNotificationService.sendNotification(notification.getEmployee().getEmployeeId(), notification);
 		}
 		catch (Exception e) {
 			log.error("createNotification: ", e);
