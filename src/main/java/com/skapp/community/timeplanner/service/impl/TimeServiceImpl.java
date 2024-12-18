@@ -750,6 +750,7 @@ public class TimeServiceImpl implements TimeService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getManagerAttendanceSummary(
 			ManagerAttendanceSummaryFilterDto managerAttendanceSummaryFilterDto) {
 		User user = userService.getCurrentUser();
@@ -780,9 +781,23 @@ public class TimeServiceImpl implements TimeService {
 			}
 		}
 
+		Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE);
+
+		List<Long> employeeList = new ArrayList<>();
+		if(managerAttendanceSummaryFilterDto.getTeamIds().contains(-1L)){
+
+			List<Employee> employeePage = teamDao.findEmployeesInManagerLeadingTeams(teamIds, pageable, user).getContent();
+
+			if(!employeePage.isEmpty()) {
+				employeePage.forEach(employee -> employeeList.add(employee.getEmployeeId()));
+			}
+			employeeList.addAll(employeeManagerDao.findManagerSupervisingEmployee(user.getUserId()));
+		}
+
+
 		AttendanceSummaryDto attendanceSummaryDto = timeRecordDao.findManagerAssignUsersAttendanceSummary(
 				user.getUserId(), teamIds, managerAttendanceSummaryFilterDto.getStartDate(),
-				managerAttendanceSummaryFilterDto.getEndDate());
+				managerAttendanceSummaryFilterDto.getEndDate() , employeeList);
 
 		log.info("getManagerAttendanceSummary: execution ended");
 		return new ResponseEntityDto(false,
@@ -1353,13 +1368,13 @@ public class TimeServiceImpl implements TimeService {
 		// request period expands to the new time request period
 		if (recordType.equals(RecordType.CLOCK_IN)) {
 			if (timeRequest.getRequestedStartTime() < timeRequest.getInitialClockIn()) {
-				timeSlots.getFirst().setStartTime(timeRequest.getRequestedStartTime());
+				timeSlots.get(0).setStartTime(timeRequest.getRequestedStartTime());
 				timeRecord.setClockInTime(timeRequest.getRequestedStartTime());
 			}
 		}
 		else {
 			if (timeRequest.getRequestedEndTime() > timeRequest.getInitialClockOut()) {
-				timeSlots.getLast().setEndTime(timeRequest.getRequestedEndTime());
+				timeSlots.get(timeSlots.size() - 1).setEndTime(timeRequest.getRequestedEndTime());
 				timeRecord.setClockOutTime(timeRequest.getRequestedEndTime());
 			}
 		}
@@ -1836,12 +1851,13 @@ public class TimeServiceImpl implements TimeService {
 		if (slotsInsideNewClockInOut.isEmpty())
 			workHoursAfterCap = timeRecord.getWorkedHours();
 		else {
-			boolean isClockInExpanding = (request.getRequestedStartTime() < slotsInsideNewClockInOut.getFirst()
+			boolean isClockInExpanding = (request.getRequestedStartTime() < slotsInsideNewClockInOut.get(0)
 				.getStartTime());
-			boolean isClockOutExpanding = (request.getRequestedEndTime() > slotsInsideNewClockInOut.getLast()
+			boolean isClockOutExpanding = (request.getRequestedEndTime() > slotsInsideNewClockInOut
+				.get(slotsInsideNewClockInOut.size() - 1)
 				.getEndTime());
-			TimeSlot firstSlot = slotsInsideNewClockInOut.getFirst();
-			TimeSlot lastSlot = slotsInsideNewClockInOut.getLast();
+			TimeSlot firstSlot = slotsInsideNewClockInOut.get(0);
+			TimeSlot lastSlot = slotsInsideNewClockInOut.get(slotsInsideNewClockInOut.size() - 1);
 			Long initialStartTime = firstSlot.getStartTime();
 			Long initialEndTime = lastSlot.getEndTime();
 

@@ -87,7 +87,7 @@ public class TimeRecordRepositoryImpl implements TimeRecordRepository {
 
 	@Override
 	public AttendanceSummaryDto findManagerAssignUsersAttendanceSummary(Long managerId, List<Long> teamIds,
-			LocalDate startDate, LocalDate endDate) {
+			LocalDate startDate, LocalDate endDate, List<Long> employeeIds) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 
 		CriteriaQuery<AttendanceSummaryDto> criteriaQuery = criteriaBuilder.createQuery(AttendanceSummaryDto.class);
@@ -96,30 +96,16 @@ public class TimeRecordRepositoryImpl implements TimeRecordRepository {
 		// Predicates for the main query
 		List<Predicate> predicates = new ArrayList<>();
 		predicates.add(criteriaBuilder.between(root.get(TimeRecord_.date), startDate, endDate));
+		if (!employeeIds.isEmpty()) {
 
-		// Subquery to select distinct TimeRecord ids
-		Subquery<Long> distinctTimeRecordSubquery = criteriaQuery.subquery(Long.class);
-		Root<TimeRecord> subqueryRoot = distinctTimeRecordSubquery.from(TimeRecord.class);
-		Join<TimeRecord, Employee> subqueryEmployeeJoin = subqueryRoot.join(TimeRecord_.employee);
+			CriteriaBuilder.In<Long> inClause = criteriaBuilder
+					.in(root.get(TimeRecord_.employee).get(Employee_.employeeId));
+			for (Long employeeID : employeeIds) {
+				inClause.value(employeeID);
+			}
+			predicates.add(inClause);
+		}
 
-		// Predicates for the subquery
-		List<Predicate> subqueryPredicates = new ArrayList<>();
-		subqueryPredicates.add(criteriaBuilder.between(subqueryRoot.get(TimeRecord_.date), startDate, endDate));
-
-		Subquery<Long> teamSubquery = distinctTimeRecordSubquery.subquery(Long.class);
-		Root<EmployeeTeam> teamSubqueryRoot = teamSubquery.from(EmployeeTeam.class);
-		teamSubquery.select(teamSubqueryRoot.get(EmployeeTeam_.employee).get(Employee_.employeeId))
-			.where(teamSubqueryRoot.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
-		subqueryPredicates.add(criteriaBuilder.in(subqueryEmployeeJoin.get(Employee_.employeeId)).value(teamSubquery));
-
-		distinctTimeRecordSubquery.select(subqueryRoot.get(TimeRecord_.timeRecordId))
-			.where(subqueryPredicates.toArray(new Predicate[0]))
-			.distinct(true);
-
-		// Main query predicates
-		predicates.add(root.get(TimeRecord_.timeRecordId).in(distinctTimeRecordSubquery));
-
-		// Construct the main query
 		criteriaQuery.select(criteriaBuilder.construct(AttendanceSummaryDto.class,
 				criteriaBuilder.coalesce(criteriaBuilder.sum(root.get(TimeRecord_.workedHours)), 0.0),
 				criteriaBuilder.coalesce(criteriaBuilder.sum(root.get(TimeRecord_.breakHours)), 0.0)));
