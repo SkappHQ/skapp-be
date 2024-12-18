@@ -769,7 +769,9 @@ public class TimeServiceImpl implements TimeService {
 
 		List<Long> teamIds = managerAttendanceSummaryFilterDto.getTeamIds();
 		if (teamIds.getFirst() == -1) {
-			teamIds = teamDao.findLeadingTeamIdsByManagerId(user.getUserId());
+			teamIds = user.getEmployee().getEmployeeRole().getAttendanceRole() == Role.ATTENDANCE_MANAGER
+					? teamDao.findLeadingTeamIdsByManagerId(user.getUserId())
+					: teamDao.findAllByIsActive(true).stream().map(Team::getTeamId).toList();
 		}
 		else {
 			List<Long> invalidTeams = teamIds.stream()
@@ -792,7 +794,10 @@ public class TimeServiceImpl implements TimeService {
 			if (!employeePage.isEmpty()) {
 				employeePage.forEach(employee -> employeeList.add(employee.getEmployeeId()));
 			}
-			employeeList.addAll(employeeManagerDao.findManagerSupervisingEmployee(user.getUserId()));
+
+			if (user.getEmployee().getEmployeeRole().getAttendanceRole() == Role.ATTENDANCE_MANAGER) {
+				employeeList.addAll(employeeManagerDao.findManagerSupervisingEmployee(user.getUserId()));
+			}
 		}
 
 		AttendanceSummaryDto attendanceSummaryDto = timeRecordDao.findManagerAssignUsersAttendanceSummary(
