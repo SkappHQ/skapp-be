@@ -784,20 +784,20 @@ public class TimeServiceImpl implements TimeService {
 		Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE);
 
 		List<Long> employeeList = new ArrayList<>();
-		if(managerAttendanceSummaryFilterDto.getTeamIds().contains(-1L)){
+		if (managerAttendanceSummaryFilterDto.getTeamIds().contains(-1L)) {
 
-			List<Employee> employeePage = teamDao.findEmployeesInManagerLeadingTeams(teamIds, pageable, user).getContent();
+			List<Employee> employeePage = teamDao.findEmployeesInManagerLeadingTeams(teamIds, pageable, user)
+				.getContent();
 
-			if(!employeePage.isEmpty()) {
+			if (!employeePage.isEmpty()) {
 				employeePage.forEach(employee -> employeeList.add(employee.getEmployeeId()));
 			}
 			employeeList.addAll(employeeManagerDao.findManagerSupervisingEmployee(user.getUserId()));
 		}
 
-
 		AttendanceSummaryDto attendanceSummaryDto = timeRecordDao.findManagerAssignUsersAttendanceSummary(
 				user.getUserId(), teamIds, managerAttendanceSummaryFilterDto.getStartDate(),
-				managerAttendanceSummaryFilterDto.getEndDate() , employeeList);
+				managerAttendanceSummaryFilterDto.getEndDate(), employeeList);
 
 		log.info("getManagerAttendanceSummary: execution ended");
 		return new ResponseEntityDto(false,
@@ -1853,8 +1853,7 @@ public class TimeServiceImpl implements TimeService {
 		else {
 			boolean isClockInExpanding = (request.getRequestedStartTime() < slotsInsideNewClockInOut.getFirst()
 				.getStartTime());
-			boolean isClockOutExpanding = (request.getRequestedEndTime() > slotsInsideNewClockInOut
-				.getLast()
+			boolean isClockOutExpanding = (request.getRequestedEndTime() > slotsInsideNewClockInOut.getLast()
 				.getEndTime());
 			TimeSlot firstSlot = slotsInsideNewClockInOut.getFirst();
 			TimeSlot lastSlot = slotsInsideNewClockInOut.getLast();

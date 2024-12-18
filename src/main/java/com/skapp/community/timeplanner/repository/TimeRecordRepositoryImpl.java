@@ -99,7 +99,7 @@ public class TimeRecordRepositoryImpl implements TimeRecordRepository {
 		if (!employeeIds.isEmpty()) {
 
 			CriteriaBuilder.In<Long> inClause = criteriaBuilder
-					.in(root.get(TimeRecord_.employee).get(Employee_.employeeId));
+				.in(root.get(TimeRecord_.employee).get(Employee_.employeeId));
 			for (Long employeeID : employeeIds) {
 				inClause.value(employeeID);
 			}
