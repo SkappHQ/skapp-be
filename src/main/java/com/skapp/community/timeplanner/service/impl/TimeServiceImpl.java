@@ -1368,7 +1368,7 @@ public class TimeServiceImpl implements TimeService {
 		// request period expands to the new time request period
 		if (recordType.equals(RecordType.CLOCK_IN)) {
 			if (timeRequest.getRequestedStartTime() < timeRequest.getInitialClockIn()) {
-				timeSlots.get(0).setStartTime(timeRequest.getRequestedStartTime());
+				timeSlots.getFirst().setStartTime(timeRequest.getRequestedStartTime());
 				timeRecord.setClockInTime(timeRequest.getRequestedStartTime());
 			}
 		}
