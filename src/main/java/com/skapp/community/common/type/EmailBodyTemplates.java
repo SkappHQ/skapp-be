@@ -9,6 +9,7 @@ public enum EmailBodyTemplates {
 
 	// People Module Templates
 	PEOPLE_MODULE_USER_INVITATION_V1("people-module-user-invitation"),
+	PEOPLE_MODULE_USER_INVITATION_SSO("people-module-user-invitation-sso"),
 	PEOPLE_MODULE_USER_TERMINATION_V1("people-module-user-termination"),
 
 	// Holiday Templates
