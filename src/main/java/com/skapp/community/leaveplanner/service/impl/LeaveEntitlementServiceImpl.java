@@ -10,6 +10,7 @@ import com.skapp.community.common.payload.response.ErrorLogDto;
 import com.skapp.community.common.payload.response.PageDto;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.repository.UserDao;
+import com.skapp.community.common.service.BulkContextService;
 import com.skapp.community.common.service.UserService;
 import com.skapp.community.common.type.BulkItemStatus;
 import com.skapp.community.common.util.CommonModuleUtils;
@@ -138,6 +139,9 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 	@NonNull
 	private final LeaveNotificationService leaveNotificationService;
+
+	@NonNull
+	private final BulkContextService bulkContextService;
 
 	@Override
 	public String processLeaveEntitlements(LeaveEntitlementsDto leaveEntitlementsDto) {
@@ -716,6 +720,8 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 	public ResponseEntityDto addBulkNewLeaveEntitlement(BulkLeaveEntitlementDto bulkLeaveEntitlementDto) {
 		log.info("addBulkNewLeaveEntitlement: execution started");
 
+		String currentTenant = bulkContextService.getContext();
+
 		ExecutorService executorService = Executors.newFixedThreadPool(5);
 		List<ErrorLogDto> bulkRecordErrorLogs = Collections.synchronizedList(new ArrayList<>());
 		LeaveBulkSkippedCountDto leaveBulkSkippedCountDto = new LeaveBulkSkippedCountDto(0);
@@ -729,6 +735,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 		for (List<EntitlementDetailsDto> entitlementBulkChunkDtoList : chunkedBulkData) {
 			for (EntitlementDetailsDto entitlementBulkDto : entitlementBulkChunkDtoList) {
 				CompletableFuture<Void> task = CompletableFuture.runAsync(() -> {
+					bulkContextService.setContext(currentTenant);
 					try {
 						transactionTemplate.execute(new TransactionCallbackWithoutResult() {
 							@Override
