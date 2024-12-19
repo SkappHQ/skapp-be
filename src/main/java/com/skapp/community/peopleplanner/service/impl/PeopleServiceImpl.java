@@ -538,39 +538,8 @@ public class PeopleServiceImpl implements PeopleService {
 		List<EmployeeBulkResponseDto> results = Collections.synchronizedList(new ArrayList<>());
 		AtomicReference<ResponseEntityDto> outValues = new AtomicReference<>(new ResponseEntityDto());
 
-		if (profileActivator.isEpProfile()) {
-			long existingUserCount = userDao.count();
-			long allowedUploadCount = Math.max(0, CommonConstants.EP_FREE_USER_LIMIT - existingUserCount);
-
-			List<EmployeeBulkDto> allowedEmployees = employeeBulkDtoList.stream().limit(allowedUploadCount).toList();
-
-			if (allowedUploadCount < employeeBulkDtoList.size()) {
-				List<EmployeeBulkResponseDto> exceedingUsersErrors = employeeBulkDtoList.stream()
-					.skip(allowedUploadCount)
-					.map(dto -> {
-						EmployeeBulkResponseDto responseDto = new EmployeeBulkResponseDto();
-						responseDto.setEmail(dto.getWorkEmail());
-						responseDto.setStatus(BulkItemStatus.ERROR);
-						responseDto.setMessage(
-								messageUtil.getMessage(PeopleMessageConstant.PEOPLE_ERROR_EXCEEDING_USER_UPLOAD));
-						return responseDto;
-					})
-					.toList();
-				results.addAll(exceedingUsersErrors);
-			}
-
-			if (allowedEmployees.isEmpty()) {
-				generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), results);
-				return outValues.get();
-			}
-
-			List<CompletableFuture<Void>> tasks = createEmployeeTasks(allowedEmployees, executorService, results);
-			waitForTaskCompletion(tasks, executorService);
-		}
-		else {
-			List<CompletableFuture<Void>> tasks = createEmployeeTasks(employeeBulkDtoList, executorService, results);
-			waitForTaskCompletion(tasks, executorService);
-		}
+		List<CompletableFuture<Void>> tasks = createEmployeeTasks(employeeBulkDtoList, executorService, results);
+		waitForTaskCompletion(tasks, executorService);
 
 		generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), results);
 		return outValues.get();
