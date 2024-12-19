@@ -17,6 +17,7 @@ import com.skapp.community.peopleplanner.model.Employee_;
 import com.skapp.community.peopleplanner.model.Team;
 import com.skapp.community.peopleplanner.model.Team_;
 import com.skapp.community.peopleplanner.repository.EmployeeTeamRepository;
+import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.timeplanner.model.TimeRecord;
 import com.skapp.community.timeplanner.model.TimeRecord_;
 import com.skapp.community.timeplanner.type.ClockInType;
@@ -66,6 +67,9 @@ public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 				criteriaBuilder.literal(Role.ATTENDANCE_ADMIN.name()));
 
 		List<Predicate> predicates = new ArrayList<>();
+
+		predicates.add(criteriaBuilder.isTrue(employeeRoot.get(Employee_.user).get(User_.isActive)));
+		predicates.add(criteriaBuilder.equal(employeeRoot.get(Employee_.ACCOUNT_STATUS), AccountStatus.ACTIVE));
 
 		if (teamsFilter.contains(-1L)) {
 			Subquery<Long> managedEmployeesSubquery = criteriaQuery.subquery(Long.class);
@@ -229,6 +233,9 @@ public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 		CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
 		Root<Employee> employeeRoot = criteriaQuery.from(Employee.class);
 		List<Predicate> predicates = new ArrayList<>();
+
+		predicates.add(criteriaBuilder.isTrue(employeeRoot.get(Employee_.user).get(User_.isActive)));
+		predicates.add(criteriaBuilder.equal(employeeRoot.get(Employee_.ACCOUNT_STATUS), AccountStatus.ACTIVE));
 
 		if (isAdmin) {
 			Join<Employee, User> userJoin = employeeRoot.join(Employee_.user);
