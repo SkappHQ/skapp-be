@@ -2058,16 +2058,19 @@ public class PeopleServiceImpl implements PeopleService {
 		Set<EmployeeManager> employeeManagers = new HashSet<>();
 
 		Employee manager = getManager(employeeDetailsDto.getPrimaryManager());
-		Employee secondaryManager = getManager(employeeDetailsDto.getSecondaryManager());
+
 		if (manager != null) {
 			addManagersToEmployee(manager, finalEmployee, employeeManagers, true);
 		}
-		if (secondaryManager != null) {
+
+		if (employeeDetailsDto.getSecondaryManager() != null) {
+			Employee secondaryManager = getManager(employeeDetailsDto.getSecondaryManager());
 			if (manager != null && manager.equals(secondaryManager)) {
 				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SECONDARY_MANAGER_DUPLICATE);
 			}
 			addManagersToEmployee(secondaryManager, finalEmployee, employeeManagers, false);
 		}
+
 		return employeeManagers;
 	}
 
