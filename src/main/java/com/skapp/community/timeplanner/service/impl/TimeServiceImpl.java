@@ -750,6 +750,7 @@ public class TimeServiceImpl implements TimeService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntityDto getManagerAttendanceSummary(
 			ManagerAttendanceSummaryFilterDto managerAttendanceSummaryFilterDto) {
 		User user = userService.getCurrentUser();
@@ -768,7 +769,9 @@ public class TimeServiceImpl implements TimeService {
 
 		List<Long> teamIds = managerAttendanceSummaryFilterDto.getTeamIds();
 		if (teamIds.getFirst() == -1) {
-			teamIds = teamDao.findLeadingTeamIdsByManagerId(user.getUserId());
+			teamIds = user.getEmployee().getEmployeeRole().getAttendanceRole() == Role.ATTENDANCE_MANAGER
+					? teamDao.findLeadingTeamIdsByManagerId(user.getUserId())
+					: teamDao.findAllByIsActive(true).stream().map(Team::getTeamId).toList();
 		}
 		else {
 			List<Long> invalidTeams = teamIds.stream()
@@ -780,9 +783,26 @@ public class TimeServiceImpl implements TimeService {
 			}
 		}
 
+		Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE);
+
+		List<Long> employeeList = new ArrayList<>();
+		if (managerAttendanceSummaryFilterDto.getTeamIds().contains(-1L)) {
+
+			List<Employee> employeePage = teamDao.findEmployeesInManagerLeadingTeams(teamIds, pageable, user)
+				.getContent();
+
+			if (!employeePage.isEmpty()) {
+				employeePage.forEach(employee -> employeeList.add(employee.getEmployeeId()));
+			}
+
+			if (user.getEmployee().getEmployeeRole().getAttendanceRole() == Role.ATTENDANCE_MANAGER) {
+				employeeList.addAll(employeeManagerDao.findManagerSupervisingEmployee(user.getUserId()));
+			}
+		}
+
 		AttendanceSummaryDto attendanceSummaryDto = timeRecordDao.findManagerAssignUsersAttendanceSummary(
 				user.getUserId(), teamIds, managerAttendanceSummaryFilterDto.getStartDate(),
-				managerAttendanceSummaryFilterDto.getEndDate());
+				managerAttendanceSummaryFilterDto.getEndDate(), employeeList);
 
 		log.info("getManagerAttendanceSummary: execution ended");
 		return new ResponseEntityDto(false,

@@ -2018,12 +2018,11 @@ public class PeopleServiceImpl implements PeopleService {
 	private Set<EmployeeManager> addNewManagers(EmployeeDetailsDto employeeDetailsDto, Employee finalEmployee) {
 		Set<EmployeeManager> employeeManagers = new HashSet<>();
 
-		Long manager = employeeDetailsDto.getPrimaryManager();
+		Employee manager = getManager(employeeDetailsDto.getPrimaryManager());
+		Employee secondaryManager = getManager(employeeDetailsDto.getSecondaryManager());
 		if (manager != null) {
 			addManagersToEmployee(manager, finalEmployee, employeeManagers, true);
 		}
-
-		Long secondaryManager = employeeDetailsDto.getSecondaryManager();
 		if (secondaryManager != null) {
 			if (manager != null && manager.equals(secondaryManager)) {
 				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SECONDARY_MANAGER_DUPLICATE);
@@ -2033,9 +2032,8 @@ public class PeopleServiceImpl implements PeopleService {
 		return employeeManagers;
 	}
 
-	private void addManagersToEmployee(Long managerId, Employee finalEmployee, Set<EmployeeManager> employeeManagers,
+	private void addManagersToEmployee(Employee manager, Employee finalEmployee, Set<EmployeeManager> employeeManagers,
 			boolean directManager) {
-		Employee manager = getManager(managerId);
 
 		EmployeeManager employeeManager = createEmployeeManager(manager, finalEmployee, directManager);
 		employeeManagers.add(employeeManager);
