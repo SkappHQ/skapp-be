@@ -183,6 +183,9 @@ en:
     - id: "common-module-email-verify"
       subject: "Verify your account!"
 
+    - id: "common-module-password-reset-otp"
+      subject: "Verify your account!"
+
     - id: "common-module-sso-creation-tenant-url"
       subject: "Welcome to Skapp!"
 
