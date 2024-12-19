@@ -327,6 +327,19 @@ public class PeopleServiceImpl implements PeopleService {
 		user.setTempPassword(encryptionDecryptionService.encrypt(tempPassword, encryptSecret));
 		user.setPassword(passwordEncoder.encode(tempPassword));
 
+		User firstUser = userDao.findById(1L)
+			.orElseThrow(() -> new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND));
+		LoginMethod loginMethod = firstUser.getLoginMethod();
+
+		if (loginMethod.equals(LoginMethod.GOOGLE)) {
+			user.setIsPasswordChangedForTheFirstTime(true);
+			user.setLoginMethod(LoginMethod.GOOGLE);
+		}
+		else {
+			user.setIsPasswordChangedForTheFirstTime(false);
+			user.setLoginMethod(LoginMethod.CREDENTIALS);
+		}
+
 		finalEmployee.setUser(user);
 		user.setEmployee(finalEmployee);
 
@@ -1283,6 +1296,19 @@ public class PeopleServiceImpl implements PeopleService {
 		user.setTempPassword(encryptionDecryptionService.encrypt(tempPassword, encryptSecret));
 		user.setPassword(passwordEncoder.encode(tempPassword));
 		user.setIsPasswordChangedForTheFirstTime(false);
+
+		User firstUser = userDao.findById(1L)
+			.orElseThrow(() -> new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND));
+		LoginMethod loginMethod = firstUser.getLoginMethod();
+
+		if (loginMethod.equals(LoginMethod.GOOGLE)) {
+			user.setIsPasswordChangedForTheFirstTime(true);
+			user.setLoginMethod(LoginMethod.GOOGLE);
+		}
+		else {
+			user.setIsPasswordChangedForTheFirstTime(false);
+			user.setLoginMethod(LoginMethod.CREDENTIALS);
+		}
 
 		setBulkEmployeeProgression(employeeBulkDto, employee);
 		setBulkManagers(employeeBulkDto, employeeDetailsDto);
