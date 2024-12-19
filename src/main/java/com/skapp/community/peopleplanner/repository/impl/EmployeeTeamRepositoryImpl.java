@@ -234,6 +234,9 @@ public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 		Root<Employee> employeeRoot = criteriaQuery.from(Employee.class);
 		List<Predicate> predicates = new ArrayList<>();
 
+		predicates.add(criteriaBuilder.isTrue(employeeRoot.get(Employee_.user).get(User_.isActive)));
+		predicates.add(criteriaBuilder.equal(employeeRoot.get(Employee_.ACCOUNT_STATUS), AccountStatus.ACTIVE));
+
 		if (isAdmin) {
 			Join<Employee, User> userJoin = employeeRoot.join(Employee_.user);
 			Predicate isActivePredicate = criteriaBuilder.isTrue(userJoin.get(User_.isActive));
