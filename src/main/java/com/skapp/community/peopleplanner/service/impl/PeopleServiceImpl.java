@@ -18,6 +18,7 @@ import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.repository.UserDao;
 import com.skapp.community.common.service.EncryptionDecryptionService;
 import com.skapp.community.common.service.UserService;
+import com.skapp.community.common.type.LoginMethod;
 import com.skapp.community.common.type.ModuleType;
 import com.skapp.community.common.type.NotificationSettingsType;
 import com.skapp.community.common.type.Role;
@@ -262,11 +263,20 @@ public class PeopleServiceImpl implements PeopleService {
 		User user = new User();
 		user.setEmail(employeeDetailsDto.getWorkEmail());
 		user.setIsActive(true);
-		String tempPassword = CommonModuleUtils.generateSecureRandomPassword();
 
-		user.setTempPassword(encryptionDecryptionService.encrypt(tempPassword, encryptSecret));
-		user.setPassword(passwordEncoder.encode(tempPassword));
-		user.setIsPasswordChangedForTheFirstTime(false);
+		String tempPassword = CommonModuleUtils.generateSecureRandomPassword();
+		Optional<User> firstUser = userDao.findById(1L);
+		LoginMethod loginMethod = firstUser.isPresent() ? firstUser.get().getLoginMethod() : LoginMethod.CREDENTIALS;
+
+		if (loginMethod.equals(LoginMethod.GOOGLE)) {
+			user.setIsPasswordChangedForTheFirstTime(true);
+		}
+		else {
+			user.setTempPassword(encryptionDecryptionService.encrypt(tempPassword, encryptSecret));
+			user.setPassword(passwordEncoder.encode(tempPassword));
+			user.setIsPasswordChangedForTheFirstTime(false);
+		}
+
 		user.setEmployee(finalEmployee);
 		finalEmployee.setUser(user);
 		userDao.save(user);
@@ -283,8 +293,11 @@ public class PeopleServiceImpl implements PeopleService {
 
 		EmployeeCredentialsResponseDto employeeCredentials = new EmployeeCredentialsResponseDto();
 		employeeCredentials.setEmail(finalEmployee.getUser().getEmail());
-		employeeCredentials.setTempPassword(tempPassword);
-		employeeResponseDto.setEmployeeCredentials(employeeCredentials);
+
+		if (loginMethod.equals(LoginMethod.CREDENTIALS)) {
+			employeeCredentials.setTempPassword(tempPassword);
+			employeeResponseDto.setEmployeeCredentials(employeeCredentials);
+		}
 
 		peopleEmailService.sendUserInvitationEmail(user);
 
