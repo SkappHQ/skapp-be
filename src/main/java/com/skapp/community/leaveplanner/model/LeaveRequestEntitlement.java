@@ -33,7 +33,7 @@ public class LeaveRequestEntitlement {
 	@JoinColumn(name = "leave_entitlement_id")
 	private LeaveEntitlement leaveEntitlement;
 
-	@JoinColumn(name = "days_used")
+	@Column(name = "days_used")
 	private float daysUsed;
 
 }
