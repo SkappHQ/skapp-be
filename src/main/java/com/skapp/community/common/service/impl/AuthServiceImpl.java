@@ -1,5 +1,7 @@
 package com.skapp.community.common.service.impl;
 
+import com.skapp.community.common.component.ProfileActivator;
+import com.skapp.community.common.constant.CommonConstants;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.mapper.CommonMapper;
@@ -93,6 +95,9 @@ public class AuthServiceImpl implements AuthService {
 	@NonNull
 	private final EncryptionDecryptionService encryptionDecryptionService;
 
+	@NonNull
+	private final ProfileActivator profileActivator;
+
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
 
@@ -111,6 +116,11 @@ public class AuthServiceImpl implements AuthService {
 
 		if (Boolean.FALSE.equals(user.getIsActive())) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_ACCOUNT_DEACTIVATED);
+		}
+
+		if (user.getEmployee().getAccountStatus() == AccountStatus.PENDING && profileActivator.isEpProfile()
+				&& employeeDao.countByAccountStatus(AccountStatus.ACTIVE) >= CommonConstants.EP_FREE_USER_LIMIT) {
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EXCEED_MAX_EMPLOYEE_COUNT);
 		}
 
 		Optional<Employee> employee = employeeDao.findById(user.getUserId());
