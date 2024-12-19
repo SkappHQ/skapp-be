@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.skapp.community.common.component.ProfileActivator;
-import com.skapp.community.common.constant.CommonConstants;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.EntityNotFoundException;
 import com.skapp.community.common.exception.ModuleException;
@@ -106,6 +105,7 @@ import com.skapp.community.peopleplanner.type.BulkItemStatus;
 import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.util.Validations;
+import com.skapp.enterprise.common.config.TenantContext;
 import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -1178,9 +1178,14 @@ public class PeopleServiceImpl implements PeopleService {
 		List<List<EmployeeBulkDto>> chunkedEmployeeBulkData = CommonModuleUtils.chunkData(employeeBulkDtoList);
 		TransactionTemplate transactionTemplate = getTransactionManagerTemplate();
 
+		String tenant = "";
+		if (profileActivator.isEpProfile()) {
+			tenant = TenantContext.getCurrentTenant();
+		}
+
 		for (List<EmployeeBulkDto> employeeBulkChunkDtoList : chunkedEmployeeBulkData) {
 			for (EmployeeBulkDto employeeBulkDto : employeeBulkChunkDtoList) {
-				tasks.add(createEmployeeTask(employeeBulkDto, transactionTemplate, results, executorService));
+				tasks.add(createEmployeeTask(employeeBulkDto, transactionTemplate, results, executorService, tenant));
 			}
 		}
 
@@ -1189,9 +1194,13 @@ public class PeopleServiceImpl implements PeopleService {
 
 	private CompletableFuture<Void> createEmployeeTask(EmployeeBulkDto employeeBulkDto,
 			TransactionTemplate transactionTemplate, List<EmployeeBulkResponseDto> results,
-			ExecutorService executorService) {
+			ExecutorService executorService, String tenant) {
 		return CompletableFuture.runAsync(() -> {
 			try {
+				if (profileActivator.isEpProfile() && !tenant.isEmpty()) {
+					TenantContext.setCurrentTenant(tenant);
+				}
+
 				saveEmployeeInTransaction(employeeBulkDto, transactionTemplate);
 			}
 			catch (DataIntegrityViolationException e) {
@@ -2063,6 +2072,7 @@ public class PeopleServiceImpl implements PeopleService {
 			addManagersToEmployee(manager, finalEmployee, employeeManagers, true);
 		}
 		if (secondaryManager != null) {
+
 			if (manager != null && manager.equals(secondaryManager)) {
 				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SECONDARY_MANAGER_DUPLICATE);
 			}
@@ -2812,21 +2822,18 @@ public class PeopleServiceImpl implements PeopleService {
 				}
 				else if (!previousJobTitle.getJobTitleId().equals(currentEmployeeProgression.get().getJobTitleId())) {
 					employeeTimelines.add(getEmployeeTimeline(employee, EmployeeTimelineType.JOB_FAMILY_CHANGED,
-							EmployeeTimelineConstant.TITLE_JOB_TITLE_CHANGED, previousJobTitle.getName(),
-							employee.getJobTitle().getName()));
+							TITLE_JOB_TITLE_CHANGED, previousJobTitle.getName(), employee.getJobTitle().getName()));
 				}
 			}
 			if (currentEmployeeProgression.get().getJobFamilyId() != null) {
 				if (previousJobFamily == null) {
 					employeeTimelines.add(getEmployeeTimeline(employee, EmployeeTimelineType.DEPARTMENT_CHANGED,
-							EmployeeTimelineConstant.TITLE_JOB_FAMILY_CHANGED, null,
-							employee.getJobFamily().getName()));
+							TITLE_JOB_FAMILY_CHANGED, null, employee.getJobFamily().getName()));
 				}
 				else if (!previousJobFamily.getJobFamilyId()
 					.equals(currentEmployeeProgression.get().getJobFamilyId())) {
 					employeeTimelines.add(getEmployeeTimeline(employee, EmployeeTimelineType.DEPARTMENT_CHANGED,
-							EmployeeTimelineConstant.TITLE_JOB_FAMILY_CHANGED, previousJobFamily.getName(),
-							employee.getJobFamily().getName()));
+							TITLE_JOB_FAMILY_CHANGED, previousJobFamily.getName(), employee.getJobFamily().getName()));
 				}
 			}
 
