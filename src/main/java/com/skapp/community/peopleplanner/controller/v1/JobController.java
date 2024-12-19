@@ -34,7 +34,7 @@ public class JobController {
 	@NonNull
 	private final JobService jobService;
 
-	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_MANAGER')")
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_EMPLOYEE')")
 	@GetMapping(value = "family", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> getAllJobFamilies() {
 		ResponseEntityDto response = jobService.getAllJobFamilies();
