@@ -1330,7 +1330,8 @@ public class PeopleServiceImpl implements PeopleService {
 			employee.setTeams(employeeTeams);
 		}
 
-		if (employeeBulkDto.getEmployeeEmergency() != null) {
+		if (employeeBulkDto.getEmployeeEmergency() != null && (employeeBulkDto.getEmployeeEmergency().getName() != null
+				|| employeeBulkDto.getEmployeeEmergency().getContactNo() != null)) {
 			EmployeeEmergency employeeEmergency = peopleMapper
 				.employeeEmergencyDtoToEmployeeEmergency(employeeBulkDto.getEmployeeEmergency());
 			employeeEmergency.setEmployee(employee);
@@ -2066,18 +2067,22 @@ public class PeopleServiceImpl implements PeopleService {
 	private Set<EmployeeManager> addNewManagers(EmployeeDetailsDto employeeDetailsDto, Employee finalEmployee) {
 		Set<EmployeeManager> employeeManagers = new HashSet<>();
 
-		Employee manager = getManager(employeeDetailsDto.getPrimaryManager());
-		Employee secondaryManager = getManager(employeeDetailsDto.getSecondaryManager());
-		if (manager != null) {
-			addManagersToEmployee(manager, finalEmployee, employeeManagers, true);
-		}
-		if (secondaryManager != null) {
+		if (employeeDetailsDto.getPrimaryManager() != null) {
+			Employee manager = getManager(employeeDetailsDto.getPrimaryManager());
 
-			if (manager != null && manager.equals(secondaryManager)) {
-				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SECONDARY_MANAGER_DUPLICATE);
+			if (manager != null) {
+				addManagersToEmployee(manager, finalEmployee, employeeManagers, true);
 			}
-			addManagersToEmployee(secondaryManager, finalEmployee, employeeManagers, false);
+
+			if (employeeDetailsDto.getSecondaryManager() != null) {
+				Employee secondaryManager = getManager(employeeDetailsDto.getSecondaryManager());
+				if (manager != null && manager.equals(secondaryManager)) {
+					throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SECONDARY_MANAGER_DUPLICATE);
+				}
+				addManagersToEmployee(secondaryManager, finalEmployee, employeeManagers, false);
+			}
 		}
+
 		return employeeManagers;
 	}
 
