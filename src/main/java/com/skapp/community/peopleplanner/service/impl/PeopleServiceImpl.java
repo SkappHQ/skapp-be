@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.skapp.community.common.component.ProfileActivator;
-import com.skapp.community.common.constant.CommonConstants;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.EntityNotFoundException;
 import com.skapp.community.common.exception.ModuleException;
@@ -106,7 +105,6 @@ import com.skapp.community.peopleplanner.type.BulkItemStatus;
 import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.util.Validations;
-import com.skapp.enterprise.common.config.TenantContext;
 import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -1178,11 +1176,10 @@ public class PeopleServiceImpl implements PeopleService {
 		List<CompletableFuture<Void>> tasks = new ArrayList<>();
 		List<List<EmployeeBulkDto>> chunkedEmployeeBulkData = CommonModuleUtils.chunkData(employeeBulkDtoList);
 		TransactionTemplate transactionTemplate = getTransactionManagerTemplate();
-		String currentTenant = TenantContext.getCurrentTenant();
+
 		for (List<EmployeeBulkDto> employeeBulkChunkDtoList : chunkedEmployeeBulkData) {
 			for (EmployeeBulkDto employeeBulkDto : employeeBulkChunkDtoList) {
-				tasks.add(createEmployeeTask(employeeBulkDto, transactionTemplate, results, executorService,
-						currentTenant));
+				tasks.add(createEmployeeTask(employeeBulkDto, transactionTemplate, results, executorService));
 			}
 		}
 
@@ -1191,9 +1188,8 @@ public class PeopleServiceImpl implements PeopleService {
 
 	private CompletableFuture<Void> createEmployeeTask(EmployeeBulkDto employeeBulkDto,
 			TransactionTemplate transactionTemplate, List<EmployeeBulkResponseDto> results,
-			ExecutorService executorService, String currentTenant) {
+			ExecutorService executorService) {
 		return CompletableFuture.runAsync(() -> {
-			TenantContext.setCurrentTenant(currentTenant);
 			try {
 				saveEmployeeInTransaction(employeeBulkDto, transactionTemplate);
 			}
