@@ -1192,7 +1192,7 @@ public class PeopleServiceImpl implements PeopleService {
 		return tasks;
 	}
 
-	protected CompletableFuture<Void> createEmployeeTask(EmployeeBulkDto employeeBulkDto,
+	private CompletableFuture<Void> createEmployeeTask(EmployeeBulkDto employeeBulkDto,
 			TransactionTemplate transactionTemplate, List<EmployeeBulkResponseDto> results,
 			ExecutorService executorService, String tenant) {
 		return CompletableFuture.runAsync(() -> {
