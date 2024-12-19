@@ -34,6 +34,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 	@NonNull
 	private final UserService userService;
 
+	@NonNull
+	private final ProfileActivator profileActivator;
+
+	@Override
+	protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+		if (profileActivator.isEpProfile()) {
+			log.info("Filtering skipped due to EpProfile being active");
+			return true;
+		}
+		return false;
+	}
+
 	@Override
 	protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
 			@NonNull FilterChain filterChain) throws ServletException, IOException {
