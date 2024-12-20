@@ -2061,20 +2061,15 @@ public class PeopleServiceImpl implements PeopleService {
 	private Set<EmployeeManager> addNewManagers(EmployeeDetailsDto employeeDetailsDto, Employee finalEmployee) {
 		Set<EmployeeManager> employeeManagers = new HashSet<>();
 
-		if (employeeDetailsDto.getPrimaryManager() != null) {
-			Employee manager = getManager(employeeDetailsDto.getPrimaryManager());
+		Optional<Employee> manager = getManager(employeeDetailsDto.getPrimaryManager());
+		Optional<Employee> secondaryManager = getManager(employeeDetailsDto.getSecondaryManager());
+		manager.ifPresent(employee -> addManagersToEmployee(employee, finalEmployee, employeeManagers, true));
+		if (secondaryManager.isPresent()) {
 
-			if (manager != null) {
-				addManagersToEmployee(manager, finalEmployee, employeeManagers, true);
+			if (manager.isPresent() && manager.get().equals(secondaryManager.get())) {
+				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SECONDARY_MANAGER_DUPLICATE);
 			}
-
-			if (employeeDetailsDto.getSecondaryManager() != null) {
-				Employee secondaryManager = getManager(employeeDetailsDto.getSecondaryManager());
-				if (manager != null && manager.equals(secondaryManager)) {
-					throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SECONDARY_MANAGER_DUPLICATE);
-				}
-				addManagersToEmployee(secondaryManager, finalEmployee, employeeManagers, false);
-			}
+			addManagersToEmployee(secondaryManager.get(), finalEmployee, employeeManagers, false);
 		}
 
 		return employeeManagers;
@@ -2089,9 +2084,8 @@ public class PeopleServiceImpl implements PeopleService {
 		addTimelineRecord(finalEmployee, employeeManager, manager);
 	}
 
-	private Employee getManager(Long managerId) {
-		return employeeDao.findEmployeeByEmployeeIdAndUserActiveNot(managerId, false)
-			.orElseThrow(() -> new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_MANAGER_NOT_FOUND));
+	private Optional<Employee> getManager(Long managerId) {
+		return employeeDao.findEmployeeByEmployeeIdAndUserActiveNot(managerId, false);
 	}
 
 	private EmployeeManager createEmployeeManager(Employee manager, Employee employee, boolean directManager) {
