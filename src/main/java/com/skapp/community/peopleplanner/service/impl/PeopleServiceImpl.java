@@ -3,7 +3,6 @@ package com.skapp.community.peopleplanner.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.skapp.community.common.component.ProfileActivator;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.EntityNotFoundException;
 import com.skapp.community.common.exception.ModuleException;
@@ -15,6 +14,7 @@ import com.skapp.community.common.payload.response.NotificationSettingsResponseD
 import com.skapp.community.common.payload.response.PageDto;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.repository.UserDao;
+import com.skapp.community.common.service.BulkContextService;
 import com.skapp.community.common.service.EncryptionDecryptionService;
 import com.skapp.community.common.service.UserService;
 import com.skapp.community.common.type.LoginMethod;
@@ -105,7 +105,6 @@ import com.skapp.community.peopleplanner.type.BulkItemStatus;
 import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.util.Validations;
-import com.skapp.enterprise.common.config.TenantContext;
 import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -228,7 +227,7 @@ public class PeopleServiceImpl implements PeopleService {
 	private final EncryptionDecryptionService encryptionDecryptionService;
 
 	@NonNull
-	private final ProfileActivator profileActivator;
+	private final BulkContextService bulkContextService;
 
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
@@ -560,6 +559,7 @@ public class PeopleServiceImpl implements PeopleService {
 		User currentUser = userService.getCurrentUser();
 		log.info("addEmployeeBulk: execution started by user: {}", currentUser.getUserId());
 
+		String currentTenant = bulkContextService.getContext();
 		ExecutorService executorService = Executors.newFixedThreadPool(6);
 		List<EmployeeBulkResponseDto> results = Collections.synchronizedList(new ArrayList<>());
 		AtomicReference<ResponseEntityDto> outValues = new AtomicReference<>(new ResponseEntityDto());
@@ -1178,10 +1178,7 @@ public class PeopleServiceImpl implements PeopleService {
 		List<List<EmployeeBulkDto>> chunkedEmployeeBulkData = CommonModuleUtils.chunkData(employeeBulkDtoList);
 		TransactionTemplate transactionTemplate = getTransactionManagerTemplate();
 
-		String tenant = "";
-		if (profileActivator.isEpProfile()) {
-			tenant = TenantContext.getCurrentTenant();
-		}
+		String tenant = bulkContextService.getContext();
 
 		for (List<EmployeeBulkDto> employeeBulkChunkDtoList : chunkedEmployeeBulkData) {
 			for (EmployeeBulkDto employeeBulkDto : employeeBulkChunkDtoList) {
@@ -1197,10 +1194,7 @@ public class PeopleServiceImpl implements PeopleService {
 			ExecutorService executorService, String tenant) {
 		return CompletableFuture.runAsync(() -> {
 			try {
-				if (profileActivator.isEpProfile() && !tenant.isEmpty()) {
-					TenantContext.setCurrentTenant(tenant);
-				}
-
+				bulkContextService.setContext(tenant);
 				saveEmployeeInTransaction(employeeBulkDto, transactionTemplate);
 			}
 			catch (DataIntegrityViolationException e) {
