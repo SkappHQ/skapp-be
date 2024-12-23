@@ -62,7 +62,8 @@ public class PeopleAnalyticsServiceImpl implements PeopleAnalyticsService {
 		PeopleDashboardSummaryResponseDto peopleDashboardSummaryResponseDto = new PeopleDashboardSummaryResponseDto();
 		peopleDashboardSummaryResponseDto
 			.setTotalEmployees(getActiveEmployeesByTeams(peopleAnalyticsFilterDto.getTeams()));
-		peopleDashboardSummaryResponseDto.setPendingEmployees(getPendingEmployeesByTeams(peopleAnalyticsFilterDto.getTeams()));
+		peopleDashboardSummaryResponseDto
+			.setPendingEmployees(getPendingEmployeesByTeams(peopleAnalyticsFilterDto.getTeams()));
 		peopleDashboardSummaryResponseDto
 			.setAverageEmployeeAge(getAverageEmployeeByTeams(peopleAnalyticsFilterDto.getTeams()));
 		peopleDashboardSummaryResponseDto
