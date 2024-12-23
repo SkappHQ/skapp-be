@@ -609,7 +609,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 	}
 
 	@Override
-	public Long countByIsActiveAndTeams(List<Long> teamIds) {
+	public Long countByIsActiveAndTeams(List<Long> teamIds, AccountStatus accountStatus) {
 		if (teamIds != null && teamIds.isEmpty()) {
 			return 0L;
 		}
@@ -622,6 +622,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		Join<Employee, User> userJoin = root.join(Employee_.user);
 		predicates.add(criteriaBuilder.equal(userJoin.get(User_.isActive), true));
+		predicates.add(criteriaBuilder.equal(root.get(Employee_.accountStatus), accountStatus));
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
 			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);

@@ -9,6 +9,7 @@ import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeCountDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeManagerDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeTeamDto;
+import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
 import com.skapp.community.peopleplanner.type.Gender;
@@ -51,7 +52,7 @@ public interface EmployeeRepository {
 
 	List<Employee> findInformantManagersByEmployeeID(Long employeeId);
 
-	Long countByIsActiveAndTeams(List<Long> teamIds);
+	Long countByIsActiveAndTeams(List<Long> teamIds, AccountStatus accountStatus);
 
 	Long countByIsActiveAndTeamsAndCreatedAt(boolean isActive, List<Long> teamIds, int currentYear);
 
