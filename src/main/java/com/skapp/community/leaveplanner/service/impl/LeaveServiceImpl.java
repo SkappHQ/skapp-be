@@ -687,7 +687,7 @@ public class LeaveServiceImpl implements LeaveService {
 		List<Team> teams = teamDao.findByTeamIdIn(teamIds);
 		boolean isSuperAdminOrAttendanceAdmin = isUserSuperAdminOrLeaveAdmin(currentUser);
 
-		validateTeamsExist(teamIds, teams);
+		LeaveModuleUtil.validateTeamsExist(teamIds, teams);
 		if (!isSuperAdminOrAttendanceAdmin) {
 			validateUserBelongsToTeams(teams, currentUser);
 		}
@@ -696,16 +696,6 @@ public class LeaveServiceImpl implements LeaveService {
 	private boolean isUserSuperAdminOrLeaveAdmin(User user) {
 		EmployeeRole role = user.getEmployee().getEmployeeRole();
 		return role.getIsSuperAdmin() || Role.LEAVE_ADMIN.equals(role.getLeaveRole());
-	}
-
-	private void validateTeamsExist(List<Long> teamIds, List<Team> teams) {
-		List<Long> unavailableTeams = teamIds.stream()
-			.filter(teamId -> teams.stream().noneMatch(t -> t.getTeamId().equals(teamId)))
-			.toList();
-		if (!unavailableTeams.isEmpty()) {
-			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_TEAM_NOT_FOUND,
-					new String[] { unavailableTeams.toString() });
-		}
 	}
 
 	private void validateUserBelongsToTeams(List<Team> teams, User user) {
