@@ -36,7 +36,8 @@ public interface LeaveEntitlementRepository {
 	PageDto findLeaveEntitlementsByLeaveTypesAndActiveState(List<Long> leaveTypes, boolean isActive,
 			LocalDate leaveCycleEndDate, Pageable page);
 
-	Page<LeaveEntitlement> findAllCustomEntitlements(String keyword, Pageable pageable, int year);
+	Page<LeaveEntitlement> findAllCustomEntitlements(String keyword, Pageable pageable, int year,
+			List<Long> leaveTypeIds);
 
 	List<Long> findAllEmployeeIdsCreatedWithValidDates(LocalDate validFrom, LocalDate validTo, Sort creationDate);
 
