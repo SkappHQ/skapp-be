@@ -95,6 +95,7 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_ORGANIZATION_THEME_COLOR_FORMAT_INVALID("api.error.common.organization.theme-color-format-invalid"),
 	COMMON_ERROR_DATABASE_ERROR("api.error.common.database-error"),
 	COMMON_ERROR_SERVLET_EXCEPTION("api.error.common.servlet-exception"),
+	COMMON_ERROR_TOO_MANY_REQUESTS_EXCEPTION("api.error.common.too-many-requests-exception"),
 	COMMON_ERROR_IO_EXCEPTION("api.error.common.io-exception"),
 	COMMON_ERROR_EXCEED_MAX_EMPLOYEE_COUNT("api.error.common.exceeded-max-employee-count"),;
 

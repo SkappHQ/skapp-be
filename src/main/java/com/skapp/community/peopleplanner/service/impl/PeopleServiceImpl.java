@@ -17,6 +17,7 @@ import com.skapp.community.common.repository.UserDao;
 import com.skapp.community.common.service.BulkContextService;
 import com.skapp.community.common.service.EncryptionDecryptionService;
 import com.skapp.community.common.service.UserService;
+import com.skapp.community.common.service.impl.AsyncEmailServiceImpl;
 import com.skapp.community.common.type.LoginMethod;
 import com.skapp.community.common.type.ModuleType;
 import com.skapp.community.common.type.NotificationSettingsType;
@@ -83,19 +84,7 @@ import com.skapp.community.peopleplanner.payload.response.SummarizedEmployeeDtoF
 import com.skapp.community.peopleplanner.payload.response.SummarizedManagerEmployeeDto;
 import com.skapp.community.peopleplanner.payload.response.TeamDetailResponseDto;
 import com.skapp.community.peopleplanner.payload.response.TeamEmployeeResponseDto;
-import com.skapp.community.peopleplanner.repository.EmployeeDao;
-import com.skapp.community.peopleplanner.repository.EmployeeEducationDao;
-import com.skapp.community.peopleplanner.repository.EmployeeFamilyDao;
-import com.skapp.community.peopleplanner.repository.EmployeeManagerDao;
-import com.skapp.community.peopleplanner.repository.EmployeePeriodDao;
-import com.skapp.community.peopleplanner.repository.EmployeeProgressionDao;
-import com.skapp.community.peopleplanner.repository.EmployeeRoleDao;
-import com.skapp.community.peopleplanner.repository.EmployeeTeamDao;
-import com.skapp.community.peopleplanner.repository.EmployeeTimelineDao;
-import com.skapp.community.peopleplanner.repository.EmployeeVisaDao;
-import com.skapp.community.peopleplanner.repository.JobFamilyDao;
-import com.skapp.community.peopleplanner.repository.JobTitleDao;
-import com.skapp.community.peopleplanner.repository.TeamDao;
+import com.skapp.community.peopleplanner.repository.*;
 import com.skapp.community.peopleplanner.service.EmployeeTimelineService;
 import com.skapp.community.peopleplanner.service.PeopleEmailService;
 import com.skapp.community.peopleplanner.service.PeopleService;
@@ -228,6 +217,8 @@ public class PeopleServiceImpl implements PeopleService {
 
 	@NonNull
 	private final BulkContextService bulkContextService;
+
+	private final AsyncEmailServiceImpl asyncEmailServiceImpl;
 
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
@@ -559,13 +550,14 @@ public class PeopleServiceImpl implements PeopleService {
 		User currentUser = userService.getCurrentUser();
 		log.info("addEmployeeBulk: execution started by user: {}", currentUser.getUserId());
 
-		String currentTenant = bulkContextService.getContext();
 		ExecutorService executorService = Executors.newFixedThreadPool(6);
 		List<EmployeeBulkResponseDto> results = Collections.synchronizedList(new ArrayList<>());
 		AtomicReference<ResponseEntityDto> outValues = new AtomicReference<>(new ResponseEntityDto());
 
 		List<CompletableFuture<Void>> tasks = createEmployeeTasks(employeeBulkDtoList, executorService, results);
 		waitForTaskCompletion(tasks, executorService);
+
+		asyncEmailServiceImpl.sendEmailsInBackground(results);
 
 		generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), results);
 		return outValues.get();
@@ -1196,6 +1188,8 @@ public class PeopleServiceImpl implements PeopleService {
 			try {
 				bulkContextService.setContext(tenant);
 				saveEmployeeInTransaction(employeeBulkDto, transactionTemplate);
+				handleSuccessResponse(employeeBulkDto,
+						messageUtil.getMessage(PeopleMessageConstant.PEOPLE_SUCCESS_EMPLOYEE_ADDED), results);
 			}
 			catch (DataIntegrityViolationException e) {
 				handleDataIntegrityException(employeeBulkDto, e, results);
@@ -1213,6 +1207,13 @@ public class PeopleServiceImpl implements PeopleService {
 				createNewEmployeeFromBulk(employeeBulkDto);
 			}
 		});
+	}
+
+	private void handleSuccessResponse(EmployeeBulkDto employeeBulkDto, String message,
+			List<EmployeeBulkResponseDto> results) {
+		log.warn("bulk employee added successfully : {}", employeeBulkDto.getWorkEmail());
+		EmployeeBulkResponseDto bulkResponseDto = createSuccessResponse(employeeBulkDto, message);
+		results.add(bulkResponseDto);
 	}
 
 	private void handleDataIntegrityException(EmployeeBulkDto employeeBulkDto, DataIntegrityViolationException e,
@@ -1237,6 +1238,15 @@ public class PeopleServiceImpl implements PeopleService {
 		bulkResponseDto.setEmail(employeeBulkDto.getWorkEmail() != null ? employeeBulkDto.getWorkEmail()
 				: employeeBulkDto.getPersonalEmail());
 		bulkResponseDto.setStatus(BulkItemStatus.ERROR);
+		bulkResponseDto.setMessage(message);
+		return bulkResponseDto;
+	}
+
+	private EmployeeBulkResponseDto createSuccessResponse(EmployeeBulkDto employeeBulkDto, String message) {
+		EmployeeBulkResponseDto bulkResponseDto = new EmployeeBulkResponseDto();
+		bulkResponseDto.setEmail(employeeBulkDto.getWorkEmail() != null ? employeeBulkDto.getWorkEmail()
+				: employeeBulkDto.getPersonalEmail());
+		bulkResponseDto.setStatus(BulkItemStatus.SUCCESS);
 		bulkResponseDto.setMessage(message);
 		return bulkResponseDto;
 	}
@@ -1272,8 +1282,12 @@ public class PeopleServiceImpl implements PeopleService {
 	private void generateBulkErrorResponse(AtomicReference<ResponseEntityDto> outValues, int totalSize,
 			List<EmployeeBulkResponseDto> results) {
 		EmployeeBulkErrorResponseDto errorResponseDto = new EmployeeBulkErrorResponseDto();
-		errorResponseDto.setBulkStatusSummary(new BulkStatusSummary(totalSize - results.size(), results.size()));
-		errorResponseDto.setBulkRecordErrorLogs(results);
+		List<EmployeeBulkResponseDto> errorResults = results.stream()
+			.filter(responseDto -> responseDto.getStatus() == BulkItemStatus.ERROR)
+			.toList();
+		errorResponseDto
+			.setBulkStatusSummary(new BulkStatusSummary(totalSize - errorResults.size(), errorResults.size()));
+		errorResponseDto.setBulkRecordErrorLogs(errorResults);
 		outValues.set(new ResponseEntityDto(false, errorResponseDto));
 	}
 
