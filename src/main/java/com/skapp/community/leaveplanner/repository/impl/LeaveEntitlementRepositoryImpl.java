@@ -58,11 +58,7 @@ import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.skapp.community.leaveplanner.model.LeaveType_.TYPE_ID;
 
@@ -228,7 +224,8 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 	}
 
 	@Override
-	public Page<LeaveEntitlement> findAllCustomEntitlements(String search, Pageable page, int year) {
+	public Page<LeaveEntitlement> findAllCustomEntitlements(String search, Pageable page, int year,
+			List<Long> leaveTypeIds) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 
 		CriteriaQuery<LeaveEntitlement> criteriaQuery = criteriaBuilder.createQuery(LeaveEntitlement.class);
@@ -271,6 +268,10 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 						criteriaBuilder.equal(
 								criteriaBuilder.function("YEAR", Integer.class, root.get(LeaveEntitlement_.validTo)),
 								year)));
+		}
+
+		if (leaveTypeIds != null && !leaveTypeIds.isEmpty()) {
+			predicates.add(root.get(LeaveEntitlement_.leaveType).get(LeaveType_.typeId).in(leaveTypeIds));
 		}
 
 		Predicate[] predArray = new Predicate[predicates.size()];

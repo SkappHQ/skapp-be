@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.springframework.data.domain.Sort;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -34,5 +35,7 @@ public class CustomEntitlementsFilterDto {
 	private CustomEntitlementSort sortKey = CustomEntitlementSort.CREATION_DATE;
 
 	private EmployeeSort sortKeySearch = EmployeeSort.NAME;
+
+	private List<Long> leaveTypeId;
 
 }

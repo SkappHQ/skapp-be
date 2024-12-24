@@ -703,7 +703,8 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 				Sort.by(customEntitlementsFilterDto.getSortOrder(),
 						customEntitlementsFilterDto.getSortKeySearch().toString()));
 		Page<LeaveEntitlement> leaveEntitlementPageable = leaveEntitlementDao.findAllCustomEntitlements(
-				customEntitlementsFilterDto.getKeyword(), pageable, customEntitlementsFilterDto.getYear());
+				customEntitlementsFilterDto.getKeyword(), pageable, customEntitlementsFilterDto.getYear(),
+				customEntitlementsFilterDto.getLeaveTypeId());
 		PageDto pageDto = pageTransformer.transform(leaveEntitlementPageable);
 
 		List<SummarizedCustomLeaveEntitlementDto> list = leaveMapper
