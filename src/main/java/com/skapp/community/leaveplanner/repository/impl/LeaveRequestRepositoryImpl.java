@@ -137,68 +137,61 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<EmployeeLeaveRequestReportQueryDto> query = cb
 			.createQuery(EmployeeLeaveRequestReportQueryDto.class);
-
 		Root<LeaveRequest> leaveRequest = query.from(LeaveRequest.class);
+
 		Join<LeaveRequest, Employee> employee = leaveRequest.join(LeaveRequest_.employee);
-		Join<Employee, User> user = employee.join(Employee_.user);
+		Join<Employee, User> user = employee.join(Employee_.user, JoinType.LEFT);
 		Join<LeaveRequest, LeaveType> leaveType = leaveRequest.join(LeaveRequest_.leaveType);
 		Join<Employee, JobFamily> jobFamily = employee.join(Employee_.jobFamily, JoinType.LEFT);
 		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.teams, JoinType.LEFT);
 		Join<EmployeeTeam, Team> team = employeeTeam.join(EmployeeTeam_.team, JoinType.LEFT);
 
 		Expression<String> teams = cb.function("GROUP_CONCAT", String.class,
-				cb.function("DISTINCT", String.class, team.get(Team_.teamName)));
-
-		Expression<String> startDateFormatted = cb.function("CONCAT", String.class, cb.function("DATE_FORMAT",
-				String.class, leaveRequest.get(LeaveRequest_.startDate), cb.literal("%D %b")));
-
-		Expression<String> endDateFormatted = cb.function("CONCAT", String.class,
-				cb.function("DATE_FORMAT", String.class, leaveRequest.get(LeaveRequest_.endDate), cb.literal("%D %b")));
+				cb.function("DISTINCT", String.class, cb.coalesce(team.get(Team_.teamName), cb.literal(""))));
+		Expression<String> startDateFormatted = cb.function("DATE_FORMAT", String.class,
+				leaveRequest.get(LeaveRequest_.startDate), cb.literal("%D %b"));
+		Expression<String> endDateFormatted = cb.function("DATE_FORMAT", String.class,
+				leaveRequest.get(LeaveRequest_.endDate), cb.literal("%D %b"));
 
 		query.select(cb.construct(EmployeeLeaveRequestReportQueryDto.class, employee.get(Employee_.employeeId),
-				employee.get(Employee_.authPic), employee.get(Employee_.firstName), employee.get(Employee_.lastName),
-				teams, leaveType.get(LeaveType_.name), leaveRequest.get(LeaveRequest_.status).as(String.class),
-				startDateFormatted, endDateFormatted, leaveType.get(LeaveType_.emojiCode),
-				leaveRequest.get(LeaveRequest_.durationDays).as(Float.class)));
+				cb.coalesce(employee.get(Employee_.authPic), ""), cb.coalesce(employee.get(Employee_.firstName), ""),
+				cb.coalesce(employee.get(Employee_.lastName), ""), teams,
+				cb.coalesce(leaveType.get(LeaveType_.name), ""),
+				cb.coalesce(leaveRequest.get(LeaveRequest_.status).as(String.class), ""), startDateFormatted,
+				endDateFormatted, cb.coalesce(leaveType.get(LeaveType_.emojiCode), ""),
+				cb.coalesce(leaveRequest.get(LeaveRequest_.durationDays), 0.0f)));
 
 		List<Predicate> predicates = createPredicatesForLeaverRequest(cb, leaveRequest, employee, user, leaveType,
 				jobFamily, team, leaveTypeIds, startDate, endDate, jobFamilyId, teamId, statuses);
-
 		query.where(predicates.toArray(new Predicate[0]));
 
 		query.groupBy(employee.get(Employee_.employeeId), employee.get(Employee_.authPic),
-				employee.get(Employee_.firstName), employee.get(Employee_.lastName), jobFamily.get(JobFamily_.name),
+				employee.get(Employee_.firstName), employee.get(Employee_.lastName), leaveType.get(LeaveType_.name),
+				leaveType.get(LeaveType_.emojiCode), leaveRequest.get(LeaveRequest_.status),
 				leaveRequest.get(LeaveRequest_.startDate), leaveRequest.get(LeaveRequest_.endDate),
-				leaveRequest.get(LeaveRequest_.durationDays), leaveType.get(LeaveType_.name),
-				leaveType.get(LeaveType_.emojiCode), leaveRequest.get(LeaveRequest_.status));
+				leaveRequest.get(LeaveRequest_.durationDays));
 
 		query.orderBy(cb.asc(employee.get(Employee_.firstName)));
 
 		TypedQuery<EmployeeLeaveRequestReportQueryDto> typedQuery = entityManager.createQuery(query);
+		typedQuery.setFirstResult((int) pageable.getOffset());
+		typedQuery.setMaxResults(pageable.getPageSize());
 
 		CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
 		Root<LeaveRequest> countRoot = countQuery.from(LeaveRequest.class);
+
 		Join<LeaveRequest, Employee> countEmployee = countRoot.join(LeaveRequest_.employee);
-		Join<Employee, User> countUser = countEmployee.join(Employee_.user);
+		Join<Employee, User> countUser = countEmployee.join(Employee_.user, JoinType.LEFT);
 		Join<LeaveRequest, LeaveType> countLeaveType = countRoot.join(LeaveRequest_.leaveType);
-		Join<Employee, JobFamily> countJobFamily = countEmployee.join(Employee_.jobFamily, JoinType.LEFT);
-		Join<Employee, EmployeeTeam> countEmployeeTeam = countEmployee.join(Employee_.teams, JoinType.LEFT);
-		Join<EmployeeTeam, Team> countTeam = countEmployeeTeam.join(EmployeeTeam_.team, JoinType.LEFT);
 
 		List<Predicate> countPredicates = createPredicatesForLeaverRequest(cb, countRoot, countEmployee, countUser,
-				countLeaveType, countJobFamily, countTeam, leaveTypeIds, startDate, endDate, jobFamilyId, teamId,
-				statuses);
-
-		countQuery.select(cb.countDistinct(countRoot));
+				countLeaveType, jobFamily, team, leaveTypeIds, startDate, endDate, jobFamilyId, teamId, statuses);
 		countQuery.where(countPredicates.toArray(new Predicate[0]));
+		countQuery.select(cb.countDistinct(countRoot));
 
 		Long total = entityManager.createQuery(countQuery).getSingleResult();
 
-		typedQuery.setFirstResult(pageable.getPageNumber() * pageable.getPageSize());
-		typedQuery.setMaxResults(pageable.getPageSize());
-
 		List<EmployeeLeaveRequestReportQueryDto> results = typedQuery.getResultList();
-
 		return new PageImpl<>(results, pageable, total);
 	}
 
