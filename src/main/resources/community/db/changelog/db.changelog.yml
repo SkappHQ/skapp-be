@@ -2,4 +2,4 @@ databaseChangeLog:
   - include:
       file: classpath:community/db/changelog/ddl-script/common-ddl-script-v1-create-tables.sql
   - include:
-      file: enterprise/db/changelog/ddl-script/common-ddl-script-v1-edit-user.sql
+      file: classpath:community/db/changelog/ddl-script/common-ddl-script-v1-edit-user.sql
