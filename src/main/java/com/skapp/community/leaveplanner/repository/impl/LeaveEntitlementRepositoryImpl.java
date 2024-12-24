@@ -347,6 +347,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 				criteriaBuilder.between(root.get(LeaveEntitlement_.validTo), validFrom, validTo));
 		predicates.add(dateBetween);
 		predicates.add(criteriaBuilder.equal(root.get(LeaveEntitlement_.isActive), true));
+		predicates.add(criteriaBuilder.equal(root.get(LeaveEntitlement_.isManual), false));
 		CriteriaBuilder.In<Long> inClause = criteriaBuilder
 			.in(root.get(LeaveEntitlement_.employee).get(Employee_.employeeId));
 		for (Long id : ids) {
