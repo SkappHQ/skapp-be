@@ -42,29 +42,6 @@ public class AuthController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-//	@GetMapping(value = "/test")
-//	public ResponseEntity<String> test() {
-//		for(int i = 0; i < 500; i++) {
-//			System.out.println("{\n" +
-//					"    \"identificationNo\": \"string\",\n" +
-//					"    \"workEmail\": \"thelonemutegamer+" + i + "@gmail.com\",\n" +
-//					"    \"personalEmail\": \"string\",\n" +
-//					"    \"firstName\": \"string\",\n" +
-//					"    \"middleName\": \"string\",\n" +
-//					"    \"lastName\": \"string\",\n" +
-//					"    \"country\": \"string\",\n" +
-//					"    \"timeZone\": \"Asia/Colombo\",\n" +
-//					"    \"gender\": \"MALE\",\n" +
-//					"    \"phone\": \"0705724551\",\n" +
-//					"    \"address\": \"string\",\n" +
-//					"    \"addressLine2\": \"string\",\n" +
-//					"    \"joinedDate\": \"2024-11-19\",\n" +
-//					"    \"eeo\": \"EXECUTIVE_SENIOR_LEVEL_OFFICIALS_AND_MANAGERS\"\n" +
-//					"  },");
-//		}
-//		return new ResponseEntity<>("", HttpStatus.OK);
-//	}
-
 	@Operation(summary = "Super Admin Sign Up", description = "Sign up as a super admin")
 	@PostMapping(value = ApiUriConstants.AUTH_SUPER_ADMIN_SIGNUP, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> superAdminSignUp(
