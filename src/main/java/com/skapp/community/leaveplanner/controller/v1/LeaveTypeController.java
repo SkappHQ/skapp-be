@@ -41,7 +41,7 @@ public class LeaveTypeController {
 
 	@Operation(summary = "Get all leave types", description = "Fetch all leave types available in the system.")
 	@GetMapping
-	@PreAuthorize("hasAnyRole('ROLE_LEAVE_ADMIN','ROLE_LEAVE_MANAGER')")
+	@PreAuthorize("hasAnyRole('ROLE_LEAVE_ADMIN','ROLE_LEAVE_MANAGER','ROLE_PEOPLE_ADMIN')")
 	public ResponseEntity<ResponseEntityDto> getLeaveTypes(@Valid LeaveTypeFilterDto leaveTypeFilterDto) {
 		ResponseEntityDto response = leaveTypeService.getLeaveTypes(leaveTypeFilterDto);
 		return new ResponseEntity<>(response, HttpStatus.OK);
