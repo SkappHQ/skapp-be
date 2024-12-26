@@ -15,4 +15,6 @@ public class PeopleDashboardSummaryResponseDto {
 
 	private EmployeeTurnoverRateResponseDto employeeTurnoverRateResponseDto;
 
+	private Long pendingEmployees;
+
 }

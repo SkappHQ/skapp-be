@@ -25,6 +25,7 @@ import com.skapp.community.peopleplanner.repository.EmployeeDao;
 import com.skapp.community.peopleplanner.repository.JobFamilyDao;
 import com.skapp.community.peopleplanner.repository.TeamDao;
 import com.skapp.community.peopleplanner.service.PeopleAnalyticsService;
+import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
 import com.skapp.community.peopleplanner.type.Gender;
@@ -61,6 +62,8 @@ public class PeopleAnalyticsServiceImpl implements PeopleAnalyticsService {
 		PeopleDashboardSummaryResponseDto peopleDashboardSummaryResponseDto = new PeopleDashboardSummaryResponseDto();
 		peopleDashboardSummaryResponseDto
 			.setTotalEmployees(getActiveEmployeesByTeams(peopleAnalyticsFilterDto.getTeams()));
+		peopleDashboardSummaryResponseDto
+			.setPendingEmployees(getPendingEmployeesByTeams(peopleAnalyticsFilterDto.getTeams()));
 		peopleDashboardSummaryResponseDto
 			.setAverageEmployeeAge(getAverageEmployeeByTeams(peopleAnalyticsFilterDto.getTeams()));
 		peopleDashboardSummaryResponseDto
@@ -169,7 +172,11 @@ public class PeopleAnalyticsServiceImpl implements PeopleAnalyticsService {
 	}
 
 	private Long getActiveEmployeesByTeams(List<Long> teamIds) {
-		return employeeDao.countByIsActiveAndTeams(teamIds);
+		return employeeDao.countByIsActiveAndTeams(teamIds, AccountStatus.ACTIVE);
+	}
+
+	private Long getPendingEmployeesByTeams(List<Long> teamIds) {
+		return employeeDao.countByIsActiveAndTeams(teamIds, AccountStatus.PENDING);
 	}
 
 	private EmployeeHireResponseDto getEmployeeHireResponseDto(List<Long> teamIds) {
