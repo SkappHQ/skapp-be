@@ -125,7 +125,7 @@ public interface LeaveRequestDao
 					  AND (leaveDate BETWEEN lr.start_date AND lr.end_date)
 					  AND ((leaveDate NOT IN ?4) OR (NOT EXISTS (SELECT 1 FROM holiday WHERE is_active = 1)))
 					  AND ((WEEKDAY(leaveDate) IN ?3) OR (NOT EXISTS (SELECT 1 FROM time_config)))
-					  AND (lr.`status` = 'APPROVED' OR lr.`status` = 'PENDING')
+					  AND (lr.`status` = 'APPROVED')
 					  AND (NOT (user.`is_active` = '0'))
 					  AND lr.employee_id = ?5
 					  AND (lr.type_id IN ?6)
