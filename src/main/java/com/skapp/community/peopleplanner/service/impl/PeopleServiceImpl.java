@@ -1711,7 +1711,7 @@ public class PeopleServiceImpl implements PeopleService {
 			updateEmployeeEducations(updateDto, employee);
 		}
 
-		if (updateDto.getEmployeeProgressions() != null && !updateDto.getEmployeeProgressions().isEmpty()) {
+		if (updateDto.getEmployeeProgressions() != null) {
 			updateEmployeeProgression(updateDto, employee, employeeTimelines);
 		}
 
@@ -2813,12 +2813,30 @@ public class PeopleServiceImpl implements PeopleService {
 
 	private void updateEmployeeProgression(EmployeeUpdateDto employeeUpdateDto, Employee employee,
 			List<EmployeeTimeline> employeeTimelines) {
+		if (employeeUpdateDto.getEmployeeProgressions().isEmpty()) {
+			clearEmployeeProgression(employee);
+			return;
+		}
 		JobFamily previousJobFamily = employee.getJobFamily() != null ? employee.getJobFamily() : null;
 		JobTitle previousJobTitle = employee.getJobTitle() != null ? employee.getJobTitle() : null;
 		validateCareerProgressionData(employeeUpdateDto.getEmployeeProgressions());
 		saveCareerProgression(employee, employeeUpdateDto.getEmployeeProgressions());
 		updateCareerProgressionTimeline(employeeUpdateDto, employee, employeeTimelines, previousJobTitle,
 				previousJobFamily);
+	}
+
+	private void clearEmployeeProgression(Employee employee) {
+		List<Long> currentIdList = employee.getEmployeeProgressions()
+			.stream()
+			.map(EmployeeProgression::getProgressionId)
+			.toList();
+		currentIdList.forEach(item -> {
+			Optional<EmployeeProgression> progressionOptional = employeeProgressionDao.findByProgressionId(item);
+			if (progressionOptional.isPresent()) {
+				employeeProgressionDao.deleteById(progressionOptional.get().getProgressionId());
+				employee.getEmployeeProgressions().remove(progressionOptional.get());
+			}
+		});
 	}
 
 	private void updateCareerProgressionTimeline(EmployeeUpdateDto employeeUpdateDto, Employee employee,
