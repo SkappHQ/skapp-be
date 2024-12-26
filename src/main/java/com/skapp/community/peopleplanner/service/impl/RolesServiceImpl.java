@@ -143,6 +143,10 @@ public class RolesServiceImpl implements RolesService {
 	@Override
 	public void updateEmployeeRoles(RoleRequestDto roleRequestDto, Employee employee) {
 		log.info("updateEmployeeRoles: execution started");
+		
+		if(employee.getEmployeeRole().getIsSuperAdmin() && employeeRoleDao.countByIsSuperAdminTrue() == 1) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SUPER_ADMIN_DEMOTION);
+		}
 
 		Optional<EmployeeRole> optionalEmployeeRole = employeeRoleDao.findById(employee.getEmployeeId());
 		if (optionalEmployeeRole.isEmpty()) {
