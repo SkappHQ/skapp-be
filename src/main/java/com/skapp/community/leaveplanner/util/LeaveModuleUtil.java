@@ -124,6 +124,24 @@ public class LeaveModuleUtil {
 		return count;
 	}
 
+	public static boolean isHolidayContainsBetweenTwoDates(LocalDate startDate, LocalDate endDate,
+			List<LocalDate> holidays, List<Holiday> holidayObjects, LeaveRequest leaveRequest) {
+		if (startDate.isAfter(endDate)) {
+			LocalDate temp = startDate;
+			startDate = endDate;
+			endDate = temp;
+		}
+		LocalDate currentDate = startDate;
+		while (!currentDate.isAfter(endDate)) {
+			if (!CommonModuleUtils.checkIfDayIsNotAHoliday(leaveRequest, holidayObjects, holidays, currentDate)) {
+				return true;
+			}
+			currentDate = currentDate.plusDays(1);
+		}
+
+		return false;
+	}
+
 	public static int getWorkingDaysBetweenTwoDates(LocalDate startDate, LocalDate endDate,
 			List<TimeConfig> timeConfigs, List<LocalDate> holidays, List<Holiday> holidayObjects,
 			LeaveRequest leaveRequest) {
