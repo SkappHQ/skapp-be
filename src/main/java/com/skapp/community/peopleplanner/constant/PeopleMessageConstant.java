@@ -29,7 +29,7 @@ public enum PeopleMessageConstant implements MessageConstant {
 	PEOPLE_ERROR_HOLIDAYS_BULK_CANNOT_ADDED_IN_PAST("api.error.people.holiday-bulk.cannot.add.past.days"),
 	PEOPLE_ERROR_TEAM_NOT_FOUND("api.error.people.people.team.not.found"),
 	PEOPLE_ERROR_EMPLOYEE_NOT_FOUND("api.error.people.employee.not.found"),
-	PEOPLE_ERROR_SUPER_ADMIN_DEMOTION("api.error.people.super-admin.demotion-not-allowed"),
+	PEOPLE_ERROR_ONLY_ONE_SUPER_ADMIN("api.error.people.super-admin.only-one-super-admin"),
 	PEOPLE_ERROR_HOLIDAYS_BULK_CANNOT_ADDED_IN_PAST_OR_CURRENT_DAY(
 			"api.error.people.holiday-bulk.cannot.add.current.or.past.days"),
 	PEOPLE_ERROR_HOLIDAYS_BULK_ONLY_ADDED_FUTURE_DAYS("api.error.people.holiday-bulk.added.only.future.days"),
