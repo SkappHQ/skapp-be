@@ -94,6 +94,7 @@ import com.skapp.community.peopleplanner.type.BulkItemStatus;
 import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.util.Validations;
+import com.skapp.enterprise.common.constant.EPCommonMessageConstant;
 import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -130,7 +131,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static com.skapp.community.common.util.Validation.ADDRESS_REGEX;
+import static com.skapp.community.common.util.Validation.ALPHANUMERIC_REGEX;
 import static com.skapp.community.common.util.Validation.NAME_REGEX;
+import static com.skapp.community.common.util.Validation.SPECIAL_CHAR_REGEX;
+import static com.skapp.community.common.util.Validation.VALID_NIN_NUMBER_REGEXP;
 import static com.skapp.community.peopleplanner.constant.EmployeeTimelineConstant.TITLE_EMPLOYMENT_TYPE_CHANGED;
 import static com.skapp.community.peopleplanner.constant.EmployeeTimelineConstant.TITLE_JOB_FAMILY_CHANGED;
 import static com.skapp.community.peopleplanner.constant.EmployeeTimelineConstant.TITLE_JOB_TITLE_CHANGED;
@@ -1503,46 +1508,120 @@ public class PeopleServiceImpl implements PeopleService {
 		validateUserSupervisor(employeeBulkDto.getPrimaryManager(), errors);
 		validateUserSupervisor(employeeBulkDto.getSecondaryManager(), errors);
 		validateCareerProgressionInBulk(employeeBulkDto.getEmployeeProgression(), errors);
+		validateStateInBulk(employeeBulkDto.getEmployeePersonalInfo().getState(), errors);
 
-		if (employeeBulkDto.getEmployeeEmergency() != null)
+		if (employeeBulkDto.getEmployeeEmergency() != null) {
 			validateEmergencyContactName(employeeBulkDto.getEmployeeEmergency().getName(), errors);
+			validatePhoneNumberInBulk(employeeBulkDto.getEmployeeEmergency().getContactNo(), errors);
+		}
 		if (employeeBulkDto.getPhone() != null)
 			validatePhoneNumberInBulk(employeeBulkDto.getPhone(), errors);
 		if (employeeBulkDto.getEmployeeEmergency() != null
 				&& employeeBulkDto.getEmployeeEmergency().getContactNo() != null)
 			validateEmergencyContactNumberInBulk(employeeBulkDto.getEmployeeEmergency().getContactNo(), errors);
+		if (employeeBulkDto.getEmployeePersonalInfo().getNin() != null)
+			validateNIN(employeeBulkDto.getEmployeePersonalInfo().getNin(), errors);
+		if (employeeBulkDto.getAddress() != null)
+			validateAddressInBulk(employeeBulkDto.getAddress(), errors);
+		if (employeeBulkDto.getAddressLine2() != null)
+			validateAddressInBulk(employeeBulkDto.getAddressLine2(), errors);
+		validateStateInBulk(employeeBulkDto.getEmployeePersonalInfo().getCity(), errors);
+		if (employeeBulkDto.getEmployeePersonalInfo().getSsn() != null) {
+			validateSocialSecurityNumber(employeeBulkDto.getEmployeePersonalInfo().getSsn(), errors);
+		}
 
 		return errors;
+	}
+
+	public void validateNIN(String nin, List<String> errors) {
+		if (!nin.trim().matches(VALID_NIN_NUMBER_REGEXP))
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_NIN));
+
+		if (nin.length() > PeopleConstants.MAX_NIN_LENGTH)
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_NIN_LENGTH,
+					new Object[] { PeopleConstants.MAX_NIN_LENGTH }));
 	}
 
 	public void validateIdentificationNo(String identificationNo, List<String> errors) {
 		if (!Validations.isValidIdentificationNo(identificationNo)) {
 			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_IDENTIFICATION_NUMBER));
 		}
+
+		if (identificationNo.length() > PeopleConstants.MAX_ID_LENGTH)
+			errors
+				.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_IDENTIFICATION_NUMBER_LENGTH,
+						new Object[] { PeopleConstants.MAX_ID_LENGTH }));
+	}
+
+	public void validateSocialSecurityNumber(String socialSecurityNumber, List<String> errors) {
+		if (socialSecurityNumber != null && (!socialSecurityNumber.trim().matches(ALPHANUMERIC_REGEX))) {
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_SSN));
+		}
+
+		if (socialSecurityNumber != null && socialSecurityNumber.length() > PeopleConstants.MAX_SSN_LENGTH)
+			errors.add(messageUtil.getMessage(PeopleMessageConstant.PEOPLE_ERROR_EXCEEDING_MAX_CHARACTER_LIMIT,
+					new Object[] { PeopleConstants.MAX_SSN_LENGTH, "First Name" }));
+	}
+
+	public void validateAddressInBulk(String addressLine, List<String> errors) {
+		if (!addressLine.trim().matches(ADDRESS_REGEX))
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_ADDRESS));
+
+		if (addressLine.length() > PeopleConstants.MAX_ADDRESS_LENGTH)
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_ADDRESS_LENGTH,
+					new Object[] { PeopleConstants.MAX_ADDRESS_LENGTH }));
+
+	}
+
+	public void validateStateInBulk(String state, List<String> errors) {
+		if (state != null && (!state.trim().matches(SPECIAL_CHAR_REGEX))) {
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_CITY_STATE));
+		}
+
+		if (state != null && state.length() > PeopleConstants.MAX_ADDRESS_LENGTH)
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_STATE_PROVINCE,
+					new Object[] { PeopleConstants.MAX_ADDRESS_LENGTH }));
 	}
 
 	public void validateFirstName(String firstName, List<String> errors) {
 		if (firstName != null && (!firstName.trim().matches(NAME_REGEX))) {
 			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_FIRST_NAME));
 		}
+
+		if (firstName != null && firstName.length() > PeopleConstants.MAX_NAME_LENGTH)
+			errors.add(messageUtil.getMessage(PeopleMessageConstant.PEOPLE_ERROR_EXCEEDING_MAX_CHARACTER_LIMIT,
+					new Object[] { PeopleConstants.MAX_NAME_LENGTH, "First Name" }));
+
 	}
 
 	public void validateLastName(String lastName, List<String> errors) {
 		if (lastName != null && (!lastName.trim().matches(NAME_REGEX))) {
 			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_LAST_NAME));
 		}
+
+		if (lastName != null && lastName.length() > PeopleConstants.MAX_NAME_LENGTH)
+			errors.add(messageUtil.getMessage(PeopleMessageConstant.PEOPLE_ERROR_EXCEEDING_MAX_CHARACTER_LIMIT,
+					new Object[] { PeopleConstants.MAX_NAME_LENGTH, "Last Name" }));
 	}
 
 	public void validateEmergencyContactName(String name, List<String> errors) {
 		if (name != null && (!name.trim().matches(NAME_REGEX))) {
 			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_EMERGENCY_CONTACT_NAME));
 		}
+
+		if (name != null && name.length() > PeopleConstants.MAX_NAME_LENGTH)
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_NAME_LENGTH,
+					new Object[] { PeopleConstants.MAX_NAME_LENGTH }));
 	}
 
 	public void validatePhoneNumberInBulk(String phone, List<String> errors) {
-		if (!Validations.isValidPhoneNumber(phone)) {
+		if (phone != null && !Validations.isValidPhoneNumber(phone)) {
 			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_PHONE_NUMBER));
 		}
+
+		if (phone != null && phone.length() > PeopleConstants.MAX_PHONE_LENGTH)
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_PHONE_NUMBER_LENGTH,
+					new Object[] { PeopleConstants.MAX_PHONE_LENGTH }));
 	}
 
 	public void validateEmergencyContactNumberInBulk(String phone, List<String> errors) {
@@ -1618,6 +1697,10 @@ public class PeopleServiceImpl implements PeopleService {
 		else {
 			errors.add(messageUtil.getMessage(PeopleMessageConstant.PEOPLE_ERROR_INVALID_EMAIL));
 		}
+
+		if (workEmail != null && workEmail.length() > PeopleConstants.MAX_EMAIL_LENGTH)
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_EMAIL_LENGTH,
+					new Object[] { PeopleConstants.MAX_EMAIL_LENGTH }));
 	}
 
 	private void validateUserSupervisor(String supervisorEmail, List<String> errors) {
