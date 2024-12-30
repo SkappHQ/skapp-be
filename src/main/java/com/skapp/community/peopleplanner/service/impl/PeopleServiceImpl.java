@@ -94,7 +94,6 @@ import com.skapp.community.peopleplanner.type.BulkItemStatus;
 import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.util.Validations;
-import com.skapp.enterprise.common.constant.EPCommonMessageConstant;
 import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -1544,7 +1543,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	public void validatePassportNumber(String passportNumber, List<String> errors) {
-		if (passportNumber != null && (!passportNumber.trim().matches(SPECIAL_CHAR_REGEX))) {
+		if (passportNumber != null && (!passportNumber.trim().matches(ALPHANUMERIC_REGEX))) {
 			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_PASSPORT));
 		}
 
