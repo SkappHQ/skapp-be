@@ -1526,6 +1526,7 @@ public class PeopleServiceImpl implements PeopleService {
 		if (employeeBulkDto.getAddressLine2() != null)
 			validateAddressInBulk(employeeBulkDto.getAddressLine2(), errors);
 		validateStateInBulk(employeeBulkDto.getEmployeePersonalInfo().getCity(), errors);
+		validatePassportNumber(employeeBulkDto.getEmployeePersonalInfo().getPassportNo(), errors);
 		if (employeeBulkDto.getEmployeePersonalInfo().getSsn() != null) {
 			validateSocialSecurityNumber(employeeBulkDto.getEmployeePersonalInfo().getSsn(), errors);
 		}
@@ -1539,6 +1540,16 @@ public class PeopleServiceImpl implements PeopleService {
 
 		if (nin.length() > PeopleConstants.MAX_NIN_LENGTH)
 			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_NIN_LENGTH,
+					new Object[] { PeopleConstants.MAX_NIN_LENGTH }));
+	}
+
+	public void validatePassportNumber(String passportNumber, List<String> errors) {
+		if (passportNumber != null && (!passportNumber.trim().matches(SPECIAL_CHAR_REGEX))) {
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_PASSPORT));
+		}
+
+		if (passportNumber != null && passportNumber.length() > PeopleConstants.MAX_NIN_LENGTH)
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_PASSPORT_LENGTH,
 					new Object[] { PeopleConstants.MAX_NIN_LENGTH }));
 	}
 
