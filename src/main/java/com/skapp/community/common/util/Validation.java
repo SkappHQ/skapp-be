@@ -29,7 +29,7 @@ public class Validation {
 
 	public static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
 
-	private static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
+	private static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[~`\\-_={}\\[\\]@$!%*?&.^()|])[A-Za-z\\d~`\\-_={}\\[\\]@$!%*?&.^()|]{8,}$";
 
 	public static final String NAME_REGEX = "[\\p{L}\\p{M}\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u00FF"
 			+ "\\u0100-\\u017F\\u0142\\u00AF\\u0027\\u002D\\u005E\\u0060\\u007E\\u00E7\\u00C7\\u02DA]*";

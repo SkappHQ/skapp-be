@@ -79,8 +79,8 @@ VALUES (default, YEAR(CURRENT_TIMESTAMP) || '-03-06', 'Poya Day', 'FULL_DAY', tr
        (default, YEAR(CURRENT_TIMESTAMP) || '-02-20', 'Maha Shiva Rathri', 'FULL_DAY', false),
        (default, YEAR(CURRENT_TIMESTAMP) || '-01-18', 'Thai Pongal Day', 'FULL_DAY', true),
        (default, YEAR(CURRENT_TIMESTAMP) || '-02-05', 'National Chocolate Fondue Day', 'FULL_DAY', true),
-       (default, YEAR(CURRENT_TIMESTAMP) || '-12-31', 'Christmas Day', 'FULL_DAY', true),
-       (default, YEAR(CURRENT_TIMESTAMP) || '-12-30', 'Future holiday', 'FULL_DAY', true);
+       (default, YEAR(CURRENT_TIMESTAMP) || '-12-25', 'Christmas Day', 'FULL_DAY', true),
+       (default, YEAR(CURRENT_TIMESTAMP+1) || '-12-31', 'Future holiday', 'FULL_DAY', true);
 
 INSERT INTO time_config(id, day_of_week, time_blocks, total_hours, is_week_start_day, start_hour, start_minute)
 VALUES (default, 'TUESDAY', '[{"hours": 4.0, "timeBlock": "MORNING_HOURS"},{"hours": 4.0, "timeBlock": "EVENING_HOURS"}]', 8.0, false, 8, 30),
