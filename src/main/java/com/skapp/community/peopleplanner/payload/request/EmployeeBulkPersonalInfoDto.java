@@ -35,4 +35,6 @@ public class EmployeeBulkPersonalInfoDto {
 
 	private JsonNode extraInfo;
 
+	private String passportNo;
+
 }

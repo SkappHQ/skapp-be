@@ -66,6 +66,8 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_VALIDATION_EMPLOYEE_NAME("api.error.common.validation.employee-name"),
 	COMMON_ERROR_VALIDATION_EMAIL_LENGTH("api.error.common.validation.email-length"),
 	COMMON_ERROR_VALIDATION_FIRST_NAME("api.error.common.validation.first-name"),
+	COMMON_ERROR_VALIDATION_CITY_STATE("api.error.common.validation.city-state"),
+	COMMON_ERROR_VALIDATION_SSN("api.error.common.validation.ssn"),
 	COMMON_ERROR_VALIDATION_LAST_NAME("api.error.common.validation.last-name"),
 	COMMON_ERROR_VALIDATION_NAME("api.error.common.validation.name"),
 	COMMON_ERROR_VALIDATION_NAME_LENGTH("api.error.common.validation.name-length"),
@@ -77,6 +79,7 @@ public enum CommonMessageConstant implements MessageConstant {
 			"api.error.common.validation.emergency-contact-phone-number"),
 	COMMON_ERROR_VALIDATION_ADDRESS("api.error.common.validation.address"),
 	COMMON_ERROR_VALIDATION_ADDRESS_LENGTH("api.error.common.validation.address-length"),
+	COMMON_ERROR_VALIDATION_STATE_PROVINCE("api.error.common.validation.state-province"),
 	COMMON_ERROR_VALIDATION_IDENTIFICATION_NUMBER("api.error.common.validation.identification-number"),
 	COMMON_ERROR_VALIDATION_IDENTIFICATION_NUMBER_LENGTH("api.error.common.validation.identification-number-length"),
 	COMMON_ERROR_VALIDATION_NIN("api.error.common.validation.nin"),
@@ -97,7 +100,9 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_SERVLET_EXCEPTION("api.error.common.servlet-exception"),
 	COMMON_ERROR_TOO_MANY_REQUESTS_EXCEPTION("api.error.common.too-many-requests-exception"),
 	COMMON_ERROR_IO_EXCEPTION("api.error.common.io-exception"),
-	COMMON_ERROR_EXCEED_MAX_EMPLOYEE_COUNT("api.error.common.exceeded-max-employee-count"),;
+	COMMON_ERROR_EXCEED_MAX_EMPLOYEE_COUNT("api.error.common.exceeded-max-employee-count"),
+	COMMON_ERROR_VALIDATION_PASSPORT("api.error.common.validation.passport"),
+	COMMON_ERROR_VALIDATION_PASSPORT_LENGTH("api.error.common.validation.passport-length"),;
 
 	private final String messageKey;
 

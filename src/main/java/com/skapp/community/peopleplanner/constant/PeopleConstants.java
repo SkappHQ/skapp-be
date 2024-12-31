@@ -88,6 +88,8 @@ public class PeopleConstants {
 
 	public static final int MAX_NIN_LENGTH = 15;
 
+	public static final int MAX_SSN_LENGTH = 11;
+
 	public static final String CHARACTER_TEXT = " characters";
 
 }
