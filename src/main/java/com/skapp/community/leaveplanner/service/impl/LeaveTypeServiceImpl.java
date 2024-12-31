@@ -132,9 +132,6 @@ public class LeaveTypeServiceImpl implements LeaveTypeService {
 
 		if (leaveTypePatchRequestDto.getEmojiCode() != null
 				&& !leaveType.getEmojiCode().equalsIgnoreCase(leaveTypePatchRequestDto.getEmojiCode())) {
-			if (isEmojiExist(leaveTypePatchRequestDto.getEmojiCode())) {
-				throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_LEAVE_TYPE_EMOJI_EXISTS);
-			}
 			leaveType.setEmojiCode(leaveTypePatchRequestDto.getEmojiCode());
 		}
 
@@ -254,10 +251,6 @@ public class LeaveTypeServiceImpl implements LeaveTypeService {
 
 		if (leaveType.getName() != null && isLeaveTypeNameExist(leaveType.getName())) {
 			throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_LEAVE_TYPE_ALREADY_EXISTS);
-		}
-
-		if (isEmojiExist(leaveType.getEmojiCode())) {
-			throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_LEAVE_TYPE_EMOJI_EXISTS);
 		}
 
 		if (Boolean.TRUE.equals(!leaveType.getIsCarryForwardEnabled()) && leaveType.getMaxCarryForwardDays() > 0) {
