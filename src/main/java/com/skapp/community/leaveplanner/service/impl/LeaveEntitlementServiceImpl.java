@@ -491,11 +491,16 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 		}
 
 		LeaveEntitlement leaveEntitlement = new LeaveEntitlement();
+		if (!leaveTypeOpt.get().getIsActive()) {
+			leaveEntitlement.setActive(false);
+		}
+
 		leaveEntitlement.setEmployee(employeeOpt.get());
 		leaveEntitlement.setManual(true);
 		leaveEntitlement.setLeaveType(leaveTypeOpt.get());
 		leaveEntitlement.setTotalDaysAllocated(customLeaveEntitlementDto.getNumberOfDaysOff());
 		leaveEntitlement.setTotalDaysUsed(0F);
+
 		// If the valid_from and valid_to dates are not given, the default value is set
 		// from the current date, till the end of the current year.
 		if (customLeaveEntitlementDto.getValidFromDate() == null) {
