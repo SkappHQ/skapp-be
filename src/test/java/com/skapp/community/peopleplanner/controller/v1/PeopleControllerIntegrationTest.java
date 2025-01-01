@@ -203,7 +203,7 @@ public class PeopleControllerIntegrationTest {
 	private EmployeeDetailsDto getEmployeeDetails() {
 		EmployeeDetailsDto employeeDetailsDto = new EmployeeDetailsDto();
 		employeeDetailsDto.setWorkEmail("username9@gmail.com");
-		employeeDetailsDto.setFirstName("Employee User Five");
+		employeeDetailsDto.setFirstName("Employee");
 		employeeDetailsDto.setLastName("Lastname");
 		employeeDetailsDto.setMiddleName("MiddleName");
 		employeeDetailsDto.setDesignation("Software Engineer");

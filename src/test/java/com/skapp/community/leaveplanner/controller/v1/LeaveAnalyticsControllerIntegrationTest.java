@@ -104,13 +104,13 @@ public class LeaveAnalyticsControllerIntegrationTest {
 		params.add("startDate", String.valueOf(LocalDate.of(LocalDate.now().getYear(), Month.JANUARY, 1)));
 		params.add("endDate", String.valueOf(LocalDate.of(LocalDate.now().getYear(), Month.DECEMBER, 30)));
 		params.add("status", "PENDING");
-		params.add("searchKeyword", "Lastname2");
+		params.add("searchKeyword", "Lastname Two");
 
 		mvc.perform(get(PATH.concat("/all/leaves")).params(params).accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("['results'][0]['items'][0]['status']").value("PENDING"))
-			.andExpect(jsonPath("['results'][0]['items'][0]['employee']['lastName']").value("Lastname2"));
+			.andExpect(jsonPath("['results'][0]['items'][0]['employee']['lastName']").value("Lastname Two"));
 	}
 
 }
