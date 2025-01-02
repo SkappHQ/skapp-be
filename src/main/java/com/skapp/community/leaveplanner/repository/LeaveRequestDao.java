@@ -86,7 +86,7 @@ public interface LeaveRequestDao
 					         LEFT JOIN employee_team et ON lr.employee_id = et.employee_id
 					         JOIN user
 					         ON lr.employee_id = user.user_id, leave_type AS lt
-					WHERE (leave_date BETWEEN ?3 AND ?4) and (leave_date BETWEEN lr.start_date AND lr.end_date) AND ((WEEKDAY(leave_date) IN ?1) OR (NOT EXISTS (SELECT 1 FROM time_config))) AND ((leave_date NOT IN ?2) OR (NOT EXISTS (SELECT 1 FROM holiday WHERE is_active=1))) AND lr.`status` IN ('APPROVED', 'PENDING')
+					WHERE (leave_date BETWEEN ?3 AND ?4) and (leave_date BETWEEN lr.start_date AND lr.end_date) AND ((WEEKDAY(leave_date) IN ?1) OR (NOT EXISTS (SELECT 1 FROM time_config))) AND ((leave_date NOT IN ?2) OR (NOT EXISTS (SELECT 1 FROM holiday WHERE is_active=1))) AND lr.`status` IN ('APPROVED')
 					AND (lr.type_id IN (?5) OR concat(?5) IS NULL)
 					AND (et.team_id IN (?6) OR concat(?6) IS NULL)
 					AND lr.type_id = lt.type_id AND lt.`is_active` = 1  AND (NOT (user.`is_active` = '0'))
@@ -125,7 +125,7 @@ public interface LeaveRequestDao
 					  AND (leaveDate BETWEEN lr.start_date AND lr.end_date)
 					  AND ((leaveDate NOT IN ?4) OR (NOT EXISTS (SELECT 1 FROM holiday WHERE is_active = 1)))
 					  AND ((WEEKDAY(leaveDate) IN ?3) OR (NOT EXISTS (SELECT 1 FROM time_config)))
-					  AND (lr.`status` = 'APPROVED')
+					  AND (lr.`status` = 'APPROVED' OR lr.`status` = 'PENDING')
 					  AND (NOT (user.`is_active` = '0'))
 					  AND lr.employee_id = ?5
 					  AND (lr.type_id IN ?6)
