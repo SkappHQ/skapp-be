@@ -54,7 +54,7 @@ public interface LeaveRequestRepository {
 	LeaveRequest findByEmployeeAndDate(Long employeeId, LocalDate date);
 
 	Page<LeaveRequest> findAllLeaveRequests(Long managerEmployeeId, LeaveRequestFilterDto leaveRequestFilterDto,
-			boolean isLeaveAdmin, Pageable page);
+			Pageable page);
 
 	Page<LeaveRequest> findAllRequestAssignedToManager(Long employeeId, LeaveRequestFilterDto leaveRequestFilterDto,
 			Pageable pageable);

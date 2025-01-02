@@ -50,6 +50,7 @@ public class LeaveAnalyticsControllerIntegrationTest {
 		 * Set mocked user and a mocked security context
 		 */
 		User mockUser = new User();
+		mockUser.setUserId(1L);
 		mockUser.setEmail("user1@gmail.com");
 		mockUser.setPassword("$2a$12$CGe4n75Yejv/O8dnOTD7R.x0LruTiKM22kcdc3YNl4RRw01srJsB6");
 		mockUser.setIsActive(true);

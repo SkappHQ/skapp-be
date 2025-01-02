@@ -761,7 +761,7 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 
 	@Override
 	public Page<LeaveRequest> findAllLeaveRequests(Long managerEmployeeId, LeaveRequestFilterDto leaveRequestFilterDto,
-			boolean isLeaveAdmin, Pageable page) {
+			Pageable page) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<LeaveRequest> criteriaQuery = criteriaBuilder.createQuery(LeaveRequest.class);
 		Root<LeaveRequest> root = criteriaQuery.from(LeaveRequest.class);
@@ -783,29 +783,30 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 
 		setDateRangeFiltration(leaveRequestFilterDto, criteriaBuilder, root, predicates);
 
-		if (!isLeaveAdmin) {
-			Subquery<Long> managedEmployeesSubquery = criteriaQuery.subquery(Long.class);
-			Root<EmployeeManager> managerRoot = managedEmployeesSubquery.from(EmployeeManager.class);
-			managedEmployeesSubquery.select(managerRoot.get(EmployeeManager_.employee).get(Employee_.employeeId))
-				.where(criteriaBuilder.equal(managerRoot.get(EmployeeManager_.manager).get(Employee_.employeeId),
-						managerEmployeeId));
+		Subquery<Long> managedEmployeesSubquery = criteriaQuery.subquery(Long.class);
+		Root<EmployeeManager> managerRoot = managedEmployeesSubquery.from(EmployeeManager.class);
+		managedEmployeesSubquery.select(managerRoot.get(EmployeeManager_.employee).get(Employee_.employeeId))
+			.where(criteriaBuilder.equal(managerRoot.get(EmployeeManager_.manager).get(Employee_.employeeId),
+					managerEmployeeId));
 
-			Subquery<Long> supervisedTeamsSubquery = criteriaQuery.subquery(Long.class);
-			Root<EmployeeTeam> teamRoot = supervisedTeamsSubquery.from(EmployeeTeam.class);
-			supervisedTeamsSubquery.select(teamRoot.get(EmployeeTeam_.employee).get(Employee_.employeeId))
-				.where(criteriaBuilder.and(criteriaBuilder
-					.equal(teamRoot.get(EmployeeTeam_.employee).get(Employee_.employeeId), managerEmployeeId),
-						criteriaBuilder.isTrue(teamRoot.get(EmployeeTeam_.isSupervisor))));
+		Subquery<Long> supervisedTeamsSubquery = criteriaQuery.subquery(Long.class);
+		Root<EmployeeTeam> teamRoot = supervisedTeamsSubquery.from(EmployeeTeam.class);
 
-			predicates.add(criteriaBuilder.or(employee.get(Employee_.employeeId).in(managedEmployeesSubquery),
-					employee.get(Employee_.employeeId).in(supervisedTeamsSubquery)));
+		Predicate baseCondition = criteriaBuilder.and(criteriaBuilder
+			.equal(teamRoot.get(EmployeeTeam_.employee).get(Employee_.employeeId), managerEmployeeId),
+				criteriaBuilder.isTrue(teamRoot.get(EmployeeTeam_.isSupervisor)));
+
+		if (leaveRequestFilterDto.getTeamIds() != null && !leaveRequestFilterDto.getTeamIds().contains(-1L)
+				&& !leaveRequestFilterDto.getTeamIds().isEmpty()) {
+			baseCondition = criteriaBuilder.and(baseCondition,
+					teamRoot.get(EmployeeTeam_.team).get(Team_.teamId).in(leaveRequestFilterDto.getTeamIds()));
 		}
-		else if (leaveRequestFilterDto.getTeamIds() != null && !leaveRequestFilterDto.getTeamIds().contains(-1L)) {
-			Join<LeaveRequest, Employee> employeeJoin = root.join(LeaveRequest_.employee);
-			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeJoin.join(Employee_.teams);
-			predicates
-				.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(leaveRequestFilterDto.getTeamIds()));
-		}
+
+		supervisedTeamsSubquery.select(teamRoot.get(EmployeeTeam_.employee).get(Employee_.employeeId))
+			.where(baseCondition);
+
+		predicates.add(criteriaBuilder.or(employee.get(Employee_.employeeId).in(managedEmployeesSubquery),
+				employee.get(Employee_.employeeId).in(supervisedTeamsSubquery)));
 
 		if (leaveRequestFilterDto.getSearchKeyword() != null && !leaveRequestFilterDto.getSearchKeyword().isBlank()) {
 			predicates.add(findByEmailName(leaveRequestFilterDto.getSearchKeyword(), criteriaBuilder, employee, user));

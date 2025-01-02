@@ -1870,9 +1870,8 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 				Sort.by(leaveRequestFilterDto.getSortOrder(), String.valueOf(leaveRequestFilterDto.getSortKey())));
 
 		EmployeeRole employeeRole = currentUser.getEmployee().getEmployeeRole();
-		boolean isLeaveAdmin = employeeRole.getLeaveRole().equals(Role.LEAVE_ADMIN);
 		Page<LeaveRequest> leaveRequests = leaveRequestDao.findAllLeaveRequests(employeeId, leaveRequestFilterDto,
-				isLeaveAdmin, pageable);
+				pageable);
 
 		PageDto pageDto = pageTransformer.transform(leaveRequests);
 		List<AllLeaveRequestsResponseDto> list = leaveMapper.leaveRequestListToAllLeaveRequestsResponseDtoList(
