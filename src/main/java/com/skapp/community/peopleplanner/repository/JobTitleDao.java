@@ -13,4 +13,6 @@ public interface JobTitleDao
 
 	Optional<JobTitle> findByJobTitleIdAndIsActive(Long jobTitleId, Boolean isActive);
 
+	boolean existsByJobTitleIdAndIsActive(Long jobTitleId, boolean isActive);
+
 }

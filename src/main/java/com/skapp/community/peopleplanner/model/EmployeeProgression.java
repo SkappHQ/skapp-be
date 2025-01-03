@@ -42,16 +42,14 @@ public class EmployeeProgression {
 	@Column(name = "is_current")
 	private Boolean isCurrent;
 
-	@ManyToOne(optional = false)
+	@ManyToOne
 	@JoinColumn(name = "employee_id")
 	private Employee employee;
 
-	@ManyToOne(optional = false)
-	@JoinColumn(name = "job_family_id")
-	private JobFamily jobFamily;
+	@Column(name = "job_family_id")
+	private Long jobFamilyId;
 
-	@ManyToOne(optional = false)
-	@JoinColumn(name = "job_title_id")
-	private JobTitle jobTitle;
+	@Column(name = "job_title_id")
+	private Long jobTitleId;
 
 }

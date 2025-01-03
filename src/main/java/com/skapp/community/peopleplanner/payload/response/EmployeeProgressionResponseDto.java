@@ -5,7 +5,7 @@ import com.skapp.community.peopleplanner.type.EmployeeType;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -19,8 +19,8 @@ public class EmployeeProgressionResponseDto {
 
 	private EmployeeJobFamilyDto jobFamily;
 
-	private Date startDate;
+	private LocalDate startDate;
 
-	private Date endDate;
+	private LocalDate endDate;
 
 }

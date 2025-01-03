@@ -13,4 +13,6 @@ public interface JobFamilyDao
 
 	Optional<JobFamily> findByJobFamilyIdAndIsActive(Long jobFamilyId, boolean isActive);
 
+	boolean existsByJobFamilyIdAndIsActive(Long jobFamilyId, boolean b);
+
 }

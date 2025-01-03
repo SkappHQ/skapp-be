@@ -22,12 +22,12 @@ import java.io.Serializable;
 public class JobFamilyTitle implements Serializable {
 
 	@Id
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "job_family_id")
 	private JobFamily jobFamily;
 
 	@Id
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "job_title_id")
 	private JobTitle jobTitle;
 

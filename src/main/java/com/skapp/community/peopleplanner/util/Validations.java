@@ -3,10 +3,10 @@ package com.skapp.community.peopleplanner.util;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.exception.ValidationException;
-import com.skapp.community.common.type.Role;
 import com.skapp.community.common.util.DateTimeUtils;
+import com.skapp.community.common.util.Validation;
 import com.skapp.community.peopleplanner.constant.PeopleConstants;
-import com.skapp.community.peopleplanner.model.EmployeeRole;
+import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeEducationDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFamilyDto;
@@ -61,14 +61,6 @@ public class Validations {
 	public static boolean validateTimeZone(String timeZone) {
 		List<String> validIDs = List.of(TimeZone.getAvailableIDs());
 		return validIDs.contains(timeZone);
-	}
-
-	public static boolean isManagerEligible(EmployeeRole role) {
-		return (role.getPeopleRole().equals(Role.PEOPLE_MANAGER) || role.getPeopleRole().equals(Role.PEOPLE_ADMIN))
-				|| (role.getAttendanceRole().equals(Role.ATTENDANCE_ADMIN)
-						|| role.getAttendanceRole().equals(Role.ATTENDANCE_MANAGER))
-				|| (role.getLeaveRole().equals(Role.LEAVE_ADMIN) || role.getLeaveRole().equals(Role.LEAVE_MANAGER))
-				|| role.getIsSuperAdmin();
 	}
 
 	public static void validateVisaDates(List<EmploymentVisaDto> employeeVisas) {
@@ -141,6 +133,20 @@ public class Validations {
 		if (employeeDetailsDto.getEmployeeFamilies() != null && !employeeDetailsDto.getEmployeeFamilies().isEmpty())
 			validateFamilyDetails(employeeDetailsDto.getEmployeeFamilies());
 
+		if (employeeDetailsDto.getEmployeeVisas() != null && !employeeDetailsDto.getEmployeeVisas().isEmpty()) {
+			validateVisaDates(employeeDetailsDto.getEmployeeVisas());
+		}
+
+		if (employeeDetailsDto.getTimeZone() != null && !employeeDetailsDto.getTimeZone().isEmpty()
+				&& !validateTimeZone(employeeDetailsDto.getTimeZone())) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_TIMEZONE);
+		}
+
+		if (employeeDetailsDto.getProbationPeriod() != null
+				&& Validation.isInvalidStartAndEndDate(employeeDetailsDto.getProbationPeriod().getStartDate(),
+						employeeDetailsDto.getProbationPeriod().getEndDate())) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_START_END_DATE);
+		}
 	}
 
 	public static void validateEmail(String email) {
@@ -154,8 +160,6 @@ public class Validations {
 
 	public static void validateName(String name) {
 		if (name != null && !name.trim().matches(NAME_REGEX))
-			// Name can only have alphabets, accent characters, whitespace and diacritical
-			// marks
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_NAME);
 
 		if (name != null && name.length() > PeopleConstants.MAX_NAME_LENGTH)
@@ -166,8 +170,6 @@ public class Validations {
 
 	public static void validateAddress(String addressLine) {
 		if (!addressLine.trim().matches(ADDRESS_REGEX))
-			// Address can only have alphabets, accent characters, whitespace and
-			// diacritical marks
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_ADDRESS);
 
 		if (addressLine.length() > PeopleConstants.MAX_ADDRESS_LENGTH)
@@ -188,7 +190,6 @@ public class Validations {
 
 	public static void validateEmployeeIdentificationNo(String identificationNo) {
 		if (!identificationNo.matches(VALID_IDENTIFICATION_NUMBER_REGEXP))
-			// Identification number is not valid. Please provide a valid phone number
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_IDENTIFICATION_NUMBER);
 
 		if (identificationNo.length() > PeopleConstants.MAX_ID_LENGTH)
@@ -199,8 +200,6 @@ public class Validations {
 
 	public static void validateNIN(String nin) {
 		if (!nin.trim().matches(VALID_NIN_NUMBER_REGEXP))
-			// The National identification number is not valid. Please provide a valid
-			// phone number
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_NIN);
 
 		if (nin.length() > PeopleConstants.MAX_NIN_LENGTH)
@@ -211,44 +210,36 @@ public class Validations {
 
 	public static void validateJoinedDate(LocalDate joinDate) {
 		if (joinDate.isAfter(LocalDate.now()))
-			// Joined date should not be a future date
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_JOIN_DATE);
 	}
 
 	public static void validateEmployeePeriod(ProbationPeriodDto employeePeriod) {
 		if (employeePeriod.getStartDate().isAfter(LocalDate.now()))
-			// Start date should not be a future date
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_START_DATE);
 
 		if (employeePeriod.getEndDate().isBefore(employeePeriod.getStartDate()))
-			// End date should be after the start date
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_END_DATE);
 	}
 
 	public static void validateStartAndJoinedDates(LocalDate startDate, LocalDate joinDate) {
 		if (startDate.isAfter(joinDate))
-			// Start date should be before the joined date
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_START_DATE_JOIN_DATE);
 	}
 
 	public static void validateBirthDate(LocalDate birthDate) {
 		if (!birthDate.isBefore(LocalDate.now()))
-			// Birthdate should not be a future date
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_BIRTH_DATE);
 	}
 
 	public static void validateEducationDetails(List<EmployeeEducationDto> employeeEducations) {
 		for (EmployeeEducationDto education : employeeEducations) {
 			if (education.getInstitution().length() > PeopleConstants.MAX_EDUCATIONAL_DETAILS_LENGTH)
-				// Institution cannot be empty
 				throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_ENTER_INSTITUTION);
 
 			if (education.getDegree().length() > PeopleConstants.MAX_EDUCATIONAL_DETAILS_LENGTH)
-				// Degree cannot be empty
 				throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_ENTER_DEGREE);
 
 			if (education.getSpecialization().length() > PeopleConstants.MAX_EDUCATIONAL_DETAILS_LENGTH)
-				// Specialization cannot be empty
 				throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_ENTER_SPECIALIZATION);
 
 			if (education.getStartDate() != null && education.getEndDate() != null

@@ -5,6 +5,7 @@ import com.skapp.community.peopleplanner.payload.request.EmployeeEmergencyDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFamilyDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeePersonalInfoDto;
 import com.skapp.community.peopleplanner.payload.request.EmploymentVisaDto;
+import com.skapp.community.peopleplanner.payload.request.JobTitleDto;
 import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.EEO;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
