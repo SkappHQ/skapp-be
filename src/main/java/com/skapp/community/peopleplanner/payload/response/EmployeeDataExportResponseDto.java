@@ -1,6 +1,7 @@
 package com.skapp.community.peopleplanner.payload.response;
 
 import com.skapp.community.peopleplanner.payload.request.JobFamilyDto;
+import com.skapp.community.peopleplanner.payload.request.JobTitleDto;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.Gender;
 import lombok.Getter;

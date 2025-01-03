@@ -1053,7 +1053,7 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 
 	public static Integer getAllDaysBetween(LocalDate startDate, LocalDate endDate, List<LocalDate> holidays,
 			List<TimeConfig> timeConfigs) {
-		Integer daysBetween = 0;
+		int daysBetween = 0;
 
 		while (!holidays.contains(startDate) && !CommonModuleUtils.checkIfDayIsWorkingDay(startDate, timeConfigs)
 				&& (startDate.isBefore(endDate) || startDate.isEqual(endDate))) {

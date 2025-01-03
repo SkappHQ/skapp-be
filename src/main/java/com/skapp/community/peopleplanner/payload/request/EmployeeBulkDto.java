@@ -36,6 +36,12 @@ public class EmployeeBulkDto {
 
 	private Set<String> teams;
 
+	private String jobFamily;
+
+	private String jobTitle;
+
+	private String employeeType;
+
 	private Gender gender;
 
 	private String phone;

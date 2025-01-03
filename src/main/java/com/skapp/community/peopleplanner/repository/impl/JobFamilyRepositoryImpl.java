@@ -111,4 +111,64 @@ public class JobFamilyRepositoryImpl implements JobFamilyRepository {
 		return entityManager.createQuery(criteriaQuery).getResultList();
 	}
 
+	@Override
+	public JobFamily getJobFamilyById(Long jobFamilyId) {
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaQuery<JobFamily> criteriaQuery = criteriaBuilder.createQuery(JobFamily.class);
+		Root<JobFamily> root = criteriaQuery.from(JobFamily.class);
+
+		List<Predicate> predicates = new ArrayList<>();
+		predicates.add(criteriaBuilder.equal(root.get(JobFamily_.jobFamilyId), jobFamilyId));
+		predicates.add(criteriaBuilder.equal(root.get(JobFamily_.isActive), true));
+
+		criteriaQuery.where(predicates.toArray(new Predicate[0]));
+
+		return entityManager.createQuery(criteriaQuery).getResultStream().findFirst().orElse(null);
+	}
+
+	@Override
+	public JobFamily getJobFamilyByName(String jobFamilyName) {
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaQuery<JobFamily> criteriaQuery = criteriaBuilder.createQuery(JobFamily.class);
+		Root<JobFamily> root = criteriaQuery.from(JobFamily.class);
+
+		List<Predicate> predicates = new ArrayList<>();
+		predicates.add(criteriaBuilder.equal(root.get(JobFamily_.name), jobFamilyName));
+		predicates.add(criteriaBuilder.equal(root.get(JobFamily_.isActive), true));
+
+		criteriaQuery.where(predicates.toArray(new Predicate[0]));
+
+		return entityManager.createQuery(criteriaQuery).getResultStream().findFirst().orElse(null);
+	}
+
+	@Override
+	public JobTitle getJobTitleById(Long jobTitleId) {
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaQuery<JobTitle> criteriaQuery = criteriaBuilder.createQuery(JobTitle.class);
+		Root<JobTitle> root = criteriaQuery.from(JobTitle.class);
+
+		List<Predicate> predicates = new ArrayList<>();
+		predicates.add(criteriaBuilder.equal(root.get(JobTitle_.jobTitleId), jobTitleId));
+		predicates.add(criteriaBuilder.equal(root.get(JobTitle_.isActive), true));
+
+		criteriaQuery.where(predicates.toArray(new Predicate[0]));
+
+		return entityManager.createQuery(criteriaQuery).getResultStream().findFirst().orElse(null);
+	}
+
+	@Override
+	public JobTitle getJobTitleByName(String jobTitleName) {
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaQuery<JobTitle> criteriaQuery = criteriaBuilder.createQuery(JobTitle.class);
+		Root<JobTitle> root = criteriaQuery.from(JobTitle.class);
+
+		List<Predicate> predicates = new ArrayList<>();
+		predicates.add(criteriaBuilder.equal(root.get(JobTitle_.name), jobTitleName));
+		predicates.add(criteriaBuilder.equal(root.get(JobTitle_.isActive), true));
+
+		criteriaQuery.where(predicates.toArray(new Predicate[0]));
+
+		return entityManager.createQuery(criteriaQuery).getResultStream().findFirst().orElse(null);
+	}
+
 }

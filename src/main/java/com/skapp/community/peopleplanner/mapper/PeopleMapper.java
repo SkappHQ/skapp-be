@@ -36,6 +36,7 @@ import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
 import com.skapp.community.peopleplanner.payload.request.EmploymentVisaDto;
 import com.skapp.community.peopleplanner.payload.request.HolidayRequestDto;
 import com.skapp.community.peopleplanner.payload.request.JobFamilyDto;
+import com.skapp.community.peopleplanner.payload.request.JobTitleDto;
 import com.skapp.community.peopleplanner.payload.request.ModuleRoleRestrictionRequestDto;
 import com.skapp.community.peopleplanner.payload.request.TeamRequestDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeDataExportResponseDto;
@@ -50,7 +51,6 @@ import com.skapp.community.peopleplanner.payload.response.HolidayBasicDetailsRes
 import com.skapp.community.peopleplanner.payload.response.HolidayResponseDto;
 import com.skapp.community.peopleplanner.payload.response.JobFamilyResponseDetailDto;
 import com.skapp.community.peopleplanner.payload.response.JobFamilyResponseDto;
-import com.skapp.community.peopleplanner.payload.response.JobTitleDto;
 import com.skapp.community.peopleplanner.payload.response.JobTitleResponseDetailDto;
 import com.skapp.community.peopleplanner.payload.response.ManagerCoreDetailsDto;
 import com.skapp.community.peopleplanner.payload.response.ManagerEmployeeDto;
@@ -166,6 +166,8 @@ public interface PeopleMapper {
 	@Mapping(target = "firstName", source = "employeeBulkDto.firstName")
 	@Mapping(target = "teams", ignore = true)
 	@Mapping(target = "joinDate", source = "employeeBulkDto.joinedDate")
+	@Mapping(target = "jobFamily", ignore = true)
+	@Mapping(target = "jobTitle", ignore = true)
 	Employee employeeBulkDtoToEmployee(EmployeeBulkDto employeeBulkDto);
 
 	@Mapping(target = "primaryManager", ignore = true)
