@@ -120,7 +120,7 @@ public class LeaveEntitlementController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_LEAVE_MANAGER')")
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_ADMIN','ROLE_LEAVE_MANAGER')")
 	@PostMapping(value = "/bulk", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> addNewLeaveEntitlements(
 			@Valid @RequestBody BulkLeaveEntitlementDto bulkLeaveEntitlementDto) {
