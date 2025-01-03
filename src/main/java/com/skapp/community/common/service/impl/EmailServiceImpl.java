@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.skapp.community.common.component.AsyncEmailSender;
-import com.skapp.community.common.component.impl.AsyncEmailSenderImpl;
 import com.skapp.community.common.model.Organization;
 import com.skapp.community.common.payload.email.EmailTemplateMetadata;
 import com.skapp.community.common.payload.request.TestEmailServerRequestDto;
