@@ -230,16 +230,13 @@ public class LeaveTypeServiceImpl implements LeaveTypeService {
 			LeaveTypePatchRequestDto leaveTypePatchRequestDto) {
 		if (!Objects.equals(leaveTypePatchRequestDto.getIsActive(), leaveType.getIsActive())) {
 			leaveType.setIsActive(leaveTypePatchRequestDto.getIsActive());
-			if (Boolean.FALSE.equals(leaveTypePatchRequestDto.getIsActive())) {
-
-				List<LeaveEntitlement> leaveEntitlements = leaveEntitlementDao.findAllByLeaveType(leaveType);
-				if (!leaveEntitlements.isEmpty()) {
-					leaveEntitlements.forEach(leaveEntitlement -> leaveEntitlement.setActive(false));
-					return leaveEntitlements;
-				}
+			List<LeaveEntitlement> leaveEntitlements = leaveEntitlementDao.findAllByLeaveType(leaveType);
+			if (!leaveEntitlements.isEmpty() && leaveTypePatchRequestDto.getIsActive() != null) {
+				boolean isActive = Boolean.TRUE.equals(leaveTypePatchRequestDto.getIsActive());
+				leaveEntitlements.forEach(leaveEntitlement -> leaveEntitlement.setActive(isActive));
+				return leaveEntitlements;
 			}
 		}
-
 		return Collections.emptyList();
 	}
 
