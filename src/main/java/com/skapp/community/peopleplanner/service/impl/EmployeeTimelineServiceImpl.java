@@ -96,10 +96,12 @@ public class EmployeeTimelineServiceImpl implements EmployeeTimelineService {
 		if (employeeOptional.isEmpty()) {
 			throw new ModuleException(PEOPLE_ERROR_RESOURCE_NOT_FOUND);
 		}
+
 		List<EmployeeTimeline> employeeTimelines = employeeTimelineDao.findAllByEmployee(employeeOptional.get());
 
 		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MM-yyyy", Locale.ENGLISH);
 		Map<String, List<EmployeeTimeline>> groupedTimelines = employeeTimelines.stream()
+			.filter(timeline -> timeline.getDisplayDate() != null)
 			.collect(Collectors.groupingBy(timeline -> timeline.getDisplayDate().format(dateFormatter)));
 
 		List<EmployeeTimelineResponseListDto> employeeTimelineResponseListDtos = groupedTimelines.entrySet()
@@ -109,29 +111,61 @@ public class EmployeeTimelineServiceImpl implements EmployeeTimelineService {
 				List<EmployeeTimeline> timelinesForYearMonth = entry.getValue();
 
 				EmployeeTimelineResponseListDto responseDtoList = new EmployeeTimelineResponseListDto();
-				responseDtoList.setYear((long) Integer.parseInt(yearMonth.split("-")[1]));
-				responseDtoList.setMonth(yearMonth.split("-")[0]);
+
+				if (yearMonth != null && yearMonth.contains("-")) {
+					String[] parts = yearMonth.split("-");
+					try {
+						responseDtoList.setYear((long) Integer.parseInt(parts[1]));
+						responseDtoList.setMonth(parts[0]);
+					}
+					catch (NumberFormatException e) {
+						log.error("Failed to parse year and month from yearMonth: {}", yearMonth, e);
+						responseDtoList.setYear(null);
+						responseDtoList.setMonth(null);
+					}
+				}
+				else {
+					log.warn("Invalid yearMonth format: {}", yearMonth);
+					responseDtoList.setYear(null);
+					responseDtoList.setMonth(null);
+				}
+
 				List<EmployeeTimelineResponseDto> unsortedTimeLines = peopleMapper
 					.employeeTimelinesToEmployeeTimelineResponseDtoList(timelinesForYearMonth);
 				unsortedTimeLines.forEach(timelineObj -> {
-					Optional<User> userOpt = userDao.findById(Long.parseLong(timelineObj.getCreatedBy()));
-					if (userOpt.isPresent() && userOpt.get().getEmployee() != null
-							&& userOpt.get().getEmployee().getFirstName() != null) {
-						Employee createdEmployee = userOpt.get().getEmployee();
-						String createdBy = createdEmployee.getFirstName()
-							.concat(createdEmployee.getLastName() != null ? " " + createdEmployee.getLastName()
-									: " " + createdEmployee.getMiddleName());
-						timelineObj.setCreatedBy(createdBy);
+					String createdById = timelineObj.getCreatedBy();
+					if (createdById != null && !createdById.isEmpty()) {
+						try {
+							Optional<User> userOpt = userDao.findById(Long.parseLong(createdById));
+							if (userOpt.isPresent() && userOpt.get().getEmployee() != null
+									&& userOpt.get().getEmployee().getFirstName() != null) {
+								Employee createdEmployee = userOpt.get().getEmployee();
+								String createdBy = createdEmployee.getFirstName()
+									.concat(createdEmployee.getLastName() != null ? " " + createdEmployee.getLastName()
+											: " " + createdEmployee.getMiddleName());
+								timelineObj.setCreatedBy(createdBy);
+							}
+						}
+						catch (NumberFormatException e) {
+							log.error("Invalid createdBy ID: {}", createdById, e);
+							timelineObj.setCreatedBy("Unknown");
+						}
+					}
+					else {
+						timelineObj.setCreatedBy("Unknown");
 					}
 				});
+
 				unsortedTimeLines.sort(
 						Comparator.comparing(EmployeeTimelineResponseDto::getDisplayDate, Collections.reverseOrder()));
 				responseDtoList.setEmployeeTimelineRecords(unsortedTimeLines);
 
 				return responseDtoList;
 			})
-			.sorted(Comparator.comparing(EmployeeTimelineResponseListDto::getYear, Collections.reverseOrder())
-				.thenComparing(EmployeeTimelineResponseListDto::getMonth, Collections.reverseOrder()))
+			.sorted(Comparator
+				.comparing(EmployeeTimelineResponseListDto::getYear, Comparator.nullsLast(Collections.reverseOrder()))
+				.thenComparing(EmployeeTimelineResponseListDto::getMonth,
+						Comparator.nullsLast(Collections.reverseOrder())))
 			.toList();
 
 		log.info("getCurrentEmployeeTimelineRecords: execution ended by user: {}", currentUser.getUserId());
