@@ -10,3 +10,6 @@
 [submodule "src/main/resources/config"]
 	path = src/main/resources/config
 	url = https://github.com/SkappHQ/skapp-ep-be-resources-config.git
+[submodule "src/main/java/com/skapp/ep"]
+	path = src/main/java/com/skapp/ep
+	url = https://github.com/rootcodelabs/skapp-ep-be-src.git
