@@ -120,12 +120,12 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 			predicates.add(criteriaBuilder.equal(root.get(Employee_.GENDER), employeeFilterDto.getGender()));
 		}
 
-		if (employeeFilterDto.getSearchKeyword().isEmpty()) {
-			addEmploymentStatusPredicate(employeeFilterDto, criteriaBuilder, root, userJoin, predicates);
-		}
-
 		if (employeeFilterDto.getEmploymentTypes() != null && !employeeFilterDto.getEmploymentTypes().isEmpty()) {
 			predicates.add(root.get(Employee_.EMPLOYEE_TYPE).in(employeeFilterDto.getEmploymentTypes()));
+		}
+
+		if (employeeFilterDto.getAccountStatus() != null && !employeeFilterDto.getAccountStatus().isEmpty()) {
+			predicates.add(root.get(Employee_.ACCOUNT_STATUS).in(employeeFilterDto.getAccountStatus()));
 		}
 
 		if (employeeFilterDto.getEmploymentAllocations() != null
