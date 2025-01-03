@@ -84,6 +84,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -1018,6 +1019,10 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 			ArrayList<EmployeeTimeline> employeeTimelines = new ArrayList<>();
 
 			for (CustomEntitlementDto customEntitlementDto : entitlementDetailsDto.getEntitlements()) {
+				if (customEntitlementDto.getTotalDaysAllocated() == null
+						|| customEntitlementDto.getTotalDaysAllocated().isEmpty()) {
+					continue;
+				}
 				EntitlementDto entitlementDto = leaveMapper.customEntitlementDtoToEntitlementDto(customEntitlementDto);
 				LocalDate validFromDate = entitlementDto.getValidFrom() != null ? entitlementDto.getValidFrom()
 						: DateTimeUtils.getUtcLocalDate(year, leaveCycleDetail.getStartMonth(),
@@ -1152,6 +1157,12 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 			validationMap.replace(LeaveModuleConstant.EMPLOYEE_EMAIL, false);
 		}
 		if (entitlementDetailsDto.getEntitlements()
+			.stream()
+			.anyMatch(entitlement -> entitlement.getTotalDaysAllocated() == null
+					|| Objects.equals(entitlement.getTotalDaysAllocated(), ""))) {
+			validationMap.replace(LeaveModuleConstant.VALID_FORMAT, true);
+		}
+		else if (entitlementDetailsDto.getEntitlements()
 			.stream()
 			.anyMatch(entitlement -> CommonModuleUtils
 				.isValidFloat(entitlement.getTotalDaysAllocated()) == Boolean.FALSE)) {
