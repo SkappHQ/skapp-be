@@ -102,7 +102,14 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_IO_EXCEPTION("api.error.common.io-exception"),
 	COMMON_ERROR_EXCEED_MAX_EMPLOYEE_COUNT("api.error.common.exceeded-max-employee-count"),
 	COMMON_ERROR_VALIDATION_PASSPORT("api.error.common.validation.passport"),
-	COMMON_ERROR_VALIDATION_PASSPORT_LENGTH("api.error.common.validation.passport-length"),;
+	COMMON_ERROR_VALIDATION_PASSPORT_LENGTH("api.error.common.validation.passport-length"),
+	COMMON_ERROR_TOKEN_EXPIRED("api.error.common.token-expired"),
+	COMMON_ERROR_REFRESH_TOKEN_NOT_ALLOWED("api.error.common.refresh-token-not-allowed"),
+	COMMON_ERROR_INVALID_TOKEN("api.error.common.invalid-token"),
+	COMMON_ERROR_INTERNAL_SERVER_ERROR("api.error.common.internal-server-error"),
+	EP_COMMON_ERROR_TOKEN_EXPIRED("api.error.common.token-expired"),
+	EP_COMMON_ERROR_INVALID_TOKEN("api.error.common.invalid-token"),
+	EP_COMMON_ERROR_REFRESH_TOKEN_NOT_ALLOWED("api.error.common.refresh-token-not-allowed"),;
 
 	private final String messageKey;
 
