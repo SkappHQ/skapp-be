@@ -8,12 +8,12 @@ import lombok.Setter;
 @Setter
 public class EmployeeRolesRequestDto {
 
-	public Role leaveRole;
+	private Role leaveRole;
 
-	public Role peopleRole;
+	private Role peopleRole;
 
-	public Role attendanceRole;
+	private Role attendanceRole;
 
-	public Boolean isSuperAdmin;
+	private Boolean isSuperAdmin;
 
 }

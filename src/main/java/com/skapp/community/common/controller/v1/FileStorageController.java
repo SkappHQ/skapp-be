@@ -57,7 +57,7 @@ public class FileStorageController {
 	@Operation(summary = "Update a file", description = "Update an existing file with a new one.")
 	@PatchMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> updateFile(@PathVariable Long id, @RequestParam("file") MultipartFile file,
-			@RequestParam("type") FileType type, @RequestParam("fileToUpdate") String fileToUpdate) throws IOException {
+			@RequestParam("type") FileType type, @RequestParam("fileToUpdate") String fileToUpdate) {
 
 		ResponseEntityDto response = fileStorageService.updateFile(id, file, type, fileToUpdate);
 		return new ResponseEntity<>(response, HttpStatus.OK);

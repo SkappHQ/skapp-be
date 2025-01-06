@@ -15,7 +15,7 @@ public class BulkContextServiceImpl implements BulkContextService {
 
 	@Override
 	public void setContext(String context) {
-
+		// This is only for Enterprise context
 	}
 
 }

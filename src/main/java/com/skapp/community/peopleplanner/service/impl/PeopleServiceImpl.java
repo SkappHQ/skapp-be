@@ -512,7 +512,7 @@ public class PeopleServiceImpl implements PeopleService {
 			List<EmployeeProgressionResponseDto> progressionResponseDtos = employee.getEmployeeProgressions()
 				.stream()
 				.map(this::mapToEmployeeProgressionResponseDto)
-				.collect(Collectors.toList());
+				.toList();
 
 			managerEmployeeDto.setEmployeeProgressions(progressionResponseDtos);
 
@@ -1517,9 +1517,9 @@ public class PeopleServiceImpl implements PeopleService {
 
 		boolean isLeaveRequestNotificationsEnabled = true;
 		boolean isTimeEntryNotificationsEnabled = true;
-		boolean isNudgeNotificationsEnabled = employeeRolesRequestDto.isSuperAdmin
+		boolean isNudgeNotificationsEnabled = employeeRolesRequestDto.getIsSuperAdmin()
 				|| employeeRolesRequestDto.getLeaveRole() == Role.LEAVE_MANAGER
-				|| employeeRolesRequestDto.leaveRole == Role.LEAVE_ADMIN;
+				|| employeeRolesRequestDto.getLeaveRole() == Role.LEAVE_ADMIN;
 
 		notificationsObjectNode.put(NotificationSettingsType.LEAVE_REQUEST.getKey(),
 				isLeaveRequestNotificationsEnabled);
@@ -2934,13 +2934,12 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 
 		if (employeePrimaryManagers.isPresent() && employeeSecondaryManagers.isPresent()
-				&& employeeUpdateDto.getPrimaryManager() != null && employeeUpdateDto.getSecondaryManager() != null) {
-			if ((Objects.equals(employeePrimaryManagers.get().getManager().getEmployeeId(),
-					employeeUpdateDto.getPrimaryManager()))
-					&& (Objects.equals(employeeSecondaryManagers.get().getManager().getEmployeeId(),
-							employeeUpdateDto.getSecondaryManager()))) {
-				return;
-			}
+				&& employeeUpdateDto.getPrimaryManager() != null && employeeUpdateDto.getSecondaryManager() != null
+				&& Objects.equals(employeePrimaryManagers.get().getManager().getEmployeeId(),
+						employeeUpdateDto.getPrimaryManager())
+				&& Objects.equals(employeeSecondaryManagers.get().getManager().getEmployeeId(),
+						employeeUpdateDto.getSecondaryManager())) {
+			return;
 		}
 
 		if (employeeUpdateDto.getPrimaryManager() == null) {
@@ -2950,10 +2949,8 @@ public class PeopleServiceImpl implements PeopleService {
 			employeeUpdateDto.setSecondaryManager(null);
 		}
 
-		if (employeeUpdateDto.getSecondaryManager() == null) {
-			if (employeeSecondaryManagers.isPresent()) {
-				employeeManagerDao.deleteByEmployeeAndManagerType(employee, ManagerType.SECONDARY);
-			}
+		if (employeeUpdateDto.getSecondaryManager() == null && employeeSecondaryManagers.isPresent()) {
+			employeeManagerDao.deleteByEmployeeAndManagerType(employee, ManagerType.SECONDARY);
 		}
 
 		if (employeeUpdateDto.getPrimaryManager() != null) {

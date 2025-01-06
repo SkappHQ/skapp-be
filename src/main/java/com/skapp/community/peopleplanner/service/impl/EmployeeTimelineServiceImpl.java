@@ -14,7 +14,6 @@ import com.skapp.community.peopleplanner.model.EmployeeTimeline;
 import com.skapp.community.peopleplanner.model.JobFamily;
 import com.skapp.community.peopleplanner.model.JobTitle;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDetailsDto;
-import com.skapp.community.peopleplanner.payload.request.EmployeeProgressionsDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeTimelineResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeTimelineResponseListDto;
 import com.skapp.community.peopleplanner.repository.EmployeeDao;
@@ -300,10 +299,6 @@ public class EmployeeTimelineServiceImpl implements EmployeeTimelineService {
 			return TITLE_SECONDARY_MANAGER_ASSIGNED;
 		}
 		return null;
-	}
-
-	private Optional<EmployeeProgressionsDto> getCurrentCareer(List<EmployeeProgressionsDto> careerProgressions) {
-		return careerProgressions.stream().filter(EmployeeProgressionsDto::getIsCurrent).findFirst();
 	}
 
 }

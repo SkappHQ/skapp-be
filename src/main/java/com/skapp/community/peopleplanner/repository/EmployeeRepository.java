@@ -56,8 +56,6 @@ public interface EmployeeRepository {
 
 	Long countByIsActiveAndTeamsAndCreatedAt(boolean isActive, List<Long> teamIds, int currentYear);
 
-	Long findTotalAgeOfActiveEmployeesByTeamIds(Long teamId);
-
 	Double findAverageAgeOfActiveEmployeesByTeamIds(List<Long> teamIds);
 
 	Long countTerminatedEmployeesByStartDateAndEndDateAndTeams(LocalDate startDate, LocalDate endDate,
@@ -74,10 +72,6 @@ public interface EmployeeRepository {
 
 	Long countEmployeesByManagerId(Long managerId);
 
-	Long countAllAvailableEmployeesLeavesByDate(LocalDate currentDate);
-
 	List<Employee> findEmployeeByName(String keyword);
-
-	List<Employee> findEmployeesByTeams(List<Long> teamIds);
 
 }

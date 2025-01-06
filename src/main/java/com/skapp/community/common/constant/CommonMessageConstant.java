@@ -102,7 +102,8 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_IO_EXCEPTION("api.error.common.io-exception"),
 	COMMON_ERROR_EXCEED_MAX_EMPLOYEE_COUNT("api.error.common.exceeded-max-employee-count"),
 	COMMON_ERROR_VALIDATION_PASSPORT("api.error.common.validation.passport"),
-	COMMON_ERROR_VALIDATION_PASSPORT_LENGTH("api.error.common.validation.passport-length"),;
+	COMMON_ERROR_VALIDATION_PASSPORT_LENGTH("api.error.common.validation.passport-length"),
+	COMMON_ERROR_MAX_RETRIES_REACHED("api.error.common.max-retries-reached"),;
 
 	private final String messageKey;
 

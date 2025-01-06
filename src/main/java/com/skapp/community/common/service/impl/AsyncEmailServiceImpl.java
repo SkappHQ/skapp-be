@@ -1,6 +1,8 @@
 package com.skapp.community.common.service.impl;
 
 import com.skapp.community.common.constant.CommonConstants;
+import com.skapp.community.common.constant.CommonMessageConstant;
+import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.exception.TooManyRequestsException;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.repository.UserDao;
@@ -70,7 +72,8 @@ public class AsyncEmailServiceImpl {
 				Thread.sleep((long) Math.pow(2, retries) * 1000);
 			}
 		}
-		throw new RuntimeException("Max retries reached for user: " + user.getEmail());
+		throw new ModuleException(CommonMessageConstant.COMMON_ERROR_MAX_RETRIES_REACHED,
+				new String[] { user.getEmail() });
 	}
 
 }

@@ -5,10 +5,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 @Service
-public class PageTransformer implements BaseTransformer<Page, PageDto> {
+public class PageTransformer implements BaseTransformer<Page<?>, PageDto> {
 
 	@Override
-	public PageDto transform(Page page) {
+	public PageDto transform(Page<?> page) {
 		PageDto pageDto = new PageDto();
 
 		if (page == null || page.isEmpty()) {
