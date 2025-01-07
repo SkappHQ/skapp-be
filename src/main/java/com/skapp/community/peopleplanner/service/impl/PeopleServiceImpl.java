@@ -936,10 +936,18 @@ public class PeopleServiceImpl implements PeopleService {
 			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
 		}
 
-		Employee employee = employeeOptional.get();
-		PrimarySecondaryOrTeamSupervisorResponseDto primarySecondaryOrTeamSupervisor = employeeDao
-			.isPrimarySecondaryOrTeamSupervisor(employee, currentUser.getEmployee());
+		List<EmployeeTeam> currentEmployeeTeams = employeeTeamDao
+			.findEmployeeTeamsByEmployee(currentUser.getEmployee());
+		List<EmployeeTeam> employeeTeams = employeeTeamDao.findEmployeeTeamsByEmployee(employeeOptional.get());
 
+		PrimarySecondaryOrTeamSupervisorResponseDto primarySecondaryOrTeamSupervisor = employeeDao
+			.isPrimarySecondaryOrTeamSupervisor(employeeOptional.get(), currentUser.getEmployee());
+
+		boolean isTeamSupervisor = currentEmployeeTeams.stream()
+			.anyMatch(currentTeam -> employeeTeams.stream()
+				.anyMatch(empTeam -> currentTeam.getTeam().equals(empTeam.getTeam()) && currentTeam.getIsSupervisor()));
+
+		primarySecondaryOrTeamSupervisor.setIsTeamSupervisor(isTeamSupervisor);
 		return new ResponseEntityDto(false, primarySecondaryOrTeamSupervisor);
 	}
 
