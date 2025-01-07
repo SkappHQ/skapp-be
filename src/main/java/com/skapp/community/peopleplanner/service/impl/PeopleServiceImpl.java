@@ -83,6 +83,7 @@ import com.skapp.community.peopleplanner.payload.response.EmployeeTeamDto;
 import com.skapp.community.peopleplanner.payload.response.ManagerEmployeeDto;
 import com.skapp.community.peopleplanner.payload.response.ManagingEmployeesResponseDto;
 import com.skapp.community.peopleplanner.payload.response.ModuleRoleRestrictionResponseDto;
+import com.skapp.community.peopleplanner.payload.response.PrimarySecondaryOrTeamSupervisorResponseDto;
 import com.skapp.community.peopleplanner.payload.response.SummarizedEmployeeDtoForEmployees;
 import com.skapp.community.peopleplanner.payload.response.SummarizedManagerEmployeeDto;
 import com.skapp.community.peopleplanner.payload.response.TeamDetailResponseDto;
@@ -924,6 +925,22 @@ public class PeopleServiceImpl implements PeopleService {
 		log.info("searchEmployeesAndTeamsByKeyword: execution ended by user: {} to search users by the keyword {}",
 				currentUser.getUserId(), keyword);
 		return new ResponseEntityDto(false, analyticsSearchResponseDto);
+	}
+
+	@Override
+	public ResponseEntityDto isPrimarySecondaryOrTeamSupervisor(Long employeeId) {
+		User currentUser = userService.getCurrentUser();
+
+		Optional<Employee> employeeOptional = employeeDao.findById(employeeId);
+		if (employeeOptional.isEmpty()) {
+			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
+		}
+
+		Employee employee = employeeOptional.get();
+		PrimarySecondaryOrTeamSupervisorResponseDto primarySecondaryOrTeamSupervisor = employeeDao
+			.isPrimarySecondaryOrTeamSupervisor(employee, currentUser.getEmployee());
+
+		return new ResponseEntityDto(false, primarySecondaryOrTeamSupervisor);
 	}
 
 	private void updateLoggedInUserGeneralDetails(EmployeeUpdateDto employeeUpdateDto, Employee employee) {

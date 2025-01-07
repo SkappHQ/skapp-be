@@ -52,4 +52,6 @@ public interface PeopleService {
 
 	ResponseEntityDto searchEmployeesAndTeamsByKeyword(String keyword);
 
+	ResponseEntityDto isPrimarySecondaryOrTeamSupervisor(Long employeeId);
+
 }
