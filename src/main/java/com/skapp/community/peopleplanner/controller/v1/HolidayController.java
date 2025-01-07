@@ -35,7 +35,7 @@ public class HolidayController {
 
 	@Operation(summary = "Get all holidays",
 			description = "Retrieve all holidays with optional pagination, sorting, and filtering.")
-	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_MANAGER')")
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_EMPLOYEE')")
 	@GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> getAllHolidays(@Valid HolidayFilterDto holidayFilterDto) {
 		ResponseEntityDto response = holidayService.getAllHolidays(holidayFilterDto);
