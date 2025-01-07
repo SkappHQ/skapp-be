@@ -412,6 +412,10 @@ public class PeopleServiceImpl implements PeopleService {
 			throw new EntityNotFoundException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND);
 		}
 
+		if (optionalEmployee.get().getAccountStatus().equals(AccountStatus.TERMINATED)) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_TERMINATED);
+		}
+
 		validateRoles(employeeUpdateDto.getUserRoles());
 
 		String employeePreviousName = optionalEmployee.get().getFirstName();
