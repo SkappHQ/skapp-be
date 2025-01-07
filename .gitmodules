@@ -1,12 +1,12 @@
 [submodule "src/main/java/com/skapp/enterprise"]
 	path = src/main/java/com/skapp/enterprise
-	url = https://github.com/SkappHQ/skapp-ep-be-src.git
+	url = https://github.com/rootcodelabs/skapp-ep-be-src.git
 [submodule "src/main/resources/enterprise"]
 	path = src/main/resources/enterprise
-	url = https://github.com/SkappHQ/skapp-ep-be-resources.git
+	url = https://github.com/rootcodelabs/skapp-ep-be-resources.git
 [submodule "src/test/java/com/skapp/enterprise"]
 	path = src/test/java/com/skapp/enterprise
-	url = https://github.com/SkappHQ/skapp-ep-be-tests.git
+	url = https://github.com/rootcodelabs/skapp-ep-be-tests.git
 [submodule "src/main/resources/config"]
 	path = src/main/resources/config
-	url = https://github.com/SkappHQ/skapp-ep-be-resources-config.git
+	url = https://github.com/rootcodelabs/skapp-ep-be-resources-config.git
