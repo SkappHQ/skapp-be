@@ -978,21 +978,6 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		CriteriaQuery<Object[]> criteriaQuery = criteriaBuilder.createQuery(Object[].class);
 		Root<EmployeeManager> root = criteriaQuery.from(EmployeeManager.class);
 
-		Subquery<Long> employeeTeamSubquery = criteriaQuery.subquery(Long.class);
-		Root<EmployeeTeam> empTeamRoot = employeeTeamSubquery.from(EmployeeTeam.class);
-		employeeTeamSubquery.select(empTeamRoot.get(EmployeeTeam_.team).get(Team_.teamId))
-			.where(criteriaBuilder.equal(empTeamRoot.get(EmployeeTeam_.employee).get(Employee_.employeeId),
-					employee.getEmployeeId()));
-
-		Subquery<Boolean> supervisorSubquery = criteriaQuery.subquery(Boolean.class);
-		Root<EmployeeTeam> supervisorTeamRoot = supervisorSubquery.from(EmployeeTeam.class);
-		supervisorSubquery.select(criteriaBuilder.literal(true))
-			.where(criteriaBuilder.and(
-					criteriaBuilder.equal(supervisorTeamRoot.get(EmployeeTeam_.employee).get(Employee_.employeeId),
-							currentEmployee.getEmployeeId()),
-					supervisorTeamRoot.get(EmployeeTeam_.team).get(Team_.teamId).in(employeeTeamSubquery),
-					criteriaBuilder.equal(supervisorTeamRoot.get(EmployeeTeam_.isSupervisor), true)));
-
 		List<Predicate> predicates = new ArrayList<>();
 		predicates.add(criteriaBuilder.equal(root.get(EmployeeManager_.employee).get(Employee_.employeeId),
 				employee.getEmployeeId()));
@@ -1008,7 +993,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		criteriaQuery.multiselect(criteriaBuilder.selectCase().when(isPrimaryManager, true).otherwise(false),
 				criteriaBuilder.selectCase().when(isSecondaryManager, true).otherwise(false),
-				criteriaBuilder.selectCase().when(criteriaBuilder.exists(supervisorSubquery), true).otherwise(false));
+				criteriaBuilder.literal(false));
 
 		TypedQuery<Object[]> query = entityManager.createQuery(criteriaQuery);
 		Object[] result = query.getResultList().stream().findFirst().orElse(new Object[] { false, false, false });
