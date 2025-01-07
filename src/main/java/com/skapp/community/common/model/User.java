@@ -67,7 +67,7 @@ public class User implements UserDetails {
 	@PrimaryKeyJoinColumn
 	private Employee employee;
 
-	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
 	@PrimaryKeyJoinColumn
 	private UserSettings settings;
 

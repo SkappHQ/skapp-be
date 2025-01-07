@@ -71,7 +71,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
 	@Override
 	public ResponseEntityDto uploadFile(MultipartFile file, FileType type) {
-		log.info("uploadFile: execution started");
+		log.info("uploadFileSingle: execution started");
 		Path targetDir = FileUtil.getTargetDirectory(type.label, fileStorageConfig.getFolders(),
 				fileStorageConfig.getBase());
 		if (!FileConfigConstants.FILE_LOGO_PATH.equals(type.label)
@@ -81,7 +81,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 					new String[] { type.name() });
 
 		assert targetDir != null;
-		log.info("File uploading started to the path : {}", targetDir);
+		log.info("uploadFileSingle: File uploading started to the path : {}", targetDir);
 		Path targetFilePath = targetDir.resolve(UUID.randomUUID() + "."
 				+ FileUtil.getFileExtension(Objects.requireNonNull(file.getOriginalFilename())));
 		File targetFile = targetFilePath.toFile();
@@ -96,6 +96,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
 			if (FileConfigConstants.FILE_PROFILE_PIC_PATH.equals(type.label) && isSizeEnough(targetFile)
 					&& FileUtil.isSupportedFormat(file.getOriginalFilename())) {
+
 				checkIfFileWithSameNameExists(targetDir,
 						FileUtil.getFileNameWithoutExtention(targetFilePath.getFileName().toString())
 								+ FileConfigConstants.THUMBNAIL_SUFFIX);
@@ -177,7 +178,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 					new String[] { type.name() });
 
 		assert targetDir != null;
-		log.info("File uploading started to the path : {}", targetDir);
+		log.info("updateFile: File uploading started to the path : {}", targetDir);
 		Path targetFilePath = targetDir.resolve(UUID.randomUUID() + "."
 				+ FileUtil.getFileExtension(Objects.requireNonNull(file.getOriginalFilename())));
 		File targetFile = targetFilePath.toFile();
@@ -292,14 +293,14 @@ public class FileStorageServiceImpl implements FileStorageService {
 				&& img.getHeight() >= FileConfigConstants.THUMBNAIL_HEIGHT;
 	}
 
-	private boolean checkIfFileWithSameNameExists(Path directoryPath, String targetName) throws IOException {
+	private void checkIfFileWithSameNameExists(Path directoryPath, String targetName) throws IOException {
 
 		if (!Files.isDirectory(directoryPath)) {
 			throw new IllegalArgumentException("Provided path is not a directory: " + directoryPath);
 		}
 
 		try (Stream<Path> files = Files.list(directoryPath)) {
-			return files.filter(filePath -> {
+			files.filter(filePath -> {
 				String fileName = filePath.getFileName().toString();
 				int dotIndex = fileName.lastIndexOf('.');
 				String nameWithoutExtension = (dotIndex == -1) ? fileName : fileName.substring(0, dotIndex);
@@ -309,10 +310,10 @@ public class FileStorageServiceImpl implements FileStorageService {
 					return deleteAllFiles(filePath);
 				}
 				catch (IOException e) {
-					e.printStackTrace();
+					log.error("Error while deleting file: {}", filePath, e);
 					return false;
 				}
-			}).orElse(false);
+			});
 		}
 	}
 
@@ -337,11 +338,15 @@ public class FileStorageServiceImpl implements FileStorageService {
 		if (employee.getAuthPic() != null && employee.getAuthPic().equals(fileName)) {
 			Path targetDir = FileUtil.getTargetDirectory(fileType.label, fileStorageConfig.getFolders(),
 					fileStorageConfig.getBase());
-			Path image = targetDir.resolve(fileName);
-			deleteAllFiles(image);
-			Path imageThumbnail = targetDir.resolve(FileUtil.getFileNameWithoutExtention(employee.getAuthPic())
-					+ FileConfigConstants.THUMBNAIL_SUFFIX + "." + FileUtil.getFileExtension(employee.getAuthPic()));
-			deleteAllFiles(imageThumbnail);
+
+			if (targetDir != null) {
+				Path image = targetDir.resolve(fileName);
+				deleteAllFiles(image);
+				Path imageThumbnail = targetDir.resolve(FileUtil.getFileNameWithoutExtention(employee.getAuthPic())
+						+ FileConfigConstants.THUMBNAIL_SUFFIX + "."
+						+ FileUtil.getFileExtension(employee.getAuthPic()));
+				deleteAllFiles(imageThumbnail);
+			}
 		}
 	}
 

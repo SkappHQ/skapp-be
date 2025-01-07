@@ -34,8 +34,6 @@ import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
 import com.skapp.community.peopleplanner.type.Gender;
-import com.skapp.community.timeplanner.model.TimeRecord;
-import com.skapp.community.timeplanner.model.TimeRecord_;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -346,11 +344,6 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		List<Employee> results = typedQuery.getResultList();
 		return results.isEmpty() ? null : results.getFirst();
-	}
-
-	@Override
-	public Page<Employee> findEmployeesByManagerId(Long managerId, Pageable page) {
-		return findEmployeesByManagerId(managerId, page, false);
 	}
 
 	@Override
@@ -678,37 +671,6 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 	}
 
 	@Override
-	public Long findTotalAgeOfActiveEmployeesByTeamIds(Long teamId) {
-		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-
-		CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
-		Root<Employee> root = criteriaQuery.from(Employee.class);
-		List<Predicate> predicates = new ArrayList<>();
-
-		Join<Employee, User> userJoin = root.join(Employee_.user);
-		Join<Employee, EmployeePersonalInfo> personalInfoJoin = root.join(Employee_.personalInfo);
-
-		predicates.add(criteriaBuilder.equal(userJoin.get(User_.isActive), true));
-
-		if (teamId != null) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
-			predicates.add(criteriaBuilder.equal(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId), teamId));
-		}
-
-		Expression<Integer> birthYear = criteriaBuilder.function("YEAR", Integer.class,
-				personalInfoJoin.get(EmployeePersonalInfo_.birthDate));
-		Expression<Integer> currentYear = criteriaBuilder.function("YEAR", Integer.class,
-				criteriaBuilder.currentDate());
-		Expression<Integer> age = criteriaBuilder.diff(currentYear, birthYear);
-
-		criteriaQuery.select(criteriaBuilder.coalesce(criteriaBuilder.sum(criteriaBuilder.toLong(age)), 0L));
-		criteriaQuery.where(predicates.toArray(new Predicate[0]));
-
-		TypedQuery<Long> query = entityManager.createQuery(criteriaQuery);
-		return query.getSingleResult();
-	}
-
-	@Override
 	public Double findAverageAgeOfActiveEmployeesByTeamIds(List<Long> teamIds) {
 		if (teamIds != null && teamIds.isEmpty()) {
 			return 0.0;
@@ -981,55 +943,6 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 	}
 
 	@Override
-	public Long countAllAvailableEmployeesLeavesByDate(LocalDate currentDate) {
-		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-		CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
-		Root<Employee> root = criteriaQuery.from(Employee.class);
-
-		Join<Employee, User> userJoin = root.join(Employee_.user);
-
-		Subquery<Long> leaveSubquery = criteriaQuery.subquery(Long.class);
-		Root<LeaveRequest> leaveRequestRoot = leaveSubquery.from(LeaveRequest.class);
-		Join<LeaveRequest, Employee> leaveEmployeeJoin = leaveRequestRoot.join(LeaveRequest_.employee);
-
-		Predicate subqueryEmployeePredicate = criteriaBuilder.equal(leaveEmployeeJoin.get(Employee_.employeeId),
-				root.get(Employee_.employeeId));
-		Predicate leaveDatePredicate = criteriaBuilder.and(
-				criteriaBuilder.lessThanOrEqualTo(leaveRequestRoot.get(LeaveRequest_.startDate), currentDate),
-				criteriaBuilder.greaterThanOrEqualTo(leaveRequestRoot.get(LeaveRequest_.endDate), currentDate));
-		Predicate leaveStatusPredicate = leaveRequestRoot.get(LeaveRequest_.status)
-			.in(LeaveRequestStatus.APPROVED, LeaveRequestStatus.PENDING);
-
-		leaveSubquery.select(leaveEmployeeJoin.get(Employee_.employeeId))
-			.where(criteriaBuilder.and(subqueryEmployeePredicate, leaveDatePredicate, leaveStatusPredicate));
-
-		Subquery<Long> clockInSubquery = criteriaQuery.subquery(Long.class);
-		Root<TimeRecord> timeRecordRoot = clockInSubquery.from(TimeRecord.class);
-		Join<TimeRecord, Employee> timeRecordEmployeeJoin = timeRecordRoot.join(TimeRecord_.employee);
-
-		Predicate clockInEmployeePredicate = criteriaBuilder.equal(timeRecordEmployeeJoin.get(Employee_.employeeId),
-				root.get(Employee_.employeeId));
-		Predicate clockInDatePredicate = criteriaBuilder.equal(timeRecordRoot.get(TimeRecord_.date), currentDate);
-
-		clockInSubquery.select(timeRecordEmployeeJoin.get(Employee_.employeeId))
-			.where(criteriaBuilder.and(clockInEmployeePredicate, clockInDatePredicate));
-
-		List<Predicate> predicates = new ArrayList<>();
-		Predicate isActivePredicate = criteriaBuilder.equal(userJoin.get(User_.isActive), true);
-		predicates.add(isActivePredicate);
-
-		Predicate notOnLeaveOrClockInPredicate = criteriaBuilder.or(
-				criteriaBuilder.not(root.get(Employee_.employeeId).in(leaveSubquery)),
-				root.get(Employee_.employeeId).in(clockInSubquery));
-		predicates.add(notOnLeaveOrClockInPredicate);
-
-		criteriaQuery.select(criteriaBuilder.countDistinct(root.get(Employee_.employeeId)));
-		criteriaQuery.where(predicates.toArray(new Predicate[0]));
-
-		return entityManager.createQuery(criteriaQuery).getSingleResult();
-	}
-
-	@Override
 	public List<Employee> findEmployeeByName(String keyword) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 
@@ -1057,24 +970,6 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		return typedQuery.getResultList();
 	}
 
-	@Override
-	public List<Employee> findEmployeesByTeams(List<Long> teamIds) {
-		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-
-		CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
-		Root<Employee> root = criteriaQuery.from(Employee.class);
-		Join<Employee, EmployeeTeam> employeeTeam = root.join(Employee_.TEAMS);
-		Join<EmployeeTeam, Team> team = employeeTeam.join(EmployeeTeam_.TEAM);
-		List<Predicate> predicates = new ArrayList<>();
-		predicates.add(team.get(Team_.teamId).in(teamIds));
-
-		Predicate[] predArray = new Predicate[predicates.size()];
-		predicates.toArray(predArray);
-		criteriaQuery.where(predArray);
-		TypedQuery<Employee> typedQuery = entityManager.createQuery(criteriaQuery);
-		return typedQuery.getResultList();
-	}
-
 	private Predicate findByEmailName(String keyword, CriteriaBuilder criteriaBuilder, Root<Employee> employee,
 			Join<Employee, User> userJoin) {
 		keyword = getSearchString(keyword);
@@ -1087,28 +982,8 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 				criteriaBuilder.like(criteriaBuilder.lower(employee.get(Employee_.LAST_NAME)), keyword));
 	}
 
-	private void addEmploymentStatusPredicate(EmployeeFilterDto employeeFilterDto, CriteriaBuilder criteriaBuilder,
-			Root<Employee> root, Join<Employee, User> userJoin, List<Predicate> predicates) {
-		if (!employeeFilterDto.getAccountStatus().isEmpty()) {
-			for (AccountStatus status : employeeFilterDto.getAccountStatus()) {
-				if (status.equals(AccountStatus.ACTIVE)) {
-					predicates.add(
-							criteriaBuilder.equal(root.get(Employee_.ACCOUNT_STATUS), AccountStatus.ACTIVE.toString()));
-				}
-				if (status.equals(AccountStatus.PENDING)) {
-					predicates.add(criteriaBuilder.equal(root.get(Employee_.ACCOUNT_STATUS),
-							AccountStatus.PENDING.toString()));
-				}
-				if (status.equals(AccountStatus.TERMINATED)) {
-					predicates.add(criteriaBuilder.or(criteriaBuilder.equal(userJoin.get(User_.isActive), false),
-							criteriaBuilder.equal(root.get(Employee_.ACCOUNT_STATUS),
-									AccountStatus.TERMINATED.toString())));
-				}
-			}
-		}
-	}
-
-	private Page<Employee> findEmployeesByManagerId(Long managerId, Pageable page, boolean signInOnly) {
+	@Override
+	public Page<Employee> findEmployeesByManagerId(Long managerId, Pageable page) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
 		Root<Employee> root = criteriaQuery.from(Employee.class);
@@ -1121,10 +996,6 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		predicates.add(criteriaBuilder.notEqual(userJoin.get(User_.isActive), false));
 		predicates.add(criteriaBuilder.equal(empMan.get(Employee_.employeeId), managerId));
-
-		if (signInOnly) {
-			predicates.add(criteriaBuilder.equal(root.get(Employee_.ACCOUNT_STATUS), AccountStatus.ACTIVE));
-		}
 
 		Predicate[] predArray = predicates.toArray(new Predicate[0]);
 		criteriaQuery.where(predArray);

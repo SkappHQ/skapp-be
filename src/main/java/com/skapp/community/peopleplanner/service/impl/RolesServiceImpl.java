@@ -144,7 +144,8 @@ public class RolesServiceImpl implements RolesService {
 	public void updateEmployeeRoles(RoleRequestDto roleRequestDto, Employee employee) {
 		log.info("updateEmployeeRoles: execution started");
 
-		if (employee.getEmployeeRole().getIsSuperAdmin() && employeeRoleDao.countByIsSuperAdminTrue() == 1) {
+		if (Boolean.TRUE.equals(employee.getEmployeeRole().getIsSuperAdmin())
+				&& employeeRoleDao.countByIsSuperAdminTrue() == 1) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_ONLY_ONE_SUPER_ADMIN);
 		}
 
