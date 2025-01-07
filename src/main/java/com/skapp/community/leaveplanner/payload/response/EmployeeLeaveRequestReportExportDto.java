@@ -1,5 +1,6 @@
 package com.skapp.community.leaveplanner.payload.response;
 
+import com.skapp.community.leaveplanner.type.LeaveRequestStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,7 +20,7 @@ public class EmployeeLeaveRequestReportExportDto {
 
 	private String leaveType;
 
-	private String status;
+	private LeaveRequestStatus status;
 
 	private Float durationDays;
 
@@ -27,7 +28,7 @@ public class EmployeeLeaveRequestReportExportDto {
 
 	private String dateRequested;
 
-	private float days;
+	private Float days;
 
 	private String reason;
 

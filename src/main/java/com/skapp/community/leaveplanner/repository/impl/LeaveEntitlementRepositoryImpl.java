@@ -767,7 +767,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 
 		query.select(cb.construct(EmployeeLeaveEntitlementReportExportDto.class, employee.get(Employee_.employeeId),
 				employeeName, teamsSubquery, jobFamily.get(JobFamily_.name), leaveType.get(LeaveType_.name),
-				totalDaysAllocated.as(Double.class), totalDaysUsed.as(Double.class), balanceDays.as(Double.class)));
+				totalDaysAllocated.as(Float.class), totalDaysUsed.as(Float.class), balanceDays.as(Float.class)));
 
 		List<Predicate> predicates = new ArrayList<>();
 		predicates.add(cb.equal(user.get(User_.isActive), true));

@@ -21,10 +21,10 @@ public class EmployeeLeaveEntitlementReportExportDto {
 
 	private String leaveName;
 
-	private Double totalDaysAllocated;
+	private Float totalDaysAllocated;
 
-	private Double totalDaysUsed;
+	private Float totalDaysUsed;
 
-	private Double totalBalanceDays;
+	private Float totalBalanceDays;
 
 }

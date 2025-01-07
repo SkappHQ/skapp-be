@@ -251,6 +251,11 @@ public class PeopleServiceImpl implements PeopleService {
 	public ResponseEntityDto addNewEmployee(@NonNull EmployeeDetailsDto employeeDetailsDto) {
 		log.info("addNewEmployee: execution started");
 
+		Optional<User> existingUser = userDao.findByEmail(employeeDetailsDto.getWorkEmail());
+		if (existingUser.isPresent()) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_USER_EMAIL_ALREADY_EXIST);
+		}
+
 		// Validate the roles
 		validateRoles(employeeDetailsDto.getUserRoles());
 
@@ -345,6 +350,8 @@ public class PeopleServiceImpl implements PeopleService {
 		if (existingUser.isPresent()) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_USER_EMAIL_ALREADY_EXIST);
 		}
+
+		Validations.validateQuickAddEmployeeDetails(employeeQuickAddDto);
 
 		validateRoles(employeeQuickAddDto.getUserRoles());
 
