@@ -107,10 +107,9 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 				cb.function("DISTINCT", String.class, team.get(Team_.teamName)));
 
 		query.select(cb.construct(EmployeeLeaveRequestReportExportDto.class, employee.get(Employee_.employeeId),
-				employeeName, teams, leaveType.get(LeaveType_.name),
-				leaveRequest.get(LeaveRequest_.status).as(String.class), leaveRequest.get(LeaveRequest_.durationDays),
-				leavePeriod, dateRequested, leaveRequest.get(LeaveRequest_.durationDays),
-				leaveRequest.get(LeaveRequest_.requestDesc)));
+				employeeName, teams, leaveType.get(LeaveType_.name), leaveRequest.get(LeaveRequest_.status),
+				leaveRequest.get(LeaveRequest_.durationDays), leavePeriod, dateRequested,
+				leaveRequest.get(LeaveRequest_.durationDays), leaveRequest.get(LeaveRequest_.requestDesc)));
 
 		List<Predicate> predicates = createPredicatesForLeaverRequest(cb, leaveRequest, employee, user, leaveType,
 				jobFamily, team, leaveTypeIds, startDate, endDate, jobFamilyId, teamId, statuses);
