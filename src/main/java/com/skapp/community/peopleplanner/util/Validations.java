@@ -10,6 +10,7 @@ import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeEducationDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFamilyDto;
+import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
 import com.skapp.community.peopleplanner.payload.request.EmploymentVisaDto;
 import com.skapp.community.peopleplanner.payload.request.ProbationPeriodDto;
 import lombok.RequiredArgsConstructor;
@@ -147,6 +148,23 @@ public class Validations {
 						employeeDetailsDto.getProbationPeriod().getEndDate())) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_START_END_DATE);
 		}
+	}
+
+	public static void validateQuickAddEmployeeDetails(EmployeeQuickAddDto employeeQuickAddDto) {
+		if (employeeQuickAddDto.getWorkEmail() == null || employeeQuickAddDto.getWorkEmail().isEmpty())
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_EMAIL);
+		else
+			validateEmail(employeeQuickAddDto.getWorkEmail());
+
+		if (employeeQuickAddDto.getFirstName() == null || employeeQuickAddDto.getFirstName().isEmpty())
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_ENTER_FIRST_NAME);
+		else
+			validateName(employeeQuickAddDto.getFirstName());
+
+		if (employeeQuickAddDto.getLastName() == null || employeeQuickAddDto.getLastName().isEmpty())
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_ENTER_LAST_NAME);
+		else
+			validateName(employeeQuickAddDto.getLastName());
 	}
 
 	public static void validateEmail(String email) {
