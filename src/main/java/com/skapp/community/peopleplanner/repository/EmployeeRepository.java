@@ -13,6 +13,7 @@ import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
 import com.skapp.community.peopleplanner.type.Gender;
+import com.skapp.enterprise.common.payload.response.PrimarySecondaryOrTeamSupervisorResponseDto;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -73,5 +74,8 @@ public interface EmployeeRepository {
 	Long countEmployeesByManagerId(Long managerId);
 
 	List<Employee> findEmployeeByName(String keyword);
+
+	PrimarySecondaryOrTeamSupervisorResponseDto isPrimarySecondaryOrTeamSupervisor(Employee employee,
+			Employee currentEmployee);
 
 }

@@ -2,6 +2,7 @@ package com.skapp.community.common.component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skapp.community.common.constant.CommonMessageConstant;
+import com.skapp.community.common.exception.AuthenticationException;
 import com.skapp.community.common.payload.response.ErrorResponse;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import jakarta.servlet.Filter;
@@ -51,20 +52,29 @@ public class ExceptionLoggingFilter implements Filter {
 		CommonMessageConstant messageKey;
 		String message;
 
-		if (e instanceof ServletException) {
-			status = HttpStatus.BAD_REQUEST;
-			messageKey = CommonMessageConstant.COMMON_ERROR_SERVLET_EXCEPTION;
-		}
-		else if (e instanceof IOException) {
-			status = HttpStatus.INTERNAL_SERVER_ERROR;
-			messageKey = CommonMessageConstant.COMMON_ERROR_IO_EXCEPTION;
-		}
-		else {
-			status = HttpStatus.NOT_FOUND;
-			messageKey = CommonMessageConstant.COMMON_ERROR_MODULE_EXCEPTION;
+		switch (e) {
+			case ServletException servletException -> {
+				status = HttpStatus.BAD_REQUEST;
+				messageKey = CommonMessageConstant.COMMON_ERROR_SERVLET_EXCEPTION;
+				message = servletException.getMessage();
+			}
+			case IOException ioException -> {
+				status = HttpStatus.INTERNAL_SERVER_ERROR;
+				messageKey = CommonMessageConstant.COMMON_ERROR_IO_EXCEPTION;
+				message = ioException.getMessage();
+			}
+			case AuthenticationException authenticationException -> {
+				status = HttpStatus.UNAUTHORIZED;
+				messageKey = (CommonMessageConstant) authenticationException.getMessageKey();
+				message = authenticationException.getMessage();
+			}
+			case null, default -> {
+				status = HttpStatus.NOT_FOUND;
+				messageKey = CommonMessageConstant.COMMON_ERROR_MODULE_EXCEPTION;
+				message = e != null ? e.getMessage() : null;
+			}
 		}
 
-		message = e.getMessage();
 		ErrorResponse errorResponse = new ErrorResponse(status, message, messageKey);
 		ResponseEntityDto responseDto = new ResponseEntityDto(true, errorResponse);
 

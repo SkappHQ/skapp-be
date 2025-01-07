@@ -109,6 +109,7 @@ import com.skapp.community.peopleplanner.type.BulkItemStatus;
 import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.util.Validations;
+import com.skapp.enterprise.common.payload.response.PrimarySecondaryOrTeamSupervisorResponseDto;
 import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -920,6 +921,22 @@ public class PeopleServiceImpl implements PeopleService {
 		log.info("searchEmployeesAndTeamsByKeyword: execution ended by user: {} to search users by the keyword {}",
 				currentUser.getUserId(), keyword);
 		return new ResponseEntityDto(false, analyticsSearchResponseDto);
+	}
+
+	@Override
+	public ResponseEntityDto isPrimarySecondaryOrTeamSupervisor(Long employeeId) {
+		User currentUser = userService.getCurrentUser();
+
+		Optional<Employee> employeeOptional = employeeDao.findById(employeeId);
+		if (employeeOptional.isEmpty()) {
+			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
+		}
+
+		Employee employee = employeeOptional.get();
+		PrimarySecondaryOrTeamSupervisorResponseDto primarySecondaryOrTeamSupervisor = employeeDao
+			.isPrimarySecondaryOrTeamSupervisor(employee, currentUser.getEmployee());
+
+		return new ResponseEntityDto(false, primarySecondaryOrTeamSupervisor);
 	}
 
 	private void updateLoggedInUserGeneralDetails(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
