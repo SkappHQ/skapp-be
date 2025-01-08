@@ -915,6 +915,55 @@ public class PeopleServiceImpl implements PeopleService {
 		log.info("searchEmployeesAndTeamsByKeyword: execution started by user: {} to search users by the keyword {}",
 				currentUser.getUserId(), keyword);
 
+		if (currentUser.getEmployee().getEmployeeRole().getAttendanceRole() == Role.ATTENDANCE_MANAGER
+				|| currentUser.getEmployee().getEmployeeRole().getLeaveRole() == Role.LEAVE_MANAGER) {
+			List<Team> allTeams = teamDao.findTeamsByName(keyword);
+			List<EmployeeTeam> employeeTeams = employeeTeamDao.findEmployeeTeamsByEmployee(currentUser.getEmployee());
+			List<EmployeeManager> employeeManagers = employeeManagerDao.findByManager(currentUser.getEmployee());
+
+			List<Team> supervisedTeams = allTeams.stream()
+				.filter(team -> employeeTeams.stream()
+					.anyMatch(et -> et.getTeam().getTeamId().equals(team.getTeamId()) && et.getIsSupervisor()))
+				.collect(Collectors.toList());
+
+			List<Employee> allEmployees = employeeDao.findEmployeeByName(keyword);
+
+			Set<Long> managedEmployeeIds = employeeManagers.stream()
+				.filter(em -> em.getManagerType() == ManagerType.PRIMARY
+						|| em.getManagerType() == ManagerType.SECONDARY)
+				.map(em -> em.getEmployee().getEmployeeId())
+				.collect(Collectors.toSet());
+
+			Set<Long> supervisedEmployeeIds = new HashSet<>();
+			boolean isSupervisor = employeeTeams.stream().anyMatch(EmployeeTeam::getIsSupervisor);
+
+			if (isSupervisor) {
+				Set<Team> supervisedTeamIds = employeeTeams.stream()
+					.filter(EmployeeTeam::getIsSupervisor)
+					.map(EmployeeTeam::getTeam)
+					.collect(Collectors.toSet());
+
+				List<EmployeeTeam> teamMembers = employeeTeamDao.findByTeamIn(supervisedTeamIds);
+				supervisedEmployeeIds = teamMembers.stream()
+					.map(et -> et.getEmployee().getEmployeeId())
+					.collect(Collectors.toSet());
+			}
+
+			Set<Long> finalSupervisedEmployeeIds = supervisedEmployeeIds;
+			List<Employee> filteredEmployees = allEmployees.stream()
+				.filter(employee -> managedEmployeeIds.contains(employee.getEmployeeId())
+						|| finalSupervisedEmployeeIds.contains(employee.getEmployeeId()))
+				.collect(Collectors.toList());
+
+			AnalyticsSearchResponseDto analyticsSearchResponseDto = new AnalyticsSearchResponseDto(
+					peopleMapper.employeeListToEmployeeSummarizedResponseDto(filteredEmployees),
+					peopleMapper.teamToTeamDetailResponseDto(supervisedTeams));
+
+			log.info("searchEmployeesAndTeamsByKeyword: execution ended by user: {} to search users by the keyword {}",
+					currentUser.getUserId(), keyword);
+			return new ResponseEntityDto(false, analyticsSearchResponseDto);
+		}
+
 		List<Team> teams = teamDao.findTeamsByName(keyword);
 		List<Employee> employees = employeeDao.findEmployeeByName(keyword);
 
