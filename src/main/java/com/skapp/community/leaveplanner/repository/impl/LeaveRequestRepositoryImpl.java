@@ -791,21 +791,7 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 		Subquery<Long> supervisedTeamsSubquery = criteriaQuery.subquery(Long.class);
 		Root<EmployeeTeam> teamRoot = supervisedTeamsSubquery.from(EmployeeTeam.class);
 
-		Predicate baseCondition = criteriaBuilder.and(criteriaBuilder
-			.equal(teamRoot.get(EmployeeTeam_.employee).get(Employee_.employeeId), managerEmployeeId),
-				criteriaBuilder.isTrue(teamRoot.get(EmployeeTeam_.isSupervisor)));
-
-		if (leaveRequestFilterDto.getTeamIds() != null && !leaveRequestFilterDto.getTeamIds().contains(-1L)
-				&& !leaveRequestFilterDto.getTeamIds().isEmpty()) {
-			baseCondition = criteriaBuilder.and(baseCondition,
-					teamRoot.get(EmployeeTeam_.team).get(Team_.teamId).in(leaveRequestFilterDto.getTeamIds()));
-		}
-
-		supervisedTeamsSubquery.select(teamRoot.get(EmployeeTeam_.employee).get(Employee_.employeeId))
-			.where(baseCondition);
-
-		predicates.add(criteriaBuilder.or(employee.get(Employee_.employeeId).in(managedEmployeesSubquery),
-				employee.get(Employee_.employeeId).in(supervisedTeamsSubquery)));
+		predicates.add(criteriaBuilder.or(employee.get(Employee_.employeeId).in(managedEmployeesSubquery)));
 
 		if (leaveRequestFilterDto.getSearchKeyword() != null && !leaveRequestFilterDto.getSearchKeyword().isBlank()) {
 			predicates.add(findByEmailName(leaveRequestFilterDto.getSearchKeyword(), criteriaBuilder, employee, user));

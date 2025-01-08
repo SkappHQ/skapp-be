@@ -145,7 +145,7 @@ public class RolesServiceImpl implements RolesService {
 		log.info("updateEmployeeRoles: execution started");
 
 		if (Boolean.TRUE.equals(employee.getEmployeeRole().getIsSuperAdmin())
-				&& employeeRoleDao.countByIsSuperAdminTrue() == 1) {
+				&& employeeRoleDao.countByIsSuperAdminTrue() == 1 && isUserRoleDowngraded(roleRequestDto)) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_ONLY_ONE_SUPER_ADMIN);
 		}
 
@@ -427,6 +427,12 @@ public class RolesServiceImpl implements RolesService {
 
 		roleResponseDto.setRoles(roles);
 		return roleResponseDto;
+	}
+
+	private boolean isUserRoleDowngraded(RoleRequestDto roleRequestDto) {
+		return roleRequestDto.getPeopleRole() == null || !roleRequestDto.getPeopleRole().equals(Role.PEOPLE_ADMIN)
+				|| !roleRequestDto.getAttendanceRole().equals(Role.ATTENDANCE_ADMIN)
+				|| !roleRequestDto.getLeaveRole().equals(Role.LEAVE_ADMIN);
 	}
 
 }
