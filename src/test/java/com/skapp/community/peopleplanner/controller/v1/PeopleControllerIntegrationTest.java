@@ -1,9 +1,10 @@
 package com.skapp.community.peopleplanner.controller.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.skapp.community.common.config.SecurityConfig;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.model.User;
+import com.skapp.community.common.security.AuthorityService;
+import com.skapp.community.common.security.SkappUserDetails;
 import com.skapp.community.common.type.Role;
 import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.common.util.MessageUtil;
@@ -27,9 +28,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -46,19 +45,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class PeopleControllerIntegrationTest {
 
 	@Autowired
-	private WebApplicationContext context;
-
-	@Autowired
 	private ObjectMapper objectMapper;
 
 	@Autowired
-	private PeopleController peopleController;
-
-	@Autowired
-	private SecurityConfig securityConfig;
-
-	@Autowired
-	private UserDetailsService userDetailsService;
+	private AuthorityService authorityService;
 
 	@Autowired
 	private MockMvc mvc;
@@ -89,9 +79,17 @@ public class PeopleControllerIntegrationTest {
 		mockEmployee.setEmployeeRole(role);
 		mockUser.setEmployee(mockEmployee);
 
+		SkappUserDetails userDetails = SkappUserDetails.builder()
+			.username(mockUser.getEmail())
+			.password(mockUser.getPassword())
+			.enabled(mockUser.getIsActive())
+			.authorities(authorityService.getAuthorities(mockUser))
+			.build();
+
 		SecurityContext securityContext = Mockito.mock(SecurityContext.class);
-		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(mockUser, null,
-				userDetailsService.loadUserByUsername(mockUser.getEmail()).getAuthorities());
+		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
+				userDetails.getAuthorities());
+
 		Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
 		SecurityContextHolder.setContext(securityContext);
 	}
