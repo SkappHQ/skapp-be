@@ -788,9 +788,6 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 			.where(criteriaBuilder.equal(managerRoot.get(EmployeeManager_.manager).get(Employee_.employeeId),
 					managerEmployeeId));
 
-		Subquery<Long> supervisedTeamsSubquery = criteriaQuery.subquery(Long.class);
-		Root<EmployeeTeam> teamRoot = supervisedTeamsSubquery.from(EmployeeTeam.class);
-
 		predicates.add(criteriaBuilder.or(employee.get(Employee_.employeeId).in(managedEmployeesSubquery)));
 
 		if (leaveRequestFilterDto.getSearchKeyword() != null && !leaveRequestFilterDto.getSearchKeyword().isBlank()) {
