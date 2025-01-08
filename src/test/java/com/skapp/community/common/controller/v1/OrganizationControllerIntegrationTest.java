@@ -53,9 +53,6 @@ public class OrganizationControllerIntegrationTest {
 	@Autowired
 	private MessageUtil messageUtil;
 
-	@Autowired
-	private UserDetailsService userDetailsService;
-
 	@BeforeEach
 	public void setup() {
 
