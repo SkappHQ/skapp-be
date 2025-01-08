@@ -299,8 +299,8 @@ public class RolesServiceImpl implements RolesService {
 
 		User currentUser = userService.getCurrentUser();
 		if (currentUser != null) {
-			timeline.setCreatedBy(currentUser.getUsername());
-			timeline.setLastModifiedBy(currentUser.getUsername());
+			timeline.setCreatedBy(currentUser.getEmail());
+			timeline.setLastModifiedBy(currentUser.getEmail());
 		}
 
 		LocalDate now = DateTimeUtils.getCurrentUtcDate();
@@ -353,6 +353,25 @@ public class RolesServiceImpl implements RolesService {
 
 		log.info("getSuperAdminCount: execution ended");
 		return new ResponseEntityDto(false, superAdminCount);
+	}
+
+	@Override
+	public void saveEmployeeRoles(Employee employee) {
+		log.info("saveEmployeeRoles: execution started");
+
+		EmployeeRole superAdminRoles = new EmployeeRole();
+		superAdminRoles.setEmployee(employee);
+		superAdminRoles.setPeopleRole(Role.PEOPLE_EMPLOYEE);
+		superAdminRoles.setLeaveRole(Role.LEAVE_EMPLOYEE);
+		superAdminRoles.setAttendanceRole(Role.ATTENDANCE_EMPLOYEE);
+		superAdminRoles.setIsSuperAdmin(false);
+		superAdminRoles.setChangedDate(DateTimeUtils.getCurrentUtcDate());
+		superAdminRoles.setRoleChangedBy(employee);
+
+		employeeRoleDao.save(superAdminRoles);
+		employee.setEmployeeRole(superAdminRoles);
+
+		log.info("saveEmployeeRoles: execution started");
 	}
 
 	private void addAllowedRolesForModule(List<AllowedRoleDto> rolesList, ModuleType module, boolean isAdminAllowed,

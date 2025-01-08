@@ -28,6 +28,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -52,6 +53,9 @@ public class TimeControllerIntegrationTest {
 
 	@Autowired
 	private WebApplicationContext context;
+
+	@Autowired
+	private UserDetailsService userDetailsService;
 
 	@Autowired
 	private ObjectMapper objectMapper;
@@ -108,7 +112,7 @@ public class TimeControllerIntegrationTest {
 
 		SecurityContext securityContext = Mockito.mock(SecurityContext.class);
 		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(mockUser, null,
-				mockUser.getAuthorities());
+				userDetailsService.loadUserByUsername(mockUser.getEmail()).getAuthorities());
 		Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
 		SecurityContextHolder.setContext(securityContext);
 	}

@@ -23,7 +23,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
@@ -58,7 +57,7 @@ public class PeopleControllerIntegrationTest {
 	@Autowired
 	private SecurityConfig securityConfig;
 
-	@MockBean
+	@Autowired
 	private UserDetailsService userDetailsService;
 
 	@Autowired
@@ -92,7 +91,7 @@ public class PeopleControllerIntegrationTest {
 
 		SecurityContext securityContext = Mockito.mock(SecurityContext.class);
 		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(mockUser, null,
-				mockUser.getAuthorities());
+				userDetailsService.loadUserByUsername(mockUser.getEmail()).getAuthorities());
 		Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
 		SecurityContextHolder.setContext(securityContext);
 	}

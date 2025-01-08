@@ -46,6 +46,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -61,6 +62,9 @@ public class AuthServiceImpl implements AuthService {
 
 	@NonNull
 	private final UserDao userDao;
+
+	@NonNull
+	private final UserDetailsService userDetailsService;
 
 	@NonNull
 	private final PeopleMapper peopleMapper;
@@ -137,8 +141,9 @@ public class AuthServiceImpl implements AuthService {
 		EmployeeSignInResponseDto employeeSignInResponseDto = peopleMapper
 			.employeeToEmployeeSignInResponseDto(employee.get());
 
-		String accessToken = jwtService.generateAccessToken(user, user.getUserId());
-		String refreshToken = jwtService.generateRefreshToken(user);
+		UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+		String accessToken = jwtService.generateAccessToken(userDetails, user.getUserId());
+		String refreshToken = jwtService.generateRefreshToken(userDetails);
 
 		SignInResponseDto signInResponseDto = new SignInResponseDto();
 		signInResponseDto.setAccessToken(accessToken);
@@ -187,8 +192,10 @@ public class AuthServiceImpl implements AuthService {
 
 		EmployeeSignInResponseDto employeeSignInResponseDto = peopleMapper
 			.employeeToEmployeeSignInResponseDto(employee);
-		String accessToken = jwtService.generateAccessToken(user, user.getUserId());
-		String refreshToken = jwtService.generateRefreshToken(user);
+
+		UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+		String accessToken = jwtService.generateAccessToken(userDetails, user.getUserId());
+		String refreshToken = jwtService.generateRefreshToken(userDetails);
 
 		SignInResponseDto signInResponseDto = new SignInResponseDto();
 		signInResponseDto.setAccessToken(accessToken);
@@ -210,7 +217,7 @@ public class AuthServiceImpl implements AuthService {
 		}
 
 		String userEmail = jwtService.extractUserEmail(refreshTokenRequestDto.getRefreshToken());
-		UserDetails userDetails = userService.userDetailsService().loadUserByUsername(userEmail);
+		UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
 		if (!jwtService.isTokenValid(refreshTokenRequestDto.getRefreshToken(), userDetails)) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_INVALID_REFRESH_TOKEN);
