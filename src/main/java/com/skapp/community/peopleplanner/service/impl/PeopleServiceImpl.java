@@ -417,6 +417,17 @@ public class PeopleServiceImpl implements PeopleService {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_TERMINATED);
 		}
 
+		User currentUser = userService.getCurrentUser();
+		boolean isSuperAdmin = currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin();
+		boolean isPeopleAdmin = Role.PEOPLE_ADMIN.equals(currentUser.getEmployee().getEmployeeRole().getPeopleRole());
+
+		if (!isSuperAdmin && !isPeopleAdmin) {
+			if (!Objects.equals(currentUser.getEmployee().getEmployeeId(), employeeId)
+					|| !Objects.equals(currentUser.getEmail(), employeeUpdateDto.getEmail())) {
+				throw new ModuleException(CommonMessageConstant.COMMON_ERROR_UNAUTHORIZED_ACCESS);
+			}
+		}
+
 		validateRoles(employeeUpdateDto.getUserRoles());
 
 		String employeePreviousName = optionalEmployee.get().getFirstName();
