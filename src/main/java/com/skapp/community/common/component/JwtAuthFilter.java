@@ -2,7 +2,6 @@ package com.skapp.community.common.component;
 
 import com.skapp.community.common.constant.AuthConstants;
 import com.skapp.community.common.service.JwtService;
-import com.skapp.community.common.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -32,7 +32,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 	private final JwtService jwtService;
 
 	@NonNull
-	private final UserService userService;
+	private final UserDetailsService userDetailsService;
 
 	@NonNull
 	private final ProfileActivator profileActivator;
@@ -70,7 +70,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 		Long userId = jwtService.extractUserId(accessToken);
 
 		if (StringUtils.isNotEmpty(userEmail) && SecurityContextHolder.getContext().getAuthentication() == null) {
-			UserDetails userDetails = userService.userDetailsService().loadUserByUsername(userEmail);
+			UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 			if (jwtService.isTokenValid(accessToken, userDetails)) {
 				SecurityContext context = SecurityContextHolder.createEmptyContext();
 				UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,

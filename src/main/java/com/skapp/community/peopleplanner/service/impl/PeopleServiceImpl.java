@@ -40,7 +40,6 @@ import com.skapp.community.peopleplanner.model.EmployeeManager;
 import com.skapp.community.peopleplanner.model.EmployeePeriod;
 import com.skapp.community.peopleplanner.model.EmployeePersonalInfo;
 import com.skapp.community.peopleplanner.model.EmployeeProgression;
-import com.skapp.community.peopleplanner.model.EmployeeRole;
 import com.skapp.community.peopleplanner.model.EmployeeTeam;
 import com.skapp.community.peopleplanner.model.EmployeeTimeline;
 import com.skapp.community.peopleplanner.model.EmployeeVisa;
@@ -94,7 +93,6 @@ import com.skapp.community.peopleplanner.repository.EmployeeFamilyDao;
 import com.skapp.community.peopleplanner.repository.EmployeeManagerDao;
 import com.skapp.community.peopleplanner.repository.EmployeePeriodDao;
 import com.skapp.community.peopleplanner.repository.EmployeeProgressionDao;
-import com.skapp.community.peopleplanner.repository.EmployeeRoleDao;
 import com.skapp.community.peopleplanner.repository.EmployeeTeamDao;
 import com.skapp.community.peopleplanner.repository.EmployeeTimelineDao;
 import com.skapp.community.peopleplanner.repository.EmployeeVisaDao;
@@ -186,9 +184,6 @@ public class PeopleServiceImpl implements PeopleService {
 
 	@NonNull
 	private final JobTitleDao jobTitleDao;
-
-	@NonNull
-	private final EmployeeRoleDao employeeRoleDao;
 
 	@NonNull
 	private final EmployeePeriodDao employeePeriodDao;
@@ -1540,7 +1535,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 		userDao.save(user);
 
-		saveEmployeeRoles(employee);
+		rolesService.saveEmployeeRoles(employee);
 		saveEmployeeProgression(employee, employeeBulkDto);
 
 		if (!employeeBulkDto.getTeams().isEmpty()) {
@@ -1627,24 +1622,6 @@ public class PeopleServiceImpl implements PeopleService {
 
 		log.info("createNotificationSettings: execution ended");
 		return userSettings;
-	}
-
-	private void saveEmployeeRoles(Employee employee) {
-		log.info("saveEmployeeRoles: execution started");
-
-		EmployeeRole superAdminRoles = new EmployeeRole();
-		superAdminRoles.setEmployee(employee);
-		superAdminRoles.setPeopleRole(Role.PEOPLE_EMPLOYEE);
-		superAdminRoles.setLeaveRole(Role.LEAVE_EMPLOYEE);
-		superAdminRoles.setAttendanceRole(Role.ATTENDANCE_EMPLOYEE);
-		superAdminRoles.setIsSuperAdmin(false);
-		superAdminRoles.setChangedDate(DateTimeUtils.getCurrentUtcDate());
-		superAdminRoles.setRoleChangedBy(employee);
-
-		employeeRoleDao.save(superAdminRoles);
-		employee.setEmployeeRole(superAdminRoles);
-
-		log.info("saveEmployeeRoles: execution started");
 	}
 
 	public void setBulkManagers(EmployeeBulkDto employeeBulkDto, EmployeeDetailsDto employeeDetailsDto) {

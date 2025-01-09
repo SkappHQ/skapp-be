@@ -5,7 +5,6 @@ import com.skapp.community.common.component.ExceptionLoggingFilter;
 import com.skapp.community.common.component.JwtAuthFilter;
 import com.skapp.community.common.component.ResetDatabaseApiKeyFilter;
 import com.skapp.community.common.constant.AuthConstants;
-import com.skapp.community.common.service.UserService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -19,6 +18,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -42,7 +42,7 @@ public class SecurityConfig {
 	private final JwtAuthFilter jwtAuthFilter;
 
 	@NonNull
-	private final UserService userService;
+	private final UserDetailsService userDetailsService;
 
 	@NonNull
 	private final AuthEntryPoint authEntryPoint;
@@ -56,7 +56,7 @@ public class SecurityConfig {
 	@Bean
 	public AuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-		authProvider.setUserDetailsService(userService.userDetailsService());
+		authProvider.setUserDetailsService(userDetailsService);
 		authProvider.setPasswordEncoder(passwordEncoder());
 		return authProvider;
 	}

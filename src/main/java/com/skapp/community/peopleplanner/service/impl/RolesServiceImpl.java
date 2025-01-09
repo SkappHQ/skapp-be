@@ -30,6 +30,7 @@ import com.skapp.community.peopleplanner.repository.ModuleRoleRestrictionDao;
 import com.skapp.community.peopleplanner.repository.TeamDao;
 import com.skapp.community.peopleplanner.service.RolesService;
 import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
+import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,8 +42,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
+@RequiredArgsConstructor
 public class RolesServiceImpl implements RolesService {
 
 	@NonNull
@@ -299,8 +300,8 @@ public class RolesServiceImpl implements RolesService {
 
 		User currentUser = userService.getCurrentUser();
 		if (currentUser != null) {
-			timeline.setCreatedBy(currentUser.getUsername());
-			timeline.setLastModifiedBy(currentUser.getUsername());
+			timeline.setCreatedBy(currentUser.getEmail());
+			timeline.setLastModifiedBy(currentUser.getEmail());
 		}
 
 		LocalDate now = DateTimeUtils.getCurrentUtcDate();
@@ -355,6 +356,25 @@ public class RolesServiceImpl implements RolesService {
 		return new ResponseEntityDto(false, superAdminCount);
 	}
 
+	@Override
+	public void saveEmployeeRoles(@NotNull Employee employee) {
+		log.info("saveEmployeeRoles: execution started");
+
+		EmployeeRole superAdminRoles = new EmployeeRole();
+		superAdminRoles.setEmployee(employee);
+		superAdminRoles.setPeopleRole(Role.PEOPLE_EMPLOYEE);
+		superAdminRoles.setLeaveRole(Role.LEAVE_EMPLOYEE);
+		superAdminRoles.setAttendanceRole(Role.ATTENDANCE_EMPLOYEE);
+		superAdminRoles.setIsSuperAdmin(false);
+		superAdminRoles.setChangedDate(DateTimeUtils.getCurrentUtcDate());
+		superAdminRoles.setRoleChangedBy(employee);
+
+		employeeRoleDao.save(superAdminRoles);
+		employee.setEmployeeRole(superAdminRoles);
+
+		log.info("saveEmployeeRoles: execution started");
+	}
+
 	private void addAllowedRolesForModule(List<AllowedRoleDto> rolesList, ModuleType module, boolean isAdminAllowed,
 			boolean isManagerAllowed) {
 		if (isAdminAllowed) {
@@ -399,7 +419,7 @@ public class RolesServiceImpl implements RolesService {
 		};
 	}
 
-	private EmployeeRole createEmployeeRole(RoleRequestDto roleRequestDto, Employee employee) {
+	protected EmployeeRole createEmployeeRole(RoleRequestDto roleRequestDto, Employee employee) {
 		EmployeeRole employeeRole = new EmployeeRole();
 		User currentUser = userService.getCurrentUser();
 

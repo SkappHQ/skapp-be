@@ -2,6 +2,8 @@ package com.skapp.community.timeplanner.controller.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skapp.community.common.model.User;
+import com.skapp.community.common.security.AuthorityService;
+import com.skapp.community.common.security.SkappUserDetails;
 import com.skapp.community.common.type.Role;
 import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.peopleplanner.model.Employee;
@@ -31,7 +33,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -51,7 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TimeControllerIntegrationTest {
 
 	@Autowired
-	private WebApplicationContext context;
+	private AuthorityService authorityService;
 
 	@Autowired
 	private ObjectMapper objectMapper;
@@ -106,9 +107,17 @@ public class TimeControllerIntegrationTest {
 		mockUser.setEmployee(mockEmployee);
 		mockEmployee.setUser(mockUser);
 
+		SkappUserDetails userDetails = SkappUserDetails.builder()
+			.username(mockUser.getEmail())
+			.password(mockUser.getPassword())
+			.enabled(mockUser.getIsActive())
+			.authorities(authorityService.getAuthorities(mockUser))
+			.build();
+
 		SecurityContext securityContext = Mockito.mock(SecurityContext.class);
-		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(mockUser, null,
-				mockUser.getAuthorities());
+		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
+				userDetails.getAuthorities());
+
 		Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
 		SecurityContextHolder.setContext(securityContext);
 	}

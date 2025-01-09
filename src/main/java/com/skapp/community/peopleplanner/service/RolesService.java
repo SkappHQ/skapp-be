@@ -23,4 +23,6 @@ public interface RolesService {
 
 	ResponseEntityDto getSuperAdminCount();
 
+	void saveEmployeeRoles(Employee employee);
+
 }
