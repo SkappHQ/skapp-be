@@ -93,7 +93,6 @@ import com.skapp.community.peopleplanner.repository.EmployeeFamilyDao;
 import com.skapp.community.peopleplanner.repository.EmployeeManagerDao;
 import com.skapp.community.peopleplanner.repository.EmployeePeriodDao;
 import com.skapp.community.peopleplanner.repository.EmployeeProgressionDao;
-import com.skapp.community.peopleplanner.repository.EmployeeRoleDao;
 import com.skapp.community.peopleplanner.repository.EmployeeTeamDao;
 import com.skapp.community.peopleplanner.repository.EmployeeTimelineDao;
 import com.skapp.community.peopleplanner.repository.EmployeeVisaDao;
@@ -185,9 +184,6 @@ public class PeopleServiceImpl implements PeopleService {
 
 	@NonNull
 	private final JobTitleDao jobTitleDao;
-
-	@NonNull
-	private final EmployeeRoleDao employeeRoleDao;
 
 	@NonNull
 	private final EmployeePeriodDao employeePeriodDao;

@@ -1,5 +1,7 @@
 package com.skapp.community.common.service.impl;
 
+import com.skapp.community.common.constant.CommonMessageConstant;
+import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.repository.UserDao;
 import com.skapp.community.common.service.UserService;
@@ -23,7 +25,8 @@ public class UserServiceImpl implements UserService {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		String email = authentication.getName();
 
-		return userDao.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+		return userDao.findByEmail(email)
+			.orElseThrow(() -> new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND));
 	}
 
 }

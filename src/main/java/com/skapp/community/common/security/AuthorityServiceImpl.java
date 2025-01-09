@@ -3,6 +3,7 @@ package com.skapp.community.common.security;
 import com.skapp.community.common.constant.AuthConstants;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.type.Role;
+import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,7 +25,11 @@ public class AuthorityServiceImpl implements AuthorityService {
 		}
 
 		List<GrantedAuthority> authorities = new ArrayList<>();
-		EmployeeRole employeeRole = user.getEmployee().getEmployeeRole();
+		EmployeeRole employeeRole = Optional.ofNullable(user.getEmployee()).map(Employee::getEmployeeRole).orElse(null);
+
+		if (employeeRole == null) {
+			return Collections.emptyList();
+		}
 
 		addSuperAdminAuthority(authorities, employeeRole);
 		addModuleRoleAuthorities(authorities, employeeRole);

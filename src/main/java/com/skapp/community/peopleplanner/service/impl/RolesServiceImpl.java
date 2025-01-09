@@ -30,6 +30,7 @@ import com.skapp.community.peopleplanner.repository.ModuleRoleRestrictionDao;
 import com.skapp.community.peopleplanner.repository.TeamDao;
 import com.skapp.community.peopleplanner.service.RolesService;
 import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
+import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -356,7 +357,7 @@ public class RolesServiceImpl implements RolesService {
 	}
 
 	@Override
-	public void saveEmployeeRoles(Employee employee) {
+	public void saveEmployeeRoles(@NotNull Employee employee) {
 		log.info("saveEmployeeRoles: execution started");
 
 		EmployeeRole superAdminRoles = new EmployeeRole();
@@ -418,7 +419,7 @@ public class RolesServiceImpl implements RolesService {
 		};
 	}
 
-	private EmployeeRole createEmployeeRole(RoleRequestDto roleRequestDto, Employee employee) {
+	protected EmployeeRole createEmployeeRole(RoleRequestDto roleRequestDto, Employee employee) {
 		EmployeeRole employeeRole = new EmployeeRole();
 		User currentUser = userService.getCurrentUser();
 
