@@ -50,6 +50,8 @@ public class PeopleConstants {
 
 	public static final String TITLE_ENTITLEMENT_UPDATED = "Entitlement Updated";
 
+	public static final String TITLE_ENTITLEMENT_DELETED = "Entitlement Deleted";
+
 	public static final String TITLE_DEFAULT_ENTITLEMENT_DELETED = "Default Entitlement Deleted";
 
 	public static final String TITLE_CUSTOM_ALLOCATION = "Custom Allocation Added";

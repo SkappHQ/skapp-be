@@ -1053,13 +1053,12 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 						entitlement.setValidFrom(validFromDate);
 						entitlement.setValidTo(validToDate);
 
-						if (!isUpdated) {
+						if (!isUpdated && entitlement.getTotalDaysAllocated() != 0) {
 							entitlements.add(entitlement);
 							employeeTimelines.add(getEmployeeTimeline(employee, EmployeeTimelineType.ENTITLEMENT_ADDED,
 									PeopleConstants.TITLE_ENTITLEMENT_ADDED, null,
 									entitlement.getLeaveType().getName() + " " + entitlement.getTotalDaysAllocated()));
 						}
-
 					}
 					else {
 						errors.add(messageUtil.getMessage(LeaveMessageConstant.LEAVE_ERROR_LEAVE_TYPE_IN_BULK_NOT_FOUND,
@@ -1213,32 +1212,47 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 		boolean isUpdated = false;
 		boolean logicFailed = false;
 		EmployeeTimeline employeeTimeline;
+		EmployeeTimelineType timelineType = EmployeeTimelineType.ENTITLEMENT_CHANGED;
+		String timelineTitle = PeopleConstants.TITLE_ENTITLEMENT_UPDATED;
+		String newTotalDaysAllocated = entitlement.getLeaveType().getName() + " "
+				+ (usedDays + entitlement.getTotalDaysAllocated());
 
 		List<LeaveEntitlement> existingEntitlements = leaveEntitlementDao
 			.findByEmployeeAndValidFromAndValidToAndLeaveType(entitlement.getEmployee(), validFrom, validTo,
 					entitlement.getLeaveType());
 		if (!existingEntitlements.isEmpty()) {
 			isUpdated = true;
-
-			for (LeaveEntitlement existingEntitlement : existingEntitlements) {
-				currentBalance = existingEntitlement.getTotalDaysAllocated() - existingEntitlement.getTotalDaysUsed();
-				if (existingEntitlement.getTotalDaysUsed() <= entitlement.getTotalDaysAllocated()) {
-					existingEntitlement.setTotalDaysUsed(existingEntitlement.getTotalDaysUsed());
-					existingEntitlement.setTotalDaysAllocated(entitlement.getTotalDaysAllocated());
+			if (entitlement.getTotalDaysAllocated() > 0) {
+				for (LeaveEntitlement existingEntitlement : existingEntitlements) {
+					allocatedDays += existingEntitlement.getTotalDaysAllocated();
+					currentBalance = existingEntitlement.getTotalDaysAllocated()
+							- existingEntitlement.getTotalDaysUsed();
+					if (entitlement.getTotalDaysAllocated() == 0) {
+						leaveEntitlementDao.delete(existingEntitlement);
+					}
+					else if (existingEntitlement.getTotalDaysUsed() <= entitlement.getTotalDaysAllocated()) {
+						existingEntitlement.setTotalDaysUsed(existingEntitlement.getTotalDaysUsed());
+						existingEntitlement.setTotalDaysAllocated(entitlement.getTotalDaysAllocated());
+					}
+					else if (currentBalance <= 0) {
+						logicFailed = true;
+					}
 				}
-				else if (existingEntitlement.getTotalDaysUsed() > entitlement.getTotalDaysAllocated()
-						|| currentBalance == 0) {
-					logicFailed = true;
-				}
+				leaveEntitlementDao.saveAll(existingEntitlements);
+				newTotalDaysAllocated = entitlement.getLeaveType().getName() + " "
+						+ (usedDays + entitlement.getTotalDaysAllocated());
 			}
-			leaveEntitlementDao.saveAll(existingEntitlements);
+			else {
+				leaveEntitlementDao.deleteAll(existingEntitlements);
+				timelineTitle = PeopleConstants.TITLE_ENTITLEMENT_DELETED;
+				timelineType = EmployeeTimelineType.ENTITLEMENT_DELETED;
+				newTotalDaysAllocated = null;
+			}
 		}
 
 		if (isUpdated) {
-			employeeTimeline = getEmployeeTimeline(entitlement.getEmployee(), EmployeeTimelineType.ENTITLEMENT_CHANGED,
-					PeopleConstants.TITLE_ENTITLEMENT_UPDATED,
-					entitlement.getLeaveType().getName() + " " + allocatedDays,
-					entitlement.getLeaveType().getName() + " " + (usedDays + entitlement.getTotalDaysAllocated()));
+			employeeTimeline = getEmployeeTimeline(entitlement.getEmployee(), timelineType, timelineTitle,
+					entitlement.getLeaveType().getName() + " " + allocatedDays, newTotalDaysAllocated);
 			employeeTimelineDao.save(employeeTimeline);
 		}
 		return new boolean[] { isUpdated, logicFailed };
