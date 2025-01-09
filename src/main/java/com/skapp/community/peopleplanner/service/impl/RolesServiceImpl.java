@@ -42,8 +42,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
+@RequiredArgsConstructor
 public class RolesServiceImpl implements RolesService {
 
 	@NonNull

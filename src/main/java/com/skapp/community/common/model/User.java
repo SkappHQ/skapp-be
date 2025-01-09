@@ -13,7 +13,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -69,10 +68,6 @@ public class User {
 	@PrimaryKeyJoinColumn
 	private UserSettings settings;
 
-	@Builder.Default
-	@Transient
-	private List<String> previousPasswordsList = new ArrayList<>();
-
 	public List<String> getPreviousPasswordsList() {
 		if (previousPasswords == null || previousPasswords.isEmpty()) {
 			return new ArrayList<>();
@@ -81,9 +76,10 @@ public class User {
 	}
 
 	public void addPreviousPassword(String password) {
-		List<String> passwordList = getPreviousPasswordsList();
-		passwordList.add(password);
-		this.previousPasswords = String.join(",", passwordList);
+		List<String> previousPasswordList = getPreviousPasswordsList();
+
+		previousPasswordList.add(password);
+		this.previousPasswords = String.join(",", previousPasswordList);
 	}
 
 }
