@@ -148,7 +148,8 @@ public class NotificationServiceImpl implements NotificationService {
 
 		InputStream file;
 		try {
-			file = new ClassPathResource("community/templates/notification/notification-templates.json").getInputStream();
+			file = new ClassPathResource("community/templates/notification/notification-templates.json")
+				.getInputStream();
 		}
 		catch (IOException exception) {
 			log.error("Unable to find notification-templates.json file", exception);
