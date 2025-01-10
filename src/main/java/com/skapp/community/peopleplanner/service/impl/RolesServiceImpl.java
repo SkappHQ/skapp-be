@@ -190,7 +190,7 @@ public class RolesServiceImpl implements RolesService {
 		}
 
 		User currentUser = userService.getCurrentUser();
-		updateEmployeeRolesSafely(employeeRole, roleRequestDto, currentDate, currentUser);
+		employeeRole = updateEmployeeRolesSafely(employeeRole, roleRequestDto, currentDate, currentUser);
 
 		employeeRoleDao.save(employeeRole);
 
@@ -215,7 +215,7 @@ public class RolesServiceImpl implements RolesService {
 		return isPeopleDemoted || isAttendanceDemoted || isLeaveDemoted;
 	}
 
-	private void updateEmployeeRolesSafely(EmployeeRole employeeRole, RoleRequestDto roleRequestDto,
+	protected EmployeeRole updateEmployeeRolesSafely(EmployeeRole employeeRole, RoleRequestDto roleRequestDto,
 			LocalDate currentDate, User currentUser) {
 		if (employeeRole != null) {
 			employeeRole.setPeopleRole(roleRequestDto.getPeopleRole());
@@ -228,6 +228,7 @@ public class RolesServiceImpl implements RolesService {
 				employeeRole.setRoleChangedBy(currentUser.getEmployee());
 			}
 		}
+		return employeeRole;
 	}
 
 	private boolean isFirstTimeRoleAssignment(EmployeeRole employeeRole) {
@@ -398,7 +399,7 @@ public class RolesServiceImpl implements RolesService {
 		return allowedRole;
 	}
 
-	private Role getRoleForModuleAndLevel(ModuleType module, RoleLevel roleLevel) {
+	protected Role getRoleForModuleAndLevel(ModuleType module, RoleLevel roleLevel) {
 		return switch (module) {
 			case ATTENDANCE -> switch (roleLevel) {
 				case ADMIN -> Role.ATTENDANCE_ADMIN;

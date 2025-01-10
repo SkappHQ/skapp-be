@@ -16,4 +16,6 @@ public class RoleRequestDto {
 
 	private Role leaveRole;
 
+	private Role eSignRole;
+
 }
