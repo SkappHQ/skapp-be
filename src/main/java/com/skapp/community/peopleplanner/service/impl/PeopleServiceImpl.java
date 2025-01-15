@@ -412,6 +412,15 @@ public class PeopleServiceImpl implements PeopleService {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_TERMINATED);
 		}
 
+		if (optionalEmployee.get().getAccountStatus().equals(AccountStatus.PENDING)
+				&& employeeUpdateDto.getEmail() != null
+				&& !Objects.equals(optionalEmployee.get().getUser().getEmail(), employeeUpdateDto.getEmail())) {
+			if (userDao.findByEmail(employeeUpdateDto.getEmail()).isPresent()) {
+				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_USER_EMAIL_ALREADY_EXIST);
+			}
+			updateEmailAndSendReInvitation(optionalEmployee.get(), employeeUpdateDto.getEmail());
+		}
+
 		User currentUser = userService.getCurrentUser();
 		boolean isSuperAdmin = currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin();
 		boolean isPeopleAdmin = Role.PEOPLE_ADMIN.equals(currentUser.getEmployee().getEmployeeRole().getPeopleRole());
@@ -3212,6 +3221,23 @@ public class PeopleServiceImpl implements PeopleService {
 			default -> false;
 		};
 
+	}
+
+	private void updateEmailAndSendReInvitation(Employee employee, String email) {
+		User user = employee.getUser();
+		user.setEmail(email);
+
+		Optional<User> firstUser = userDao.findById(1L);
+		LoginMethod loginMethod = firstUser.isPresent() ? firstUser.get().getLoginMethod() : LoginMethod.CREDENTIALS;
+
+		if (loginMethod.equals(LoginMethod.CREDENTIALS)) {
+			String tempPassword = CommonModuleUtils.generateSecureRandomPassword();
+			user.setTempPassword(encryptionDecryptionService.encrypt(tempPassword, encryptSecret));
+			user.setPassword(passwordEncoder.encode(tempPassword));
+		}
+
+		userDao.save(user);
+		peopleEmailService.sendUserInvitationEmail(user);
 	}
 
 }
