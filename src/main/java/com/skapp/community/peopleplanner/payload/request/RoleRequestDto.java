@@ -1,5 +1,6 @@
 package com.skapp.community.peopleplanner.payload.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.skapp.community.common.type.Role;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,6 +17,7 @@ public class RoleRequestDto {
 
 	private Role leaveRole;
 
+	@JsonProperty("eSignRole")
 	private Role eSignRole;
 
 }
