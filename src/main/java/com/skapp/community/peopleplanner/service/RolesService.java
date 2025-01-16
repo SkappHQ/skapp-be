@@ -25,4 +25,6 @@ public interface RolesService {
 
 	void saveEmployeeRoles(Employee employee);
 
+	void validateRoles(RoleRequestDto userRoles);
+
 }
