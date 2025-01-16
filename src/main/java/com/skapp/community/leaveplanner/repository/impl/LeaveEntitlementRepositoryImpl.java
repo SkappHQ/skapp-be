@@ -920,7 +920,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		predicates.add(criteriaBuilder
 			.notEqual(root.get(LeaveEntitlement_.leaveType).get(LeaveType_.maxCarryForwardDays), 0F));
 		predicates.add(criteriaBuilder.equal(root.get(LeaveEntitlement_.isActive), isActive));
-		predicates.add(criteriaBuilder.equal(root.get(LeaveEntitlement_.validTo), leaveCycleEndDate));
+		predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get(LeaveEntitlement_.validTo), leaveCycleEndDate));
 		predicates.add(criteriaBuilder.greaterThan(root.get(LeaveEntitlement_.totalDaysAllocated),
 				root.get(LeaveEntitlement_.totalDaysUsed)));
 		predicates.add(criteriaBuilder.or(
