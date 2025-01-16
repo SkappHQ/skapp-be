@@ -38,7 +38,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -316,35 +318,55 @@ public class RolesServiceImpl implements RolesService {
 	public ResponseEntityDto getAllowedRoles() {
 		log.info("getAllowedRoles: execution started");
 
-		List<AllowedModuleRolesResponseDto> allowedModuleRolesResponseDtos = new ArrayList<>();
-		for (ModuleType module : ModuleType.values()) {
-			if (module == ModuleType.COMMON) {
-				continue;
-			}
-
-			Optional<ModuleRoleRestriction> optionalModuleRoleRestriction = moduleRoleRestrictionDao.findById(module);
-
-			boolean isAdminAllowed = true;
-			boolean isManagerAllowed = true;
-
-			if (optionalModuleRoleRestriction.isPresent()) {
-				ModuleRoleRestriction moduleRoleRestriction = optionalModuleRoleRestriction.get();
-				isAdminAllowed = !Boolean.TRUE.equals(moduleRoleRestriction.getIsAdmin());
-				isManagerAllowed = !Boolean.TRUE.equals(moduleRoleRestriction.getIsManager());
-			}
-
-			List<AllowedRoleDto> rolesForModule = new ArrayList<>();
-			addAllowedRolesForModule(rolesForModule, module, isAdminAllowed, isManagerAllowed);
-
-			AllowedModuleRolesResponseDto moduleResponse = new AllowedModuleRolesResponseDto();
-			moduleResponse.setModule(module);
-			moduleResponse.setRoles(rolesForModule);
-
-			allowedModuleRolesResponseDtos.add(moduleResponse);
-		}
+		Map<ModuleType, List<RoleLevel>> moduleTypeListMap = initializeRolesForModule();
+		List<AllowedModuleRolesResponseDto> allowedModuleRolesResponseDtos = moduleTypeListMap.entrySet()
+			.stream()
+			.map(this::processModuleRoles)
+			.toList();
 
 		log.info("getAllowedRoles: execution ended");
 		return new ResponseEntityDto(false, allowedModuleRolesResponseDtos);
+	}
+
+	private AllowedModuleRolesResponseDto processModuleRoles(Map.Entry<ModuleType, List<RoleLevel>> entry) {
+		ModuleType module = entry.getKey();
+		List<RoleLevel> prebuiltRoles = entry.getValue();
+
+		ModuleRoleRestriction moduleRoleRestriction = moduleRoleRestrictionDao.findById(module).orElse(null);
+		boolean isAdminAllowed = moduleRoleRestriction == null
+				|| !Boolean.TRUE.equals(moduleRoleRestriction.getIsAdmin());
+		boolean isManagerAllowed = moduleRoleRestriction == null
+				|| !Boolean.TRUE.equals(moduleRoleRestriction.getIsManager());
+
+		List<AllowedRoleDto> rolesForModule = prebuiltRoles.stream()
+			.filter(roleLevel -> isRoleAllowed(roleLevel, isAdminAllowed, isManagerAllowed))
+			.map(roleLevel -> createAllowedRole(roleLevel.getDisplayName(),
+					getRoleForModuleAndLevel(module, roleLevel)))
+			.toList();
+
+		AllowedModuleRolesResponseDto moduleResponse = new AllowedModuleRolesResponseDto();
+		moduleResponse.setModule(module);
+		moduleResponse.setRoles(rolesForModule);
+		return moduleResponse;
+	}
+
+	// Helper method to determine if a role is allowed based on restrictions
+	private boolean isRoleAllowed(RoleLevel roleLevel, boolean isAdminAllowed, boolean isManagerAllowed) {
+		return switch (roleLevel) {
+			case ADMIN -> isAdminAllowed;
+			case MANAGER -> isManagerAllowed;
+			default -> true; // other roles are always allowed
+		};
+	}
+
+	protected Map<ModuleType, List<RoleLevel>> initializeRolesForModule() {
+		Map<ModuleType, List<RoleLevel>> roles = new EnumMap<>(ModuleType.class);
+
+		roles.put(ModuleType.ATTENDANCE, List.of(RoleLevel.ADMIN, RoleLevel.MANAGER, RoleLevel.EMPLOYEE));
+		roles.put(ModuleType.PEOPLE, List.of(RoleLevel.ADMIN, RoleLevel.MANAGER, RoleLevel.EMPLOYEE));
+		roles.put(ModuleType.LEAVE, List.of(RoleLevel.ADMIN, RoleLevel.MANAGER, RoleLevel.EMPLOYEE));
+
+		return roles;
 	}
 
 	@Override
@@ -376,22 +398,6 @@ public class RolesServiceImpl implements RolesService {
 		log.info("saveEmployeeRoles: execution started");
 	}
 
-	private void addAllowedRolesForModule(List<AllowedRoleDto> rolesList, ModuleType module, boolean isAdminAllowed,
-			boolean isManagerAllowed) {
-		if (isAdminAllowed) {
-			rolesList.add(createAllowedRole(RoleLevel.ADMIN.getDisplayName(),
-					getRoleForModuleAndLevel(module, RoleLevel.ADMIN)));
-		}
-
-		if (isManagerAllowed) {
-			rolesList.add(createAllowedRole(RoleLevel.MANAGER.getDisplayName(),
-					getRoleForModuleAndLevel(module, RoleLevel.MANAGER)));
-		}
-
-		rolesList.add(createAllowedRole(RoleLevel.EMPLOYEE.getDisplayName(),
-				getRoleForModuleAndLevel(module, RoleLevel.EMPLOYEE)));
-	}
-
 	private AllowedRoleDto createAllowedRole(String roleName, Role role) {
 		AllowedRoleDto allowedRole = new AllowedRoleDto();
 		allowedRole.setName(roleName);
@@ -405,16 +411,19 @@ public class RolesServiceImpl implements RolesService {
 				case ADMIN -> Role.ATTENDANCE_ADMIN;
 				case MANAGER -> Role.ATTENDANCE_MANAGER;
 				case EMPLOYEE -> Role.ATTENDANCE_EMPLOYEE;
+				default -> null;
 			};
 			case PEOPLE -> switch (roleLevel) {
 				case ADMIN -> Role.PEOPLE_ADMIN;
 				case MANAGER -> Role.PEOPLE_MANAGER;
 				case EMPLOYEE -> Role.PEOPLE_EMPLOYEE;
+				default -> null;
 			};
 			case LEAVE -> switch (roleLevel) {
 				case ADMIN -> Role.LEAVE_ADMIN;
 				case MANAGER -> Role.LEAVE_MANAGER;
 				case EMPLOYEE -> Role.LEAVE_EMPLOYEE;
+				default -> null;
 			};
 			default -> null;
 		};
