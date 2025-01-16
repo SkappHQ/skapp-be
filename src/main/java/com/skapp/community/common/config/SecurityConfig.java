@@ -75,7 +75,7 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.cors(Customizer.withDefaults());
-		http.csrf(AbstractHttpConfigurer::disable) // JWT protects against CSRF attacks
+		http.csrf(AbstractHttpConfigurer::disable)
 			.sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
 			.exceptionHandling(exception -> exception.authenticationEntryPoint(authEntryPoint))
 			.authorizeHttpRequests(auth -> auth
