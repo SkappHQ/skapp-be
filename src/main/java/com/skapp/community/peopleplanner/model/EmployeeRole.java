@@ -51,7 +51,7 @@ public class EmployeeRole {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "esign_role", length = 20, columnDefinition = "varchar(255)")
-	private Role eSignRole;
+	private Role esignRole;
 
 	@Column(name = "is_super_admin", nullable = false)
 	private Boolean isSuperAdmin = false;
