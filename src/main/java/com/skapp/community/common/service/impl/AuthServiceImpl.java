@@ -320,11 +320,11 @@ public class AuthServiceImpl implements AuthService {
 	public ResponseEntityDto sendReInvitation(ReInvitationRequestDto reInvitationRequestDto) {
 		log.info("sendReInvitation: execution started");
 
-		List<String> emails = reInvitationRequestDto.getEmails();
-		if (emails != null) {
-			Set<String> uniqueEmails = new HashSet<>(emails);
-			emails = new ArrayList<>(uniqueEmails);
-			reInvitationRequestDto.setEmails(emails);
+		List<Long> ids = reInvitationRequestDto.getIds();
+		if (ids != null) {
+			Set<Long> uniqueEmails = new HashSet<>(ids);
+			ids = new ArrayList<>(uniqueEmails);
+			reInvitationRequestDto.setIds(ids);
 		}
 
 		String currentTenant = bulkContextService.getContext();
@@ -335,18 +335,18 @@ public class AuthServiceImpl implements AuthService {
 		BulkStatusSummaryDto bulkStatusSummary = new BulkStatusSummaryDto();
 
 		List<CompletableFuture<Void>> tasks = new ArrayList<>();
-		List<List<String>> chunkedEmails = CommonModuleUtils.chunkData(reInvitationRequestDto.getEmails());
+		List<List<Long>> chunkedIds = CommonModuleUtils.chunkData(reInvitationRequestDto.getIds());
 		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 
-		for (List<String> chunkedEmailsChunkDtoList : chunkedEmails) {
-			for (String email : chunkedEmailsChunkDtoList) {
+		for (List<Long> chunkedIdsChunkDtoList : chunkedIds) {
+			for (Long id : chunkedIdsChunkDtoList) {
 				CompletableFuture<Void> task = CompletableFuture.runAsync(() -> {
 					bulkContextService.setContext(currentTenant);
 					try {
 						transactionTemplate.execute(new TransactionCallbackWithoutResult() {
 							@Override
 							protected void doInTransactionWithoutResult(@NonNull TransactionStatus status) {
-								validateAndSendReInvitation(email, reInvitationSkippedCountDto, bulkRecordErrorLogs,
+								validateAndSendReInvitation(id, reInvitationSkippedCountDto, bulkRecordErrorLogs,
 										bulkStatusSummary);
 							}
 						});
@@ -354,7 +354,7 @@ public class AuthServiceImpl implements AuthService {
 					catch (Exception e) {
 						log.info("Exception occurred when saving entitlement: {}", e.getMessage());
 						List<String> errorMessages = Collections.singletonList(e.getMessage());
-						bulkRecordErrorLogs.add(createErrorLog(email, errorMessages));
+						bulkRecordErrorLogs.add(createErrorLog(id, errorMessages));
 						bulkStatusSummary.incrementFailedCount();
 					}
 				}, executorService);
@@ -501,32 +501,27 @@ public class AuthServiceImpl implements AuthService {
 		userDao.save(user);
 	}
 
-	private void validateAndSendReInvitation(String email, ReInvitationSkippedCountDto reInvitationSkippedCountDto,
+	private void validateAndSendReInvitation(Long id, ReInvitationSkippedCountDto reInvitationSkippedCountDto,
 			List<ErrorLogDto> bulkRecordErrorLogs, BulkStatusSummaryDto bulkStatusSummary) {
 		List<String> errors = new ArrayList<>();
 
-		if (!Validation.isValidEmail(email)) {
-			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_EMAIL,
-					new String[] { email }));
-		}
-
-		Optional<User> optionalUser = userDao.findByEmail(email);
+		Optional<User> optionalUser = userDao.findById(id);
 
 		if (optionalUser.isEmpty()) {
-			errors
-				.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND, new String[] { email }));
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND,
+					new String[] { String.valueOf(id) }));
 		}
 		else {
 			if (optionalUser.get().getEmployee().getAccountStatus() != AccountStatus.PENDING) {
 				errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_USER_ACCOUNT_ACTIVATED,
-						new String[] { email }));
+						new String[] { String.valueOf(id) }));
 			}
 		}
 
 		if (!errors.isEmpty()) {
 			reInvitationSkippedCountDto.incrementSkippedCount();
 			bulkStatusSummary.incrementFailedCount();
-			bulkRecordErrorLogs.add(createErrorLog(email, errors));
+			bulkRecordErrorLogs.add(createErrorLog(id, errors));
 			return;
 		}
 
@@ -547,16 +542,16 @@ public class AuthServiceImpl implements AuthService {
 			bulkStatusSummary.incrementSuccessCount();
 		}
 		catch (Exception e) {
-			log.error("Error re invitation for : {}, error: {}", email, e.getMessage());
+			log.error("Error re invitation for : {}, error: {}", id, e.getMessage());
 			bulkStatusSummary.incrementFailedCount();
-			bulkRecordErrorLogs.add(createErrorLog(email, List.of(e.getMessage())));
+			bulkRecordErrorLogs.add(createErrorLog(id, List.of(e.getMessage())));
 		}
 
 	}
 
-	private ErrorLogDto createErrorLog(String email, List<String> errors) {
+	private ErrorLogDto createErrorLog(Long id, List<String> errors) {
 		ErrorLogDto errorLog = new ErrorLogDto();
-		errorLog.setEmail(email);
+		errorLog.setEmployeeId(id);
 		errorLog.setStatus(BulkItemStatus.ERROR);
 		errorLog.setMessage(String.join("; ", errors));
 		return errorLog;

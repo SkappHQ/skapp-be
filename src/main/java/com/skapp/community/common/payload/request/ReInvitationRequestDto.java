@@ -9,6 +9,6 @@ import java.util.List;
 @Setter
 public class ReInvitationRequestDto {
 
-	private List<String> emails;
+	private List<Long> ids;
 
 }
