@@ -1544,7 +1544,7 @@ public class PeopleServiceImpl implements PeopleService {
 		rolesService.saveEmployeeRoles(employee);
 		saveEmployeeProgression(employee, employeeBulkDto);
 
-		if (!employeeBulkDto.getTeams().isEmpty()) {
+		if (employeeBulkDto.getTeams() != null && !employeeBulkDto.getTeams().isEmpty()) {
 			saveEmployeeTeams(employee, employeeBulkDto);
 		}
 
