@@ -360,6 +360,15 @@ public class RolesServiceImpl implements RolesService {
 	public void saveEmployeeRoles(@NotNull Employee employee) {
 		log.info("saveEmployeeRoles: execution started");
 
+		EmployeeRole superAdminRoles = setupBulkEmployeeRoles(employee);
+
+		employeeRoleDao.save(superAdminRoles);
+		employee.setEmployeeRole(superAdminRoles);
+
+		log.info("saveEmployeeRoles: execution started");
+	}
+
+	private EmployeeRole setupBulkEmployeeRoles(Employee employee) {
 		EmployeeRole superAdminRoles = new EmployeeRole();
 		superAdminRoles.setEmployee(employee);
 		superAdminRoles.setPeopleRole(Role.PEOPLE_EMPLOYEE);
@@ -368,11 +377,62 @@ public class RolesServiceImpl implements RolesService {
 		superAdminRoles.setIsSuperAdmin(false);
 		superAdminRoles.setChangedDate(DateTimeUtils.getCurrentUtcDate());
 		superAdminRoles.setRoleChangedBy(employee);
+		return superAdminRoles;
+	}
+
+	public void validateRoles(RoleRequestDto userRoles) {
+		User currentUser = userService.getCurrentUser();
+
+		if (hasOnlyAdminPermissions(currentUser) && ((userRoles.getAttendanceRole() != null
+				&& validateRestrictedRoleAssignment(userRoles.getAttendanceRole(), ModuleType.ATTENDANCE))
+				|| (userRoles.getPeopleRole() != null
+						&& validateRestrictedRoleAssignment(userRoles.getPeopleRole(), ModuleType.PEOPLE))
+				|| (userRoles.getLeaveRole() != null
+						&& validateRestrictedRoleAssignment(userRoles.getLeaveRole(), ModuleType.LEAVE)))) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SUPER_ADMIN_RESTRICTED_ASSIGNING_ROLE_ACCESS);
+		}
+
+		if (Boolean.TRUE.equals(userRoles.getIsSuperAdmin())
+				&& (userRoles.getPeopleRole() != Role.PEOPLE_ADMIN || userRoles.getLeaveRole() != Role.LEAVE_ADMIN
+						|| userRoles.getAttendanceRole() != Role.ATTENDANCE_ADMIN)) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SHOULD_ASSIGN_PROPER_PERMISSIONS);
+		}
+	}
+
+	@Override
+	public void saveSuperAdminRoles(Employee employee) {
+		log.info("saveSuperAdminRoles: execution started");
+
+		EmployeeRole superAdminRoles = new EmployeeRole();
+		superAdminRoles.setEmployee(employee);
+		superAdminRoles.setPeopleRole(Role.PEOPLE_ADMIN);
+		superAdminRoles.setLeaveRole(Role.LEAVE_ADMIN);
+		superAdminRoles.setAttendanceRole(Role.ATTENDANCE_ADMIN);
+		superAdminRoles.setIsSuperAdmin(true);
+		superAdminRoles.setChangedDate(DateTimeUtils.getCurrentUtcDate());
+		superAdminRoles.setRoleChangedBy(employee);
 
 		employeeRoleDao.save(superAdminRoles);
 		employee.setEmployeeRole(superAdminRoles);
 
-		log.info("saveEmployeeRoles: execution started");
+		log.info("saveSuperAdminRoles: execution ended");
+	}
+
+	private boolean hasOnlyAdminPermissions(User currentUser) {
+		return Boolean.FALSE.equals(currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin())
+				&& currentUser.getEmployee().getEmployeeRole().getPeopleRole() == Role.PEOPLE_ADMIN;
+	}
+
+	private Boolean validateRestrictedRoleAssignment(Role role, ModuleType moduleType) {
+		ModuleRoleRestrictionResponseDto restrictedRole = getRestrictedRoleByModule(moduleType);
+
+		return switch (role) {
+			case PEOPLE_ADMIN, ATTENDANCE_ADMIN, LEAVE_ADMIN -> Boolean.TRUE.equals(restrictedRole.getIsAdmin());
+			case PEOPLE_MANAGER, ATTENDANCE_MANAGER, LEAVE_MANAGER ->
+				Boolean.TRUE.equals(restrictedRole.getIsManager());
+			default -> false;
+		};
+
 	}
 
 	private void addAllowedRolesForModule(List<AllowedRoleDto> rolesList, ModuleType module, boolean isAdminAllowed,
