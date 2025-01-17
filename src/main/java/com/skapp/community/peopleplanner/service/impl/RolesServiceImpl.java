@@ -31,6 +31,7 @@ import com.skapp.community.peopleplanner.repository.TeamDao;
 import com.skapp.community.peopleplanner.service.RolesService;
 import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +53,7 @@ public class RolesServiceImpl implements RolesService {
 	private final EmployeeRoleDao employeeRoleDao;
 
 	@NonNull
+	@Getter
 	private final UserService userService;
 
 	@NonNull
@@ -383,24 +385,24 @@ public class RolesServiceImpl implements RolesService {
 	public void saveEmployeeRoles(@NotNull Employee employee) {
 		log.info("saveEmployeeRoles: execution started");
 
-		EmployeeRole superAdminRoles = setupBulkEmployeeRoles(employee);
+		EmployeeRole employeeRole = setupBulkEmployeeRoles(employee);
 
-		employeeRoleDao.save(superAdminRoles);
-		employee.setEmployeeRole(superAdminRoles);
+		employeeRoleDao.save(employeeRole);
+		employee.setEmployeeRole(employeeRole);
 
 		log.info("saveEmployeeRoles: execution started");
 	}
 
-	private EmployeeRole setupBulkEmployeeRoles(Employee employee) {
-		EmployeeRole superAdminRoles = new EmployeeRole();
-		superAdminRoles.setEmployee(employee);
-		superAdminRoles.setPeopleRole(Role.PEOPLE_EMPLOYEE);
-		superAdminRoles.setLeaveRole(Role.LEAVE_EMPLOYEE);
-		superAdminRoles.setAttendanceRole(Role.ATTENDANCE_EMPLOYEE);
-		superAdminRoles.setIsSuperAdmin(false);
-		superAdminRoles.setChangedDate(DateTimeUtils.getCurrentUtcDate());
-		superAdminRoles.setRoleChangedBy(employee);
-		return superAdminRoles;
+	protected EmployeeRole setupBulkEmployeeRoles(Employee employee) {
+		EmployeeRole employeeRole = new EmployeeRole();
+		employeeRole.setEmployee(employee);
+		employeeRole.setPeopleRole(Role.PEOPLE_EMPLOYEE);
+		employeeRole.setLeaveRole(Role.LEAVE_EMPLOYEE);
+		employeeRole.setAttendanceRole(Role.ATTENDANCE_EMPLOYEE);
+		employeeRole.setIsSuperAdmin(false);
+		employeeRole.setChangedDate(DateTimeUtils.getCurrentUtcDate());
+		employeeRole.setRoleChangedBy(employee);
+		return employeeRole;
 	}
 
 	public void validateRoles(RoleRequestDto userRoles) {
@@ -441,7 +443,7 @@ public class RolesServiceImpl implements RolesService {
 		log.info("saveSuperAdminRoles: execution ended");
 	}
 
-	private boolean hasOnlyAdminPermissions(User currentUser) {
+	protected boolean hasOnlyAdminPermissions(User currentUser) {
 		return Boolean.FALSE.equals(currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin())
 				&& currentUser.getEmployee().getEmployeeRole().getPeopleRole() == Role.PEOPLE_ADMIN;
 	}
