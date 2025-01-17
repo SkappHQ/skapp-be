@@ -188,6 +188,27 @@ public class CommonModuleUtils {
 		return isNotHoliday;
 	}
 
+	public static boolean checkIfDayIsAHalfHoliday(List<Holiday> holidayObjects, List<LocalDate> holidays,
+			LocalDate date) {
+		boolean isNotHoliday = false;
+
+		if (holidayObjects != null && !holidayObjects.isEmpty()) {
+			List<Holiday> halfDays = holidayObjects.stream()
+
+				.filter(holiday -> holiday.getHolidayDuration() == HolidayDuration.HALF_DAY_EVENING
+						|| holiday.getHolidayDuration() == HolidayDuration.HALF_DAY_MORNING)
+				.toList();
+
+			if (halfDays.stream().anyMatch(holiday -> holiday.getDate().equals(date))) {
+				return true;
+			}
+		}
+		else if (holidays != null && !holidays.isEmpty() && date != null) {
+			return holidays.contains(date);
+		}
+		return isNotHoliday;
+	}
+
 	public static boolean checkIfHalfDayLeaveAndHolidayOnSameDay(List<Holiday> halfDays, LeaveRequest leaveRequest,
 			LocalDate date) {
 

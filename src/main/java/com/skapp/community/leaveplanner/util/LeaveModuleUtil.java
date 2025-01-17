@@ -10,6 +10,8 @@ import com.skapp.community.common.util.CommonModuleUtils;
 import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.leaveplanner.constant.LeaveMessageConstant;
 import com.skapp.community.leaveplanner.model.LeaveRequest;
+import com.skapp.community.leaveplanner.type.LeaveDuration;
+import com.skapp.community.leaveplanner.type.LeaveState;
 import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
 import com.skapp.community.peopleplanner.model.Holiday;
@@ -124,25 +126,7 @@ public class LeaveModuleUtil {
 		return count;
 	}
 
-	public static boolean isHolidayContainsBetweenTwoDates(LocalDate startDate, LocalDate endDate,
-			List<LocalDate> holidays, List<Holiday> holidayObjects, LeaveRequest leaveRequest) {
-		if (startDate.isAfter(endDate)) {
-			LocalDate temp = startDate;
-			startDate = endDate;
-			endDate = temp;
-		}
-		LocalDate currentDate = startDate;
-		while (!currentDate.isAfter(endDate)) {
-			if (!CommonModuleUtils.checkIfDayIsNotAHoliday(leaveRequest, holidayObjects, holidays, currentDate)) {
-				return true;
-			}
-			currentDate = currentDate.plusDays(1);
-		}
-
-		return false;
-	}
-
-	public static int getWorkingDaysBetweenTwoDates(LocalDate startDate, LocalDate endDate,
+	public static float getWorkingDaysBetweenTwoDates(LocalDate startDate, LocalDate endDate,
 			List<TimeConfig> timeConfigs, List<LocalDate> holidays, List<Holiday> holidayObjects,
 			LeaveRequest leaveRequest) {
 		if (startDate.isAfter(endDate)) {
@@ -150,12 +134,15 @@ public class LeaveModuleUtil {
 			startDate = endDate;
 			endDate = temp;
 		}
-		int workDays = 0;
+		float workDays = 0;
 		LocalDate currentDate = startDate;
 		while (!currentDate.isAfter(endDate)) {
-			if (CommonModuleUtils.checkIfDayIsWorkingDay(currentDate, timeConfigs)
-					&& CommonModuleUtils.checkIfDayIsNotAHoliday(leaveRequest, holidayObjects, holidays, currentDate)) {
-				workDays++;
+			if (CommonModuleUtils.checkIfDayIsWorkingDay(currentDate, timeConfigs)) {
+				if (!leaveRequest.getLeaveType().getLeaveDuration().equals(LeaveDuration.FULL_DAY)
+						&& CommonModuleUtils.checkIfDayIsAHalfHoliday(holidayObjects, holidays, currentDate))
+					workDays += 0.5F;
+				else if (CommonModuleUtils.checkIfDayIsNotAHoliday(leaveRequest, holidayObjects, holidays, currentDate))
+					workDays++;
 			}
 			currentDate = currentDate.plusDays(1);
 		}
