@@ -27,4 +27,6 @@ public interface RolesService {
 
 	void validateRoles(RoleRequestDto userRoles);
 
+	void saveSuperAdminRoles(Employee employee);
+
 }

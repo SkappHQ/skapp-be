@@ -360,6 +360,15 @@ public class RolesServiceImpl implements RolesService {
 	public void saveEmployeeRoles(@NotNull Employee employee) {
 		log.info("saveEmployeeRoles: execution started");
 
+		EmployeeRole superAdminRoles = setupBulkEmployeeRoles(employee);
+
+		employeeRoleDao.save(superAdminRoles);
+		employee.setEmployeeRole(superAdminRoles);
+
+		log.info("saveEmployeeRoles: execution started");
+	}
+
+	private EmployeeRole setupBulkEmployeeRoles(Employee employee) {
 		EmployeeRole superAdminRoles = new EmployeeRole();
 		superAdminRoles.setEmployee(employee);
 		superAdminRoles.setPeopleRole(Role.PEOPLE_EMPLOYEE);
@@ -368,11 +377,7 @@ public class RolesServiceImpl implements RolesService {
 		superAdminRoles.setIsSuperAdmin(false);
 		superAdminRoles.setChangedDate(DateTimeUtils.getCurrentUtcDate());
 		superAdminRoles.setRoleChangedBy(employee);
-
-		employeeRoleDao.save(superAdminRoles);
-		employee.setEmployeeRole(superAdminRoles);
-
-		log.info("saveEmployeeRoles: execution started");
+		return superAdminRoles;
 	}
 
 	public void validateRoles(RoleRequestDto userRoles) {
@@ -392,6 +397,25 @@ public class RolesServiceImpl implements RolesService {
 						|| userRoles.getAttendanceRole() != Role.ATTENDANCE_ADMIN)) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SHOULD_ASSIGN_PROPER_PERMISSIONS);
 		}
+	}
+
+	@Override
+	public void saveSuperAdminRoles(Employee employee) {
+		log.info("saveSuperAdminRoles: execution started");
+
+		EmployeeRole superAdminRoles = new EmployeeRole();
+		superAdminRoles.setEmployee(employee);
+		superAdminRoles.setPeopleRole(Role.PEOPLE_ADMIN);
+		superAdminRoles.setLeaveRole(Role.LEAVE_ADMIN);
+		superAdminRoles.setAttendanceRole(Role.ATTENDANCE_ADMIN);
+		superAdminRoles.setIsSuperAdmin(true);
+		superAdminRoles.setChangedDate(DateTimeUtils.getCurrentUtcDate());
+		superAdminRoles.setRoleChangedBy(employee);
+
+		employeeRoleDao.save(superAdminRoles);
+		employee.setEmployeeRole(superAdminRoles);
+
+		log.info("saveSuperAdminRoles: execution ended");
 	}
 
 	private boolean hasOnlyAdminPermissions(User currentUser) {
