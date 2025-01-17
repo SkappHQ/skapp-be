@@ -3,6 +3,8 @@ package com.skapp.community.peopleplanner.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.skapp.community.common.util.event.UserCreatedEvent;
+import com.skapp.community.common.util.event.UserDeactivatedEvent;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.EntityNotFoundException;
 import com.skapp.community.common.exception.ModuleException;
@@ -110,6 +112,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -232,6 +235,8 @@ public class PeopleServiceImpl implements PeopleService {
 
 	private final AsyncEmailServiceImpl asyncEmailServiceImpl;
 
+	private final ApplicationEventPublisher applicationEventPublisher;
+
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
 
@@ -289,6 +294,7 @@ public class PeopleServiceImpl implements PeopleService {
 		user.setEmployee(finalEmployee);
 		finalEmployee.setUser(user);
 		userDao.save(user);
+		applicationEventPublisher.publishEvent(new UserCreatedEvent(this, user));
 
 		List<EmployeeProgressionsDto> progressions = employeeDetailsDto.getEmployeeProgressions();
 		if (progressions != null && !progressions.isEmpty()) {
@@ -376,6 +382,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 		userDao.save(user);
 		employeeDao.save(finalEmployee);
+		applicationEventPublisher.publishEvent(new UserCreatedEvent(this, user));
 
 		rolesService.assignRolesToEmployee(employeeQuickAddDto.getUserRoles(), finalEmployee);
 
@@ -802,6 +809,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 		userDao.save(user);
 		employeeDao.save(employee);
+		applicationEventPublisher.publishEvent(new UserDeactivatedEvent(this, user));
 
 		log.info("updateUserStatus: execution ended");
 		return new ResponseEntityDto(false, "User status updated successfully");
@@ -1531,6 +1539,7 @@ public class PeopleServiceImpl implements PeopleService {
 		user.setSettings(userSettings);
 
 		userDao.save(user);
+		applicationEventPublisher.publishEvent(new UserCreatedEvent(this, user));
 
 		rolesService.saveEmployeeRoles(employee);
 		saveEmployeeProgression(employee, employeeBulkDto);
