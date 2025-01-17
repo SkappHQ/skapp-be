@@ -16,6 +16,7 @@ import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
 import com.skapp.community.peopleplanner.model.Holiday;
 import com.skapp.community.peopleplanner.model.Team;
+import com.skapp.community.peopleplanner.type.HolidayDuration;
 import com.skapp.community.timeplanner.model.TimeConfig;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -147,6 +148,29 @@ public class LeaveModuleUtil {
 			currentDate = currentDate.plusDays(1);
 		}
 		return workDays;
+	}
+
+	public static boolean isHalfDayHolidayAndFullDayLeave(LocalDate startDate, LocalDate endDate, List<Holiday> holidayObjects) {
+		List<Holiday> halfDays = holidayObjects.stream()
+				.filter(holiday -> holiday.getHolidayDuration() == HolidayDuration.HALF_DAY_EVENING
+						|| holiday.getHolidayDuration() == HolidayDuration.HALF_DAY_MORNING)
+				.toList();
+
+		if (startDate.isAfter(endDate)) {
+			LocalDate temp = startDate;
+			startDate = endDate;
+			endDate = temp;
+		}
+
+		LocalDate currentDate = startDate;
+		while (!currentDate.isAfter(endDate)) {
+			LocalDate finalCurrentDate = currentDate;
+			if (halfDays.stream().anyMatch(holiday -> holiday.getDate().equals(finalCurrentDate))) {
+				return true;
+			}
+			currentDate = currentDate.plusDays(1);
+		}
+		return false;
 	}
 
 	public static void validateTeamsForLeaveAnalytics(List<Long> teamIds, User currentUser, List<Team> teams) {

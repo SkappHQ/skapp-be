@@ -799,6 +799,11 @@ public class LeaveServiceImpl implements LeaveService {
 		List<LocalDate> holidayDates = holidayDao.findAllByIsActiveTrue().stream().map(Holiday::getDate).toList();
 		List<Holiday> holidayObjects = holidayDao.findAllByIsActiveTrue();
 
+		if(LeaveModuleUtil.isHalfDayHolidayAndFullDayLeave(leaveRequest.getStartDate(),
+				leaveRequest.getEndDate(), holidayObjects)){
+			throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_NOT_APPLICABLE);
+		}
+
 		float weekDays = LeaveModuleUtil.getWorkingDaysBetweenTwoDates(leaveRequest.getStartDate(),
 				leaveRequest.getEndDate(), timeConfigs, holidayDates, holidayObjects, leaveRequest);
 
