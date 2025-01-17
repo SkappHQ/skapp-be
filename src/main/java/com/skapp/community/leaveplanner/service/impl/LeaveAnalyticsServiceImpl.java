@@ -1486,7 +1486,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 			return new ResponseEntityDto(false, responseDtoList.values());
 		}
 
-		if (role.equals(Role.PEOPLE_MANAGER)) {
+		if (role.equals(Role.PEOPLE_MANAGER) || role.equals(Role.LEAVE_MANAGER)) {
 			List<Employee> employeeManagers = employeeDao.findManagersByEmployeeIdAndLoggedInManagerId(id,
 					currentUser.getEmployee().getEmployeeId());
 
