@@ -31,6 +31,7 @@ import com.skapp.community.peopleplanner.repository.TeamDao;
 import com.skapp.community.peopleplanner.service.RolesService;
 import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -50,6 +53,7 @@ public class RolesServiceImpl implements RolesService {
 	private final EmployeeRoleDao employeeRoleDao;
 
 	@NonNull
+	@Getter
 	private final UserService userService;
 
 	@NonNull
@@ -190,7 +194,7 @@ public class RolesServiceImpl implements RolesService {
 		}
 
 		User currentUser = userService.getCurrentUser();
-		updateEmployeeRolesSafely(employeeRole, roleRequestDto, currentDate, currentUser);
+		employeeRole = updateEmployeeRolesSafely(employeeRole, roleRequestDto, currentDate, currentUser);
 
 		employeeRoleDao.save(employeeRole);
 
@@ -215,7 +219,7 @@ public class RolesServiceImpl implements RolesService {
 		return isPeopleDemoted || isAttendanceDemoted || isLeaveDemoted;
 	}
 
-	private void updateEmployeeRolesSafely(EmployeeRole employeeRole, RoleRequestDto roleRequestDto,
+	protected EmployeeRole updateEmployeeRolesSafely(EmployeeRole employeeRole, RoleRequestDto roleRequestDto,
 			LocalDate currentDate, User currentUser) {
 		if (employeeRole != null) {
 			employeeRole.setPeopleRole(roleRequestDto.getPeopleRole());
@@ -228,6 +232,7 @@ public class RolesServiceImpl implements RolesService {
 				employeeRole.setRoleChangedBy(currentUser.getEmployee());
 			}
 		}
+		return employeeRole;
 	}
 
 	private boolean isFirstTimeRoleAssignment(EmployeeRole employeeRole) {
@@ -315,35 +320,55 @@ public class RolesServiceImpl implements RolesService {
 	public ResponseEntityDto getAllowedRoles() {
 		log.info("getAllowedRoles: execution started");
 
-		List<AllowedModuleRolesResponseDto> allowedModuleRolesResponseDtos = new ArrayList<>();
-		for (ModuleType module : ModuleType.values()) {
-			if (module == ModuleType.COMMON) {
-				continue;
-			}
-
-			Optional<ModuleRoleRestriction> optionalModuleRoleRestriction = moduleRoleRestrictionDao.findById(module);
-
-			boolean isAdminAllowed = true;
-			boolean isManagerAllowed = true;
-
-			if (optionalModuleRoleRestriction.isPresent()) {
-				ModuleRoleRestriction moduleRoleRestriction = optionalModuleRoleRestriction.get();
-				isAdminAllowed = !Boolean.TRUE.equals(moduleRoleRestriction.getIsAdmin());
-				isManagerAllowed = !Boolean.TRUE.equals(moduleRoleRestriction.getIsManager());
-			}
-
-			List<AllowedRoleDto> rolesForModule = new ArrayList<>();
-			addAllowedRolesForModule(rolesForModule, module, isAdminAllowed, isManagerAllowed);
-
-			AllowedModuleRolesResponseDto moduleResponse = new AllowedModuleRolesResponseDto();
-			moduleResponse.setModule(module);
-			moduleResponse.setRoles(rolesForModule);
-
-			allowedModuleRolesResponseDtos.add(moduleResponse);
-		}
+		Map<ModuleType, List<RoleLevel>> moduleTypeListMap = initializeRolesForModule();
+		List<AllowedModuleRolesResponseDto> allowedModuleRolesResponseDtos = moduleTypeListMap.entrySet()
+			.stream()
+			.map(this::processModuleRoles)
+			.toList();
 
 		log.info("getAllowedRoles: execution ended");
 		return new ResponseEntityDto(false, allowedModuleRolesResponseDtos);
+	}
+
+	private AllowedModuleRolesResponseDto processModuleRoles(Map.Entry<ModuleType, List<RoleLevel>> entry) {
+		ModuleType module = entry.getKey();
+		List<RoleLevel> prebuiltRoles = entry.getValue();
+
+		ModuleRoleRestriction moduleRoleRestriction = moduleRoleRestrictionDao.findById(module).orElse(null);
+		boolean isAdminAllowed = moduleRoleRestriction == null
+				|| !Boolean.TRUE.equals(moduleRoleRestriction.getIsAdmin());
+		boolean isManagerAllowed = moduleRoleRestriction == null
+				|| !Boolean.TRUE.equals(moduleRoleRestriction.getIsManager());
+
+		List<AllowedRoleDto> rolesForModule = prebuiltRoles.stream()
+			.filter(roleLevel -> isRoleAllowed(roleLevel, isAdminAllowed, isManagerAllowed))
+			.map(roleLevel -> createAllowedRole(roleLevel.getDisplayName(),
+					getRoleForModuleAndLevel(module, roleLevel)))
+			.toList();
+
+		AllowedModuleRolesResponseDto moduleResponse = new AllowedModuleRolesResponseDto();
+		moduleResponse.setModule(module);
+		moduleResponse.setRoles(rolesForModule);
+		return moduleResponse;
+	}
+
+	// Helper method to determine if a role is allowed based on restrictions
+	private boolean isRoleAllowed(RoleLevel roleLevel, boolean isAdminAllowed, boolean isManagerAllowed) {
+		return switch (roleLevel) {
+			case ADMIN -> isAdminAllowed;
+			case MANAGER -> isManagerAllowed;
+			default -> true; // other roles are always allowed
+		};
+	}
+
+	protected Map<ModuleType, List<RoleLevel>> initializeRolesForModule() {
+		Map<ModuleType, List<RoleLevel>> roles = new EnumMap<>(ModuleType.class);
+
+		roles.put(ModuleType.ATTENDANCE, List.of(RoleLevel.ADMIN, RoleLevel.MANAGER, RoleLevel.EMPLOYEE));
+		roles.put(ModuleType.PEOPLE, List.of(RoleLevel.ADMIN, RoleLevel.MANAGER, RoleLevel.EMPLOYEE));
+		roles.put(ModuleType.LEAVE, List.of(RoleLevel.ADMIN, RoleLevel.MANAGER, RoleLevel.EMPLOYEE));
+
+		return roles;
 	}
 
 	@Override
@@ -360,24 +385,24 @@ public class RolesServiceImpl implements RolesService {
 	public void saveEmployeeRoles(@NotNull Employee employee) {
 		log.info("saveEmployeeRoles: execution started");
 
-		EmployeeRole superAdminRoles = setupBulkEmployeeRoles(employee);
+		EmployeeRole employeeRole = setupBulkEmployeeRoles(employee);
 
-		employeeRoleDao.save(superAdminRoles);
-		employee.setEmployeeRole(superAdminRoles);
+		employeeRoleDao.save(employeeRole);
+		employee.setEmployeeRole(employeeRole);
 
 		log.info("saveEmployeeRoles: execution started");
 	}
 
-	private EmployeeRole setupBulkEmployeeRoles(Employee employee) {
-		EmployeeRole superAdminRoles = new EmployeeRole();
-		superAdminRoles.setEmployee(employee);
-		superAdminRoles.setPeopleRole(Role.PEOPLE_EMPLOYEE);
-		superAdminRoles.setLeaveRole(Role.LEAVE_EMPLOYEE);
-		superAdminRoles.setAttendanceRole(Role.ATTENDANCE_EMPLOYEE);
-		superAdminRoles.setIsSuperAdmin(false);
-		superAdminRoles.setChangedDate(DateTimeUtils.getCurrentUtcDate());
-		superAdminRoles.setRoleChangedBy(employee);
-		return superAdminRoles;
+	protected EmployeeRole setupBulkEmployeeRoles(Employee employee) {
+		EmployeeRole employeeRole = new EmployeeRole();
+		employeeRole.setEmployee(employee);
+		employeeRole.setPeopleRole(Role.PEOPLE_EMPLOYEE);
+		employeeRole.setLeaveRole(Role.LEAVE_EMPLOYEE);
+		employeeRole.setAttendanceRole(Role.ATTENDANCE_EMPLOYEE);
+		employeeRole.setIsSuperAdmin(false);
+		employeeRole.setChangedDate(DateTimeUtils.getCurrentUtcDate());
+		employeeRole.setRoleChangedBy(employee);
+		return employeeRole;
 	}
 
 	public void validateRoles(RoleRequestDto userRoles) {
@@ -418,7 +443,7 @@ public class RolesServiceImpl implements RolesService {
 		log.info("saveSuperAdminRoles: execution ended");
 	}
 
-	private boolean hasOnlyAdminPermissions(User currentUser) {
+	protected boolean hasOnlyAdminPermissions(User currentUser) {
 		return Boolean.FALSE.equals(currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin())
 				&& currentUser.getEmployee().getEmployeeRole().getPeopleRole() == Role.PEOPLE_ADMIN;
 	}
@@ -435,22 +460,6 @@ public class RolesServiceImpl implements RolesService {
 
 	}
 
-	private void addAllowedRolesForModule(List<AllowedRoleDto> rolesList, ModuleType module, boolean isAdminAllowed,
-			boolean isManagerAllowed) {
-		if (isAdminAllowed) {
-			rolesList.add(createAllowedRole(RoleLevel.ADMIN.getDisplayName(),
-					getRoleForModuleAndLevel(module, RoleLevel.ADMIN)));
-		}
-
-		if (isManagerAllowed) {
-			rolesList.add(createAllowedRole(RoleLevel.MANAGER.getDisplayName(),
-					getRoleForModuleAndLevel(module, RoleLevel.MANAGER)));
-		}
-
-		rolesList.add(createAllowedRole(RoleLevel.EMPLOYEE.getDisplayName(),
-				getRoleForModuleAndLevel(module, RoleLevel.EMPLOYEE)));
-	}
-
 	private AllowedRoleDto createAllowedRole(String roleName, Role role) {
 		AllowedRoleDto allowedRole = new AllowedRoleDto();
 		allowedRole.setName(roleName);
@@ -458,22 +467,25 @@ public class RolesServiceImpl implements RolesService {
 		return allowedRole;
 	}
 
-	private Role getRoleForModuleAndLevel(ModuleType module, RoleLevel roleLevel) {
+	protected Role getRoleForModuleAndLevel(ModuleType module, RoleLevel roleLevel) {
 		return switch (module) {
 			case ATTENDANCE -> switch (roleLevel) {
 				case ADMIN -> Role.ATTENDANCE_ADMIN;
 				case MANAGER -> Role.ATTENDANCE_MANAGER;
 				case EMPLOYEE -> Role.ATTENDANCE_EMPLOYEE;
+				default -> null;
 			};
 			case PEOPLE -> switch (roleLevel) {
 				case ADMIN -> Role.PEOPLE_ADMIN;
 				case MANAGER -> Role.PEOPLE_MANAGER;
 				case EMPLOYEE -> Role.PEOPLE_EMPLOYEE;
+				default -> null;
 			};
 			case LEAVE -> switch (roleLevel) {
 				case ADMIN -> Role.LEAVE_ADMIN;
 				case MANAGER -> Role.LEAVE_MANAGER;
 				case EMPLOYEE -> Role.LEAVE_EMPLOYEE;
+				default -> null;
 			};
 			default -> null;
 		};
