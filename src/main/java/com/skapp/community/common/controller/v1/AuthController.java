@@ -76,7 +76,6 @@ public class AuthController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	// reset the password and share
 	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_PEOPLE_ADMIN')")
 	@GetMapping(value = "/reset/share-password/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> resetAndSharePassword(@PathVariable Long userId) {
