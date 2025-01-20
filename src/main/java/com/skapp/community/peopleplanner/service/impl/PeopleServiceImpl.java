@@ -19,13 +19,14 @@ import com.skapp.community.common.service.EncryptionDecryptionService;
 import com.skapp.community.common.service.UserService;
 import com.skapp.community.common.service.impl.AsyncEmailServiceImpl;
 import com.skapp.community.common.type.LoginMethod;
-import com.skapp.community.common.type.ModuleType;
 import com.skapp.community.common.type.NotificationSettingsType;
 import com.skapp.community.common.type.Role;
 import com.skapp.community.common.util.CommonModuleUtils;
 import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.common.util.MessageUtil;
 import com.skapp.community.common.util.Validation;
+import com.skapp.community.common.util.event.UserCreatedEvent;
+import com.skapp.community.common.util.event.UserDeactivatedEvent;
 import com.skapp.community.common.util.transformer.PageTransformer;
 import com.skapp.community.leaveplanner.type.ManagerType;
 import com.skapp.community.peopleplanner.constant.EmployeeTimelineConstant;
@@ -63,7 +64,6 @@ import com.skapp.community.peopleplanner.payload.request.JobTitleDto;
 import com.skapp.community.peopleplanner.payload.request.NotificationSettingsPatchRequestDto;
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.request.ProbationPeriodDto;
-import com.skapp.community.peopleplanner.payload.request.RoleRequestDto;
 import com.skapp.community.peopleplanner.payload.response.AnalyticsSearchResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeBulkErrorResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeBulkResponseDto;
@@ -81,7 +81,6 @@ import com.skapp.community.peopleplanner.payload.response.EmployeeResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeTeamDto;
 import com.skapp.community.peopleplanner.payload.response.ManagerEmployeeDto;
 import com.skapp.community.peopleplanner.payload.response.ManagingEmployeesResponseDto;
-import com.skapp.community.peopleplanner.payload.response.ModuleRoleRestrictionResponseDto;
 import com.skapp.community.peopleplanner.payload.response.PrimarySecondaryOrTeamSupervisorResponseDto;
 import com.skapp.community.peopleplanner.payload.response.SummarizedEmployeeDtoForEmployees;
 import com.skapp.community.peopleplanner.payload.response.SummarizedManagerEmployeeDto;
@@ -113,6 +112,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -235,6 +235,8 @@ public class PeopleServiceImpl implements PeopleService {
 
 	private final AsyncEmailServiceImpl asyncEmailServiceImpl;
 
+	private final ApplicationEventPublisher applicationEventPublisher;
+
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
 
@@ -253,7 +255,7 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 
 		// Validate the roles
-		validateRoles(employeeDetailsDto.getUserRoles());
+		rolesService.validateRoles(employeeDetailsDto.getUserRoles());
 
 		// Validate the employee details
 		Validations.validateEmployeeDetails(employeeDetailsDto);
@@ -292,6 +294,7 @@ public class PeopleServiceImpl implements PeopleService {
 		user.setEmployee(finalEmployee);
 		finalEmployee.setUser(user);
 		userDao.save(user);
+		applicationEventPublisher.publishEvent(new UserCreatedEvent(this, user));
 
 		List<EmployeeProgressionsDto> progressions = employeeDetailsDto.getEmployeeProgressions();
 		if (progressions != null && !progressions.isEmpty()) {
@@ -349,7 +352,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 		Validations.validateQuickAddEmployeeDetails(employeeQuickAddDto);
 
-		validateRoles(employeeQuickAddDto.getUserRoles());
+		rolesService.validateRoles(employeeQuickAddDto.getUserRoles());
 
 		Employee finalEmployee = peopleMapper.employeeQuickAddDtoToEmployee(employeeQuickAddDto);
 		finalEmployee.setAccountStatus(AccountStatus.PENDING);
@@ -379,6 +382,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 		userDao.save(user);
 		employeeDao.save(finalEmployee);
+		applicationEventPublisher.publishEvent(new UserCreatedEvent(this, user));
 
 		rolesService.assignRolesToEmployee(employeeQuickAddDto.getUserRoles(), finalEmployee);
 
@@ -423,7 +427,7 @@ public class PeopleServiceImpl implements PeopleService {
 			}
 		}
 
-		validateRoles(employeeUpdateDto.getUserRoles());
+		rolesService.validateRoles(employeeUpdateDto.getUserRoles());
 
 		String employeePreviousName = optionalEmployee.get().getFirstName();
 		String employeePreviousLastName = optionalEmployee.get().getLastName();
@@ -805,6 +809,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 		userDao.save(user);
 		employeeDao.save(employee);
+		applicationEventPublisher.publishEvent(new UserDeactivatedEvent(this, user));
 
 		log.info("updateUserStatus: execution ended");
 		return new ResponseEntityDto(false, "User status updated successfully");
@@ -1534,11 +1539,12 @@ public class PeopleServiceImpl implements PeopleService {
 		user.setSettings(userSettings);
 
 		userDao.save(user);
+		applicationEventPublisher.publishEvent(new UserCreatedEvent(this, user));
 
 		rolesService.saveEmployeeRoles(employee);
 		saveEmployeeProgression(employee, employeeBulkDto);
 
-		if (!employeeBulkDto.getTeams().isEmpty()) {
+		if (employeeBulkDto.getTeams() != null && !employeeBulkDto.getTeams().isEmpty()) {
 			saveEmployeeTeams(employee, employeeBulkDto);
 		}
 
@@ -3176,42 +3182,6 @@ public class PeopleServiceImpl implements PeopleService {
 			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_TEAM_NOT_FOUND);
 		}
 		return employeeTeams;
-	}
-
-	private void validateRoles(RoleRequestDto userRoles) {
-		User currentUser = userService.getCurrentUser();
-
-		if (hasOnlyAdminPermissions(currentUser) && ((userRoles.getAttendanceRole() != null
-				&& validateRestrictedRoleAssignment(userRoles.getAttendanceRole(), ModuleType.ATTENDANCE))
-				|| (userRoles.getPeopleRole() != null
-						&& validateRestrictedRoleAssignment(userRoles.getPeopleRole(), ModuleType.PEOPLE))
-				|| (userRoles.getLeaveRole() != null
-						&& validateRestrictedRoleAssignment(userRoles.getLeaveRole(), ModuleType.LEAVE)))) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SUPER_ADMIN_RESTRICTED_ASSIGNING_ROLE_ACCESS);
-		}
-
-		if (Boolean.TRUE.equals(userRoles.getIsSuperAdmin())
-				&& (userRoles.getPeopleRole() != Role.PEOPLE_ADMIN || userRoles.getLeaveRole() != Role.LEAVE_ADMIN
-						|| userRoles.getAttendanceRole() != Role.ATTENDANCE_ADMIN)) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SHOULD_ASSIGN_PROPER_PERMISSIONS);
-		}
-	}
-
-	private boolean hasOnlyAdminPermissions(User currentUser) {
-		return Boolean.FALSE.equals(currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin())
-				&& currentUser.getEmployee().getEmployeeRole().getPeopleRole() == Role.PEOPLE_ADMIN;
-	}
-
-	private Boolean validateRestrictedRoleAssignment(Role role, ModuleType moduleType) {
-		ModuleRoleRestrictionResponseDto restrictedRole = rolesService.getRestrictedRoleByModule(moduleType);
-
-		return switch (role) {
-			case PEOPLE_ADMIN, ATTENDANCE_ADMIN, LEAVE_ADMIN -> Boolean.TRUE.equals(restrictedRole.getIsAdmin());
-			case PEOPLE_MANAGER, ATTENDANCE_MANAGER, LEAVE_MANAGER ->
-				Boolean.TRUE.equals(restrictedRole.getIsManager());
-			default -> false;
-		};
-
 	}
 
 }

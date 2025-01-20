@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public enum ModuleType {
 
-	COMMON("common"), ATTENDANCE("attendance"), PEOPLE("people"), LEAVE("leave");
+	COMMON("common"), ATTENDANCE("attendance"), PEOPLE("people"), LEAVE("leave"), ESIGN("esignature");
 
 	private final String displayName;
 

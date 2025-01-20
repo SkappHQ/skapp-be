@@ -899,9 +899,6 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		 */
 		float monthOnMonthAbsenceRate = getMonthOnMonthAbsenceRate(lastMonthFirstDay, lastMonthLastDay, employeeCounts,
 				absenceRateForTwoMonthsBack, timeConfigs, holidayDates);
-		/*
-		
-		 */
 
 		List<OrganizationalLeaveAnalyticsKPIDto> leaveAbsenceVacationAnalyticsDtoList = new ArrayList<>();
 
@@ -915,21 +912,15 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 				lastMonthFirstDay + " - " + lastMonthLastDay);
 		leaveAbsenceVacationAnalyticsDtoList.add(leaveAbsenceVacationAnalyticsDtoLastMonth);
 
-		/*
-		 * KPI 1
-		 */
+		// KPI 1
 		LeaveAnalyticsFilterDto leaveAnalyticsFilterResponseDto = new LeaveAnalyticsFilterDto();
 		leaveAnalyticsFilterResponseDto.setAnalyticsType(OrganizationalLeaveAnalyticsKPIType.ABSENCE_RATE);
 		leaveAnalyticsFilterResponseDto.setOrganizationalLeaveAnalyticsDto(leaveAbsenceVacationAnalyticsDtoList);
 
-		/*
-		 * vacation usage rate = total number of annuals taken / total annuals given
-		 */
+		// vacation usage rate = total number of annuals taken / total annuals given
 		float vacationUsageRate = getAnnualVacationUsageRate(firstDateOfYear, lastDateOfYear, currentDate);
 
-		/*
-		 * KPI 2
-		 */
+		// KPI 2
 		List<OrganizationalLeaveAnalyticsKPIDto> leaveAbsenceVacationAnalyticsDtoList2 = new ArrayList<>();
 
 		OrganizationalLeaveAnalyticsKPIDto leaveAbsenceVacationAnalyticsDtoAnnually2 = new OrganizationalLeaveAnalyticsKPIDto(
@@ -941,9 +932,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		leaveAnalyticsFilterResponseDto2.setAnalyticsType(OrganizationalLeaveAnalyticsKPIType.VACATION_USAGE_RATE);
 		leaveAnalyticsFilterResponseDto2.setOrganizationalLeaveAnalyticsDto(leaveAbsenceVacationAnalyticsDtoList2);
 
-		/*
-		 * Main response DTO list
-		 */
+		// Main response DTO list
 		List<LeaveAnalyticsFilterDto> leaveAnalyticsFilterResponseDtoList = new ArrayList<>();
 		leaveAnalyticsFilterResponseDtoList.add(leaveAnalyticsFilterResponseDto);
 		leaveAnalyticsFilterResponseDtoList.add(leaveAnalyticsFilterResponseDto2);
@@ -1486,7 +1475,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 			return new ResponseEntityDto(false, responseDtoList.values());
 		}
 
-		if (role.equals(Role.PEOPLE_MANAGER)) {
+		if (role.equals(Role.PEOPLE_MANAGER) || role.equals(Role.LEAVE_MANAGER)) {
 			List<Employee> employeeManagers = employeeDao.findManagersByEmployeeIdAndLoggedInManagerId(id,
 					currentUser.getEmployee().getEmployeeId());
 
@@ -1869,7 +1858,6 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		Pageable pageable = PageRequest.of(leaveRequestFilterDto.getPage(), leaveRequestFilterDto.getSize(),
 				Sort.by(leaveRequestFilterDto.getSortOrder(), String.valueOf(leaveRequestFilterDto.getSortKey())));
 
-		EmployeeRole employeeRole = currentUser.getEmployee().getEmployeeRole();
 		Page<LeaveRequest> leaveRequests = leaveRequestDao.findAllLeaveRequests(employeeId, leaveRequestFilterDto,
 				pageable);
 

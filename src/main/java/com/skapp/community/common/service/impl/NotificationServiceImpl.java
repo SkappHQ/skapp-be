@@ -33,7 +33,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -146,9 +145,10 @@ public class NotificationServiceImpl implements NotificationService {
 	private String getNotificationMessageFromNotificationTemplates(EmailBodyTemplates emailBodyTemplates,
 			NotificationCategory notificationCategory) {
 
-		File file;
+		InputStream file;
 		try {
-			file = new ClassPathResource("community/templates/notification/notification-templates.json").getFile();
+			file = new ClassPathResource("community/templates/notification/notification-templates.json")
+				.getInputStream();
 		}
 		catch (IOException exception) {
 			log.error("Unable to find notification-templates.json file", exception);

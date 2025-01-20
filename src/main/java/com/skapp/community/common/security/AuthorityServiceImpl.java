@@ -57,7 +57,7 @@ public class AuthorityServiceImpl implements AuthorityService {
 					Role.ATTENDANCE_EMPLOYEE));
 	}
 
-	private void addRoleHierarchy(List<GrantedAuthority> authorities, Role currentRole, Role adminRole,
+	protected void addRoleHierarchy(List<GrantedAuthority> authorities, Role currentRole, Role adminRole,
 			Role managerRole, Role employeeRole) {
 		if (currentRole == adminRole) {
 			authorities.add(new SimpleGrantedAuthority(AuthConstants.AUTH_ROLE + adminRole));

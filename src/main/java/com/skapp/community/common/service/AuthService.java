@@ -7,7 +7,6 @@ import com.skapp.community.common.payload.request.ResetPasswordRequestDto;
 import com.skapp.community.common.payload.request.SignInRequestDto;
 import com.skapp.community.common.payload.request.SuperAdminSignUpRequestDto;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
-import com.skapp.community.peopleplanner.model.Employee;
 
 public interface AuthService {
 
@@ -26,7 +25,5 @@ public interface AuthService {
 	ResponseEntityDto forgotPassword(ForgotPasswordRequestDto forgotPasswordRequestDto);
 
 	ResponseEntityDto changePassword(ChangePasswordRequestDto changePasswordRequestDto, Long userId);
-
-	void saveEmployeeRoles(Employee employee);
 
 }
