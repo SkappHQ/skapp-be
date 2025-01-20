@@ -127,6 +127,63 @@ public class LeaveModuleUtil {
 		return count;
 	}
 
+	public static boolean isHolidayContainsBetweenTwoDates(LocalDate startDate, LocalDate endDate,
+			List<LocalDate> holidays, List<Holiday> holidayObjects, LeaveRequest leaveRequest) {
+		if (startDate.isAfter(endDate)) {
+			LocalDate temp = startDate;
+			startDate = endDate;
+			endDate = temp;
+		}
+		LocalDate currentDate = startDate;
+		while (!currentDate.isAfter(endDate)) {
+			if (!CommonModuleUtils.checkIfDayIsNotAHoliday(leaveRequest, holidayObjects, holidays, currentDate)) {
+				return true;
+			}
+			currentDate = currentDate.plusDays(1);
+		}
+
+		return false;
+	}
+
+	public static HolidayDuration getHolidayAvailabilityOnGivenDate(LocalDate date, List<Holiday> holidayObjects) {
+		return holidayObjects.stream()
+			.filter(holiday -> holiday.getDate().equals(date))
+			.map(Holiday::getHolidayDuration)
+			.findFirst()
+			.orElse(null);
+	}
+
+	public static HolidayDuration getHolidayAvailabilityOnGivenDateRange(LocalDate startDate, LocalDate endDate,
+			List<Holiday> holidayObjects) {
+		if (startDate.isAfter(endDate)) {
+			LocalDate temp = startDate;
+			startDate = endDate;
+			endDate = temp;
+		}
+
+		for (LocalDate currentDate = startDate; !currentDate.isAfter(endDate); currentDate = currentDate.plusDays(1)) {
+			LocalDate finalCurrentDate = currentDate;
+			HolidayDuration holidayDuration = holidayObjects.stream()
+				.filter(holiday -> holiday.getDate().equals(finalCurrentDate))
+				.map(Holiday::getHolidayDuration)
+				.findFirst()
+				.orElse(null);
+
+			if (holidayDuration == HolidayDuration.HALF_DAY_MORNING
+					|| holidayDuration == HolidayDuration.HALF_DAY_EVENING) {
+				return holidayDuration;
+			}
+		}
+
+		LocalDate finalStartDate = startDate;
+		LocalDate finalEndDate = endDate;
+		boolean allFullDays = holidayObjects.stream()
+			.filter(holiday -> !holiday.getDate().isBefore(finalStartDate) && !holiday.getDate().isAfter(finalEndDate))
+			.allMatch(holiday -> holiday.getHolidayDuration() == HolidayDuration.FULL_DAY);
+
+		return allFullDays ? HolidayDuration.FULL_DAY : null;
+	}
+
 	public static float getWorkingDaysBetweenTwoDates(LocalDate startDate, LocalDate endDate,
 			List<TimeConfig> timeConfigs, List<LocalDate> holidays, List<Holiday> holidayObjects,
 			LeaveRequest leaveRequest) {
@@ -139,38 +196,19 @@ public class LeaveModuleUtil {
 		LocalDate currentDate = startDate;
 		while (!currentDate.isAfter(endDate)) {
 			if (CommonModuleUtils.checkIfDayIsWorkingDay(currentDate, timeConfigs)) {
-				if (!leaveRequest.getLeaveType().getLeaveDuration().equals(LeaveDuration.FULL_DAY)
-						&& CommonModuleUtils.checkIfDayIsAHalfHoliday(holidayObjects, holidays, currentDate))
-					workDays += 0.5F;
-				else if (CommonModuleUtils.checkIfDayIsNotAHoliday(leaveRequest, holidayObjects, holidays, currentDate))
+				HolidayDuration holidayDuration = LeaveModuleUtil.getHolidayAvailabilityOnGivenDate(currentDate,
+						holidayObjects);
+				if (holidayDuration == null) {
 					workDays++;
+				}
+				else if (holidayDuration == HolidayDuration.HALF_DAY_MORNING
+						|| holidayDuration == HolidayDuration.HALF_DAY_EVENING) {
+					workDays += 0.5F;
+				}
 			}
 			currentDate = currentDate.plusDays(1);
 		}
 		return workDays;
-	}
-
-	public static boolean isHalfDayHolidayAndFullDayLeave(LocalDate startDate, LocalDate endDate, List<Holiday> holidayObjects) {
-		List<Holiday> halfDays = holidayObjects.stream()
-				.filter(holiday -> holiday.getHolidayDuration() == HolidayDuration.HALF_DAY_EVENING
-						|| holiday.getHolidayDuration() == HolidayDuration.HALF_DAY_MORNING)
-				.toList();
-
-		if (startDate.isAfter(endDate)) {
-			LocalDate temp = startDate;
-			startDate = endDate;
-			endDate = temp;
-		}
-
-		LocalDate currentDate = startDate;
-		while (!currentDate.isAfter(endDate)) {
-			LocalDate finalCurrentDate = currentDate;
-			if (halfDays.stream().anyMatch(holiday -> holiday.getDate().equals(finalCurrentDate))) {
-				return true;
-			}
-			currentDate = currentDate.plusDays(1);
-		}
-		return false;
 	}
 
 	public static void validateTeamsForLeaveAnalytics(List<Long> teamIds, User currentUser, List<Team> teams) {

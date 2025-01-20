@@ -64,6 +64,7 @@ import com.skapp.community.peopleplanner.repository.EmployeeTeamDao;
 import com.skapp.community.peopleplanner.repository.HolidayDao;
 import com.skapp.community.peopleplanner.repository.TeamDao;
 import com.skapp.community.peopleplanner.service.PeopleService;
+import com.skapp.community.peopleplanner.type.HolidayDuration;
 import com.skapp.community.timeplanner.model.TimeConfig;
 import com.skapp.community.timeplanner.repository.TimeConfigDao;
 import jakarta.validation.constraints.NotNull;
@@ -799,10 +800,7 @@ public class LeaveServiceImpl implements LeaveService {
 		List<LocalDate> holidayDates = holidayDao.findAllByIsActiveTrue().stream().map(Holiday::getDate).toList();
 		List<Holiday> holidayObjects = holidayDao.findAllByIsActiveTrue();
 
-		if(LeaveModuleUtil.isHalfDayHolidayAndFullDayLeave(leaveRequest.getStartDate(),
-				leaveRequest.getEndDate(), holidayObjects)){
-			throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_NOT_APPLICABLE);
-		}
+		validateLeaveWithHoliday(leaveRequest.getStartDate(), leaveRequest.getEndDate(), holidayObjects, leaveRequest);
 
 		float weekDays = LeaveModuleUtil.getWorkingDaysBetweenTwoDates(leaveRequest.getStartDate(),
 				leaveRequest.getEndDate(), timeConfigs, holidayDates, holidayObjects, leaveRequest);
@@ -983,6 +981,52 @@ public class LeaveServiceImpl implements LeaveService {
 		}
 
 		return leaveTypeOptional.get();
+	}
+
+	private void validateLeaveWithHoliday(LocalDate startDate, LocalDate endDate, List<Holiday> holidayObjects,
+			LeaveRequest leaveRequest) {
+
+		if (startDate == null || endDate == null) {
+			return;
+		}
+
+		boolean isSingleDayLeave = startDate.equals(endDate);
+		HolidayDuration holidayDuration = isSingleDayLeave
+				? LeaveModuleUtil.getHolidayAvailabilityOnGivenDate(startDate, holidayObjects)
+				: LeaveModuleUtil.getHolidayAvailabilityOnGivenDateRange(startDate, endDate, holidayObjects);
+
+		if (holidayDuration == null || holidayDuration.equals(HolidayDuration.FULL_DAY)) {
+			return;
+		}
+
+		if (isSingleDayLeave) {
+			validateSingleDayLeave(leaveRequest, holidayDuration);
+		}
+		else if (isHalfDayHoliday(holidayDuration)) {
+			if(leaveRequest.getLeaveType().getLeaveDuration().equals(LeaveDuration.FULL_DAY)) {
+				throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_NOT_APPLICABLE);
+			}
+		}
+	}
+
+	private void validateSingleDayLeave(LeaveRequest leaveRequest, HolidayDuration holidayDuration) {
+		if (leaveRequest.getLeaveState().equals(LeaveState.FULLDAY)) {
+			throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_NOT_APPLICABLE);
+		}
+
+		boolean isMorningConflict = holidayDuration.equals(HolidayDuration.HALF_DAY_MORNING)
+				&& leaveRequest.getLeaveState().equals(LeaveState.HALFDAY_MORNING);
+		boolean isEveningConflict = holidayDuration.equals(HolidayDuration.HALF_DAY_EVENING)
+				&& leaveRequest.getLeaveState().equals(LeaveState.HALFDAY_EVENING);
+
+		if (isMorningConflict || isEveningConflict) {
+			throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_NOT_APPLICABLE);
+		}
+	}
+
+	private boolean isHalfDayHoliday(HolidayDuration holidayDuration) {
+		return holidayDuration.equals(HolidayDuration.HALF_DAY_MORNING)
+				|| holidayDuration.equals(HolidayDuration.HALF_DAY_EVENING);
 	}
 
 	private float getRemainingTotalHours(List<LeaveEntitlement> leaveEntitlements, LeaveRequest leaveRequest,
