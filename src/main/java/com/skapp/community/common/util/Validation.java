@@ -73,10 +73,14 @@ public class Validation {
 		}
 	}
 
-	public static void isValidEmail(String email) throws ValidationException {
+	public static void validateEmail(String email) throws ValidationException {
 		if (!Pattern.compile(EMAIL_REGEX).matcher(email).matches()) {
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_EMAIL);
 		}
+	}
+
+	public static boolean isValidEmail(String email) throws ValidationException {
+		return Pattern.compile(EMAIL_REGEX).matcher(email).matches();
 	}
 
 	public static void isValidPassword(String password) throws ValidationException {

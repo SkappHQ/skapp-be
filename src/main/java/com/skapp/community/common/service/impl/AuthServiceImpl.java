@@ -1,29 +1,42 @@
 package com.skapp.community.common.service.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.skapp.community.common.component.ProfileActivator;
 import com.skapp.community.common.constant.CommonConstants;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.mapper.CommonMapper;
+import com.skapp.community.common.model.OrganizationConfig;
 import com.skapp.community.common.model.User;
+import com.skapp.community.common.payload.ReInvitationSkippedCountDto;
 import com.skapp.community.common.payload.request.ChangePasswordRequestDto;
 import com.skapp.community.common.payload.request.ForgotPasswordRequestDto;
+import com.skapp.community.common.payload.request.ReInvitationRequestDto;
 import com.skapp.community.common.payload.request.RefreshTokenRequestDto;
 import com.skapp.community.common.payload.request.ResetPasswordRequestDto;
 import com.skapp.community.common.payload.request.SignInRequestDto;
 import com.skapp.community.common.payload.request.SuperAdminSignUpRequestDto;
 import com.skapp.community.common.payload.response.AccessTokenResponseDto;
+import com.skapp.community.common.payload.response.BulkResponseDto;
+import com.skapp.community.common.payload.response.BulkStatusSummaryDto;
 import com.skapp.community.common.payload.response.EmployeeSignInResponseDto;
+import com.skapp.community.common.payload.response.ErrorLogDto;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.payload.response.SharePasswordResponseDto;
 import com.skapp.community.common.payload.response.SignInResponseDto;
+import com.skapp.community.common.repository.OrganizationConfigDao;
 import com.skapp.community.common.repository.UserDao;
 import com.skapp.community.common.service.AuthService;
+import com.skapp.community.common.service.BulkContextService;
 import com.skapp.community.common.service.EncryptionDecryptionService;
 import com.skapp.community.common.service.JwtService;
 import com.skapp.community.common.service.UserService;
+import com.skapp.community.common.type.BulkItemStatus;
+import com.skapp.community.common.type.LoginMethod;
+import com.skapp.community.common.type.OrganizationConfigType;
 import com.skapp.community.common.util.CommonModuleUtils;
 import com.skapp.community.common.util.DateTimeUtils;
+import com.skapp.community.common.util.MessageUtil;
 import com.skapp.community.common.util.Validation;
 import com.skapp.community.peopleplanner.mapper.PeopleMapper;
 import com.skapp.community.peopleplanner.model.Employee;
@@ -48,11 +61,24 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -102,7 +128,17 @@ public class AuthServiceImpl implements AuthService {
 	private final ProfileActivator profileActivator;
 
 	@NonNull
+	private final PlatformTransactionManager transactionManager;
+
+	@NonNull
+	private final BulkContextService bulkContextService;
+
+	private final MessageUtil messageUtil;
+
+	@NonNull
 	private final RolesService rolesService;
+
+	private final OrganizationConfigDao organizationConfigDao;
 
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
@@ -174,7 +210,7 @@ public class AuthServiceImpl implements AuthService {
 
 		Validation.isValidFirstName(superAdminSignUpRequestDto.getFirstName());
 		Validation.isValidLastName(superAdminSignUpRequestDto.getLastName());
-		Validation.isValidEmail(superAdminSignUpRequestDto.getEmail());
+		Validation.validateEmail(superAdminSignUpRequestDto.getEmail());
 		Validation.isValidPassword(superAdminSignUpRequestDto.getPassword());
 
 		User user = commonMapper.createSuperAdminRequestDtoToUser(superAdminSignUpRequestDto);
@@ -320,6 +356,85 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
+	public ResponseEntityDto sendReInvitation(ReInvitationRequestDto reInvitationRequestDto) {
+		log.info("sendReInvitation: execution started");
+
+		if (!profileActivator.isEpProfile()) {
+			Optional<OrganizationConfig> optionalOrganizationConfig = organizationConfigDao
+				.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.EMAIL_CONFIGS);
+
+			if (optionalOrganizationConfig.isEmpty()) {
+				log.error("Email configuration not found");
+				throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EMAIL_CONFIG_NOT_FOUND);
+			}
+		}
+
+		List<Long> ids = reInvitationRequestDto.getIds();
+		if (ids != null) {
+			Set<Long> uniqueEmails = new HashSet<>(ids);
+			ids = new ArrayList<>(uniqueEmails);
+			reInvitationRequestDto.setIds(ids);
+		}
+
+		String currentTenant = bulkContextService.getContext();
+
+		ExecutorService executorService = Executors.newFixedThreadPool(5);
+		List<ErrorLogDto> bulkRecordErrorLogs = Collections.synchronizedList(new ArrayList<>());
+		ReInvitationSkippedCountDto reInvitationSkippedCountDto = new ReInvitationSkippedCountDto(0);
+		BulkStatusSummaryDto bulkStatusSummary = new BulkStatusSummaryDto();
+
+		List<CompletableFuture<Void>> tasks = new ArrayList<>();
+		List<List<Long>> chunkedIds = CommonModuleUtils.chunkData(reInvitationRequestDto.getIds());
+		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+
+		for (List<Long> chunkedIdsChunkDtoList : chunkedIds) {
+			for (Long id : chunkedIdsChunkDtoList) {
+				CompletableFuture<Void> task = CompletableFuture.runAsync(() -> {
+					bulkContextService.setContext(currentTenant);
+					try {
+						transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+							@Override
+							protected void doInTransactionWithoutResult(@NonNull TransactionStatus status) {
+								validateAndSendReInvitation(id, reInvitationSkippedCountDto, bulkRecordErrorLogs,
+										bulkStatusSummary);
+							}
+						});
+					}
+					catch (Exception e) {
+						log.error("Exception occurred when saving entitlement: {}", e.getMessage());
+						List<String> errorMessages = Collections.singletonList(e.getMessage());
+						bulkRecordErrorLogs.add(createErrorLog(id, errorMessages));
+						bulkStatusSummary.incrementFailedCount();
+					}
+				}, executorService);
+				tasks.add(task);
+			}
+		}
+
+		CompletableFuture<Void> allTasks = CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0]));
+		allTasks.thenRun(executorService::shutdown);
+		allTasks.join();
+
+		try {
+			if (!executorService.awaitTermination(5, TimeUnit.MINUTES)) {
+				log.error("ExecutorService failed to terminate after 5 minutes, shutting down");
+				executorService.shutdownNow();
+			}
+		}
+		catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			log.error("Interrupted while waiting for termination of ExecutorService", e);
+		}
+
+		BulkResponseDto responseDto = new BulkResponseDto();
+		responseDto.setBulkRecordErrorLogs(bulkRecordErrorLogs);
+		responseDto.setBulkStatusSummary(bulkStatusSummary);
+
+		log.info("sendReInvitation: execution ended");
+		return new ResponseEntityDto(false, responseDto);
+	}
+
+	@Override
 	public ResponseEntityDto forgotPassword(ForgotPasswordRequestDto forgotPasswordRequestDto) {
 		log.info("forgotPassword: execution started");
 
@@ -383,6 +498,62 @@ public class AuthServiceImpl implements AuthService {
 		user.setTempPassword(null);
 
 		userDao.save(user);
+	}
+
+	private void validateAndSendReInvitation(Long id, ReInvitationSkippedCountDto reInvitationSkippedCountDto,
+			List<ErrorLogDto> bulkRecordErrorLogs, BulkStatusSummaryDto bulkStatusSummary) {
+		List<String> errors = new ArrayList<>();
+
+		Optional<User> optionalUser = userDao.findById(id);
+
+		if (optionalUser.isEmpty()) {
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND,
+					new String[] { String.valueOf(id) }));
+		}
+		else {
+			if (optionalUser.get().getEmployee().getAccountStatus() != AccountStatus.PENDING) {
+				errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_USER_ACCOUNT_ACTIVATED,
+						new String[] { String.valueOf(id) }));
+			}
+		}
+
+		if (!errors.isEmpty()) {
+			reInvitationSkippedCountDto.incrementSkippedCount();
+			bulkStatusSummary.incrementFailedCount();
+			bulkRecordErrorLogs.add(createErrorLog(id, errors));
+			return;
+		}
+
+		try {
+			User user = optionalUser.get();
+			Optional<User> firstUser = userDao.findById(1L);
+			LoginMethod loginMethod = firstUser.isPresent() ? firstUser.get().getLoginMethod()
+					: LoginMethod.CREDENTIALS;
+
+			if (loginMethod.equals(LoginMethod.CREDENTIALS)) {
+				String tempPassword = CommonModuleUtils.generateSecureRandomPassword();
+				user.setTempPassword(encryptionDecryptionService.encrypt(tempPassword, encryptSecret));
+				user.setPassword(passwordEncoder.encode(tempPassword));
+			}
+
+			userDao.save(user);
+			peopleEmailService.sendUserInvitationEmail(user);
+			bulkStatusSummary.incrementSuccessCount();
+		}
+		catch (Exception e) {
+			log.error("Error re invitation for : {}, error: {}", id, e.getMessage());
+			bulkStatusSummary.incrementFailedCount();
+			bulkRecordErrorLogs.add(createErrorLog(id, List.of(e.getMessage())));
+		}
+
+	}
+
+	private ErrorLogDto createErrorLog(Long id, List<String> errors) {
+		ErrorLogDto errorLog = new ErrorLogDto();
+		errorLog.setEmployeeId(id);
+		errorLog.setStatus(BulkItemStatus.ERROR);
+		errorLog.setMessage(String.join("; ", errors));
+		return errorLog;
 	}
 
 }

@@ -753,7 +753,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 						});
 					}
 					catch (Exception e) {
-						log.info("Exception occurred when saving entitlement: {}", e.getMessage());
+						log.error("Exception occurred when saving entitlement: {}", e.getMessage());
 						List<String> errorMessages = Collections.singletonList(e.getMessage());
 						bulkRecordErrorLogs.add(createErrorLog(entitlementBulkDto, errorMessages));
 						bulkStatusSummary.incrementFailedCount();
