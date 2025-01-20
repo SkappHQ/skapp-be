@@ -3,8 +3,6 @@ package com.skapp.community.peopleplanner.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.skapp.community.common.util.event.UserCreatedEvent;
-import com.skapp.community.common.util.event.UserDeactivatedEvent;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.EntityNotFoundException;
 import com.skapp.community.common.exception.ModuleException;
@@ -27,6 +25,8 @@ import com.skapp.community.common.util.CommonModuleUtils;
 import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.common.util.MessageUtil;
 import com.skapp.community.common.util.Validation;
+import com.skapp.community.common.util.event.UserCreatedEvent;
+import com.skapp.community.common.util.event.UserDeactivatedEvent;
 import com.skapp.community.common.util.transformer.PageTransformer;
 import com.skapp.community.leaveplanner.type.ManagerType;
 import com.skapp.community.peopleplanner.constant.EmployeeTimelineConstant;
@@ -1553,7 +1553,7 @@ public class PeopleServiceImpl implements PeopleService {
 		rolesService.saveEmployeeRoles(employee);
 		saveEmployeeProgression(employee, employeeBulkDto);
 
-		if (!employeeBulkDto.getTeams().isEmpty()) {
+		if (employeeBulkDto.getTeams() != null && !employeeBulkDto.getTeams().isEmpty()) {
 			saveEmployeeTeams(employee, employeeBulkDto);
 		}
 
