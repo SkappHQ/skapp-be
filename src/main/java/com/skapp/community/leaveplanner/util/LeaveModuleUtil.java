@@ -10,8 +10,6 @@ import com.skapp.community.common.util.CommonModuleUtils;
 import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.leaveplanner.constant.LeaveMessageConstant;
 import com.skapp.community.leaveplanner.model.LeaveRequest;
-import com.skapp.community.leaveplanner.type.LeaveDuration;
-import com.skapp.community.leaveplanner.type.LeaveState;
 import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
 import com.skapp.community.peopleplanner.model.Holiday;
@@ -185,8 +183,7 @@ public class LeaveModuleUtil {
 	}
 
 	public static float getWorkingDaysBetweenTwoDates(LocalDate startDate, LocalDate endDate,
-			List<TimeConfig> timeConfigs, List<LocalDate> holidays, List<Holiday> holidayObjects,
-			LeaveRequest leaveRequest) {
+			List<TimeConfig> timeConfigs, List<Holiday> holidayObjects) {
 		if (startDate.isAfter(endDate)) {
 			LocalDate temp = startDate;
 			startDate = endDate;

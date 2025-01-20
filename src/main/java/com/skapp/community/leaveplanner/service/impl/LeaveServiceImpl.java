@@ -745,8 +745,8 @@ public class LeaveServiceImpl implements LeaveService {
 		LeaveRequestFilterDto leaveRequestFilterDto = new LeaveRequestFilterDto();
 		leaveRequestFilterDto.setStartDate(leaveRequest.getStartDate());
 		leaveRequestFilterDto.setEndDate(leaveRequest.getEndDate());
-		List<LeaveRequest> leaveRequestsList = leaveRequestDao.findRequestsByDateRangeAndEmployee(employeeId,
-				leaveRequestFilterDto);
+		List<LeaveRequest> leaveRequestsList = leaveRequestDao.findLeaveRequestsByDateRange(leaveRequestFilterDto,
+				employeeId);
 
 		if (leaveRequest.getLeaveState().equals(LeaveState.HALFDAY_EVENING)
 				|| leaveRequest.getLeaveState().equals(LeaveState.HALFDAY_MORNING)) {
@@ -803,7 +803,7 @@ public class LeaveServiceImpl implements LeaveService {
 		validateLeaveWithHoliday(leaveRequest.getStartDate(), leaveRequest.getEndDate(), holidayObjects, leaveRequest);
 
 		float weekDays = LeaveModuleUtil.getWorkingDaysBetweenTwoDates(leaveRequest.getStartDate(),
-				leaveRequest.getEndDate(), timeConfigs, holidayDates, holidayObjects, leaveRequest);
+				leaveRequest.getEndDate(), timeConfigs, holidayObjects);
 
 		if (weekDays <= 0) {
 			throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_NOT_APPLICABLE);
@@ -1003,7 +1003,7 @@ public class LeaveServiceImpl implements LeaveService {
 			validateSingleDayLeave(leaveRequest, holidayDuration);
 		}
 		else if (isHalfDayHoliday(holidayDuration)) {
-			if(leaveRequest.getLeaveType().getLeaveDuration().equals(LeaveDuration.FULL_DAY)) {
+			if (leaveRequest.getLeaveType().getLeaveDuration().equals(LeaveDuration.FULL_DAY)) {
 				throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_NOT_APPLICABLE);
 			}
 		}
