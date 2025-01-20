@@ -1467,15 +1467,15 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
 		}
 
-		Role role = currentUser.getEmployee().getEmployeeRole().getPeopleRole();
+		Role leaveRole = currentUser.getEmployee().getEmployeeRole().getLeaveRole();
 
-		if (role.equals(Role.PEOPLE_ADMIN)) {
+		if (leaveRole.equals(Role.LEAVE_ADMIN)) {
 			HashMap<Long, LeaveEntitlementResponseDto> responseDtoList = processedLeaveEntitlements(id,
 					leaveEntitlementsFilterDto);
 			return new ResponseEntityDto(false, responseDtoList.values());
 		}
 
-		if (role.equals(Role.PEOPLE_MANAGER) || role.equals(Role.LEAVE_MANAGER)) {
+		if (leaveRole.equals(Role.LEAVE_MANAGER)) {
 			List<Employee> employeeManagers = employeeDao.findManagersByEmployeeIdAndLoggedInManagerId(id,
 					currentUser.getEmployee().getEmployeeId());
 

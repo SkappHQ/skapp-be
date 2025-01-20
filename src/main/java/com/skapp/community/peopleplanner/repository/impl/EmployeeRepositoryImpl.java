@@ -65,7 +65,6 @@ import static com.skapp.community.peopleplanner.util.PeopleUtil.getSearchString;
 @RequiredArgsConstructor
 public class EmployeeRepositoryImpl implements EmployeeRepository {
 
-	@NonNull
 	private final EntityManager entityManager;
 
 	@Override
@@ -478,30 +477,24 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 	}
 
 	@Override
-	public List<Employee> findManagersByEmployeeIdAndLoggedInManagerId(@lombok.NonNull Long employeeId,
-			Long managerId) {
-
+	public List<Employee> findManagersByEmployeeIdAndLoggedInManagerId(@NonNull Long employeeId, Long managerId) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-
 		CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
 		Root<Employee> root = criteriaQuery.from(Employee.class);
 
 		List<Predicate> predicates = new ArrayList<>();
 
 		Join<Employee, EmployeeManager> managers = root.join(Employee_.managers);
-		Join<EmployeeManager, Employee> manEmp = managers.join(EmployeeManager_.employee);
+		Join<EmployeeManager, Employee> employeeJoin = managers.join(EmployeeManager_.employee);
 		Join<Employee, User> userJoin = root.join(Employee_.user);
-		predicates.add(criteriaBuilder.equal(manEmp.get(Employee_.employeeId), employeeId));
 
-		predicates.add(criteriaBuilder.equal(managers.get(EmployeeManager_.MANAGER), managerId));
+		predicates.add(criteriaBuilder.equal(employeeJoin.get(Employee_.employeeId), employeeId));
+		predicates.add(criteriaBuilder.equal(root.get(Employee_.employeeId), managerId));
 		predicates.add(criteriaBuilder.notEqual(userJoin.get(User_.isActive), false));
 
-		Predicate[] predArray = new Predicate[predicates.size()];
-		predicates.toArray(predArray);
-		criteriaQuery.where(predArray);
+		criteriaQuery.where(predicates.toArray(new Predicate[0]));
 
 		TypedQuery<Employee> query = entityManager.createQuery(criteriaQuery);
-
 		return query.getResultList();
 	}
 
