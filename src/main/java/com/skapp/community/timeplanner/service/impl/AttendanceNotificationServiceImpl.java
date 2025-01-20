@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -50,9 +51,13 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		attendanceEmailDynamicFields
 			.setEmployeeName(timeRequest.getEmployee().getFirstName() + " " + timeRequest.getEmployee().getLastName());
 
-		notificationService.createNotification(timeRequest.getEmployee(), timeRequest.getTimeRequestId().toString(),
-				NotificationType.TIME_ENTRY, EmailBodyTemplates.ATTENDANCE_MODULE_RECEIVED_TIME_ENTRY_REQUEST_MANAGER,
-				attendanceEmailDynamicFields, NotificationCategory.ATTENDANCE);
+		Set<EmployeeManager> employeeManagers = timeRequest.getEmployee().getManagers();
+		employeeManagers.forEach(employeeManager -> {
+			notificationService.createNotification(employeeManager.getEmployee(),
+					timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
+					EmailBodyTemplates.ATTENDANCE_MODULE_RECEIVED_TIME_ENTRY_REQUEST_MANAGER,
+					attendanceEmailDynamicFields, NotificationCategory.ATTENDANCE);
+		});
 	}
 
 	@Override
