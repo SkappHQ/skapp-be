@@ -14,6 +14,8 @@ public class EmployeeRoleResponseDto {
 
 	private Role attendanceRole;
 
+	private Role esignRole;
+
 	private Boolean isSuperAdmin;
 
 }

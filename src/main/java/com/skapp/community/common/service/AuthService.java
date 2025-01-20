@@ -27,6 +27,4 @@ public interface AuthService {
 
 	ResponseEntityDto changePassword(ChangePasswordRequestDto changePasswordRequestDto, Long userId);
 
-	void saveEmployeeRoles(Employee employee);
-
 }

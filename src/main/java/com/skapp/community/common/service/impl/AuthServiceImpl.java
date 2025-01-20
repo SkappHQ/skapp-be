@@ -22,19 +22,18 @@ import com.skapp.community.common.service.AuthService;
 import com.skapp.community.common.service.EncryptionDecryptionService;
 import com.skapp.community.common.service.JwtService;
 import com.skapp.community.common.service.UserService;
-import com.skapp.community.common.type.Role;
 import com.skapp.community.common.util.CommonModuleUtils;
 import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.common.util.Validation;
 import com.skapp.community.peopleplanner.mapper.PeopleMapper;
 import com.skapp.community.peopleplanner.model.Employee;
-import com.skapp.community.peopleplanner.model.EmployeeRole;
 import com.skapp.community.peopleplanner.payload.response.EmployeeCredentialsResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeResponseDto;
 import com.skapp.community.peopleplanner.repository.EmployeeDao;
 import com.skapp.community.peopleplanner.repository.EmployeeRoleDao;
 import com.skapp.community.peopleplanner.service.PeopleEmailService;
 import com.skapp.community.peopleplanner.service.PeopleNotificationService;
+import com.skapp.community.peopleplanner.service.RolesService;
 import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
 import com.skapp.community.peopleplanner.util.Validations;
@@ -101,6 +100,9 @@ public class AuthServiceImpl implements AuthService {
 
 	@NonNull
 	private final ProfileActivator profileActivator;
+
+	@NonNull
+	private final RolesService rolesService;
 
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
@@ -187,7 +189,7 @@ public class AuthServiceImpl implements AuthService {
 
 		userDao.save(user);
 
-		saveEmployeeRoles(employee);
+		rolesService.saveSuperAdminRoles(employee);
 		employeeDao.save(employee);
 
 		EmployeeSignInResponseDto employeeSignInResponseDto = peopleMapper
@@ -357,25 +359,6 @@ public class AuthServiceImpl implements AuthService {
 
 		log.info("changePassword: execution ended");
 		return new ResponseEntityDto(false, "User password changed successfully");
-	}
-
-	@Override
-	public void saveEmployeeRoles(Employee employee) {
-		log.info("saveEmployeeRoles: execution started");
-
-		EmployeeRole superAdminRoles = new EmployeeRole();
-		superAdminRoles.setEmployee(employee);
-		superAdminRoles.setPeopleRole(Role.PEOPLE_ADMIN);
-		superAdminRoles.setLeaveRole(Role.LEAVE_ADMIN);
-		superAdminRoles.setAttendanceRole(Role.ATTENDANCE_ADMIN);
-		superAdminRoles.setIsSuperAdmin(true);
-		superAdminRoles.setChangedDate(DateTimeUtils.getCurrentUtcDate());
-		superAdminRoles.setRoleChangedBy(employee);
-
-		employeeRoleDao.save(superAdminRoles);
-		employee.setEmployeeRole(superAdminRoles);
-
-		log.info("saveEmployeeRoles: execution started");
 	}
 
 	private boolean isSuperAdminExists() {
