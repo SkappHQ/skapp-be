@@ -2,12 +2,12 @@ package com.skapp.community.common.service;
 
 import com.skapp.community.common.payload.request.ChangePasswordRequestDto;
 import com.skapp.community.common.payload.request.ForgotPasswordRequestDto;
+import com.skapp.community.common.payload.request.ReInvitationRequestDto;
 import com.skapp.community.common.payload.request.RefreshTokenRequestDto;
 import com.skapp.community.common.payload.request.ResetPasswordRequestDto;
 import com.skapp.community.common.payload.request.SignInRequestDto;
 import com.skapp.community.common.payload.request.SuperAdminSignUpRequestDto;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
-import com.skapp.community.peopleplanner.model.Employee;
 
 public interface AuthService {
 
@@ -22,6 +22,8 @@ public interface AuthService {
 	ResponseEntityDto sharePassword(Long userId);
 
 	ResponseEntityDto resetAndSharePassword(Long userId);
+
+	ResponseEntityDto sendReInvitation(ReInvitationRequestDto reInvitationRequestDto);
 
 	ResponseEntityDto forgotPassword(ForgotPasswordRequestDto forgotPasswordRequestDto);
 

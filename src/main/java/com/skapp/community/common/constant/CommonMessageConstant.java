@@ -22,6 +22,7 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_FILE_NOT_EXIST("api.error.common.file-not-exist"),
 	COMMON_ERROR_NO_ENOUGH_STORAGE("api.error.common.storage-exceed"),
 	COMMON_ERROR_FILE_URL("api.error.common.file-url"),
+	COMMON_ERROR_USER_ACCOUNT_ACTIVATED("api.error.common.user-account-already-activated"),
 	COMMON_ERROR_USER_ACCOUNT_DEACTIVATED("api.error.common.user-account-deactivated"),
 	COMMON_ERROR_EXCEED_MAX_ORGANIZATION_COUNT("api.error.common.organization-create"),
 	COMMON_ERROR_USER_ALREADY_EXISTS("api.error.common.user-already-exists"),

@@ -3,8 +3,6 @@ package com.skapp.community.peopleplanner.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.skapp.community.common.util.event.UserCreatedEvent;
-import com.skapp.community.common.util.event.UserDeactivatedEvent;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.EntityNotFoundException;
 import com.skapp.community.common.exception.ModuleException;
@@ -27,6 +25,8 @@ import com.skapp.community.common.util.CommonModuleUtils;
 import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.common.util.MessageUtil;
 import com.skapp.community.common.util.Validation;
+import com.skapp.community.common.util.event.UserCreatedEvent;
+import com.skapp.community.common.util.event.UserDeactivatedEvent;
 import com.skapp.community.common.util.transformer.PageTransformer;
 import com.skapp.community.leaveplanner.type.ManagerType;
 import com.skapp.community.peopleplanner.constant.EmployeeTimelineConstant;
@@ -414,6 +414,15 @@ public class PeopleServiceImpl implements PeopleService {
 
 		if (optionalEmployee.get().getAccountStatus().equals(AccountStatus.TERMINATED)) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_TERMINATED);
+		}
+
+		if (optionalEmployee.get().getAccountStatus().equals(AccountStatus.PENDING)
+				&& employeeUpdateDto.getEmail() != null
+				&& !Objects.equals(optionalEmployee.get().getUser().getEmail(), employeeUpdateDto.getEmail())) {
+			if (userDao.findByEmail(employeeUpdateDto.getEmail()).isPresent()) {
+				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_USER_EMAIL_ALREADY_EXIST);
+			}
+			updateEmailAndSendReInvitation(optionalEmployee.get(), employeeUpdateDto.getEmail());
 		}
 
 		User currentUser = userService.getCurrentUser();
@@ -1544,7 +1553,7 @@ public class PeopleServiceImpl implements PeopleService {
 		rolesService.saveEmployeeRoles(employee);
 		saveEmployeeProgression(employee, employeeBulkDto);
 
-		if (!employeeBulkDto.getTeams().isEmpty()) {
+		if (employeeBulkDto.getTeams() != null && !employeeBulkDto.getTeams().isEmpty()) {
 			saveEmployeeTeams(employee, employeeBulkDto);
 		}
 
@@ -3182,6 +3191,23 @@ public class PeopleServiceImpl implements PeopleService {
 			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_TEAM_NOT_FOUND);
 		}
 		return employeeTeams;
+	}
+
+	private void updateEmailAndSendReInvitation(Employee employee, String email) {
+		User user = employee.getUser();
+		user.setEmail(email);
+
+		Optional<User> firstUser = userDao.findById(1L);
+		LoginMethod loginMethod = firstUser.isPresent() ? firstUser.get().getLoginMethod() : LoginMethod.CREDENTIALS;
+
+		if (loginMethod.equals(LoginMethod.CREDENTIALS)) {
+			String tempPassword = CommonModuleUtils.generateSecureRandomPassword();
+			user.setTempPassword(encryptionDecryptionService.encrypt(tempPassword, encryptSecret));
+			user.setPassword(passwordEncoder.encode(tempPassword));
+		}
+
+		userDao.save(user);
+		peopleEmailService.sendUserInvitationEmail(user);
 	}
 
 }

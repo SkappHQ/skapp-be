@@ -20,7 +20,7 @@ public class UpdateOrganizationRequestDto {
 
 	@Schema(description = "The website of the organization. Must be a valid URL with a length between 1 and 2083 characters.",
 			example = "https://www.example.com")
-	@Size(min = 1, max = 2083)
+	@Size(max = 2083)
 	private String organizationWebsite;
 
 	@Schema(description = "The country where the organization is located. Cannot be null.", example = "Sri Lanka")
@@ -28,21 +28,12 @@ public class UpdateOrganizationRequestDto {
 
 	@Schema(description = "The logo of the organization. Must be a valid file name with a length between 1 and 100 characters.",
 			example = "logo.png")
-	@Size(min = 1, max = 100)
+	@Size(max = 100)
 	private String organizationLogo;
 
 	@Schema(description = "The theme color in hexadecimal format (e.g., #FFFFFF). Must match the regex pattern for a valid hexadecimal color.",
 			example = "#FFFFFF", pattern = HEXA_DECIMAL_VALIDATION_PATTERN)
 	@Size(min = 1, max = 9)
 	private String themeColor;
-
-	public void setOrganizationLogo(String organizationLogo) {
-		if (organizationLogo != null && organizationLogo.isEmpty()) {
-			this.organizationLogo = null;
-		}
-		else {
-			this.organizationLogo = organizationLogo;
-		}
-	}
 
 }
