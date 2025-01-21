@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class JobServiceImplUnitTest {
+class JobServiceImplUnitTest {
 
 	@Mock
 	private JobFamilyDao jobFamilyDao;

@@ -1,6 +1,5 @@
 package com.skapp.community.common.controller.v1;
 
-import com.skapp.community.common.constant.ApiUriConstants;
 import com.skapp.community.common.payload.request.ChangePasswordRequestDto;
 import com.skapp.community.common.payload.request.ForgotPasswordRequestDto;
 import com.skapp.community.common.payload.request.ReInvitationRequestDto;
@@ -37,14 +36,14 @@ public class AuthController {
 	private final AuthService authService;
 
 	@Operation(summary = "Sign In", description = "Sign in to the application")
-	@PostMapping(value = ApiUriConstants.AUTH_SIGN_IN, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(value = "/sign-in", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> signIn(@Valid @RequestBody SignInRequestDto signInRequestDto) {
 		ResponseEntityDto response = authService.signIn(signInRequestDto);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@Operation(summary = "Super Admin Sign Up", description = "Sign up as a super admin")
-	@PostMapping(value = ApiUriConstants.AUTH_SUPER_ADMIN_SIGNUP, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PostMapping(value = "/signup/super-admin", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> superAdminSignUp(
 			@Valid @RequestBody SuperAdminSignUpRequestDto superAdminSignUpRequestDto) {
 		ResponseEntityDto response = authService.superAdminSignUp(superAdminSignUpRequestDto);

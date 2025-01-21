@@ -282,56 +282,9 @@ public class LeaveServiceImpl implements LeaveService {
 		}
 
 		leaveRequest.setReviewedDate(DateTimeUtils.getCurrentUtcDateTime());
-
 		LeaveRequest saveResponse = leaveRequestDao.save(leaveRequest);
 
-		if (leaveRequest.getStatus().equals(LeaveRequestStatus.APPROVED)
-				&& leaveRequest.getStartDate() == leaveRequest.getEndDate()) {
-			leaveEmailService.sendApprovedSingleDayLeaveRequestEmployeeEmail(leaveRequest);
-			leaveNotificationService.sendApprovedSingleDayLeaveRequestEmployeeNotification(leaveRequest);
-
-			leaveEmailService.sendApprovedSingleDayLeaveRequestManagerEmail(leaveRequest);
-			leaveNotificationService.sendApprovedSingleDayLeaveRequestManagerNotification(leaveRequest);
-		}
-		else if (leaveRequest.getStatus().equals(LeaveRequestStatus.APPROVED)) {
-			leaveEmailService.sendApprovedMultiDayLeaveRequestEmployeeEmail(leaveRequest);
-			leaveNotificationService.sendApprovedMultiDayLeaveRequestEmployeeNotification(leaveRequest);
-
-			leaveEmailService.sendApprovedMultiDayLeaveRequestManagerEmail(leaveRequest);
-			leaveNotificationService.sendApprovedMultiDayLeaveRequestManagerNotification(leaveRequest);
-		}
-
-		if (leaveRequest.getStatus().equals(LeaveRequestStatus.REVOKED)
-				&& leaveRequest.getStartDate() == leaveRequest.getEndDate()) {
-			leaveEmailService.sendRevokedSingleDayLeaveRequestEmployeeEmail(leaveRequest);
-			leaveNotificationService.sendRevokedSingleDayLeaveRequestEmployeeNotification(leaveRequest);
-
-			leaveEmailService.sendRevokedSingleDayLeaveRequestManagerEmail(leaveRequest);
-			leaveNotificationService.sendRevokedSingleDayLeaveRequestManagerNotification(leaveRequest);
-		}
-		else if (leaveRequest.getStatus().equals(LeaveRequestStatus.REVOKED)) {
-			leaveEmailService.sendRevokedMultiDayLeaveRequestEmployeeEmail(leaveRequest);
-			leaveNotificationService.sendRevokedMultiDayLeaveRequestEmployeeNotification(leaveRequest);
-
-			leaveEmailService.sendRevokedMultiDayLeaveRequestManagerEmail(leaveRequest);
-			leaveNotificationService.sendRevokedMultiDayLeaveRequestManagerEmail(leaveRequest);
-		}
-
-		if (leaveRequest.getStatus().equals(LeaveRequestStatus.DENIED)
-				&& leaveRequest.getStartDate() == leaveRequest.getEndDate()) {
-			leaveEmailService.sendDeclinedSingleDayLeaveRequestEmployeeEmail(leaveRequest);
-			leaveNotificationService.sendDeclinedSingleDayLeaveRequestEmployeeNotification(leaveRequest);
-
-			leaveEmailService.sendDeclinedSingleDayLeaveRequestManagerEmail(leaveRequest);
-			leaveNotificationService.sendDeclinedSingleDayLeaveRequestManagerNotification(leaveRequest);
-		}
-		else if (leaveRequest.getStatus().equals(LeaveRequestStatus.DENIED)) {
-			leaveEmailService.sendDeclinedMultiDayLeaveRequestEmployeeEmail(leaveRequest);
-			leaveNotificationService.sendDeclinedMultiDayLeaveRequestEmployeeNotification(leaveRequest);
-
-			leaveEmailService.sendDeclinedMultiDayLeaveRequestManagerEmail(leaveRequest);
-			leaveNotificationService.sendDeclinedMultiDayLeaveRequestManagerEmail(leaveRequest);
-		}
+		sendLeaveUpdateEmailsAndNotifications(leaveRequest);
 
 		LeaveRequestByIdResponseDto responseDto = leaveMapper.leaveRequestToLeaveRequestByIdResponseDto(saveResponse);
 
@@ -669,6 +622,56 @@ public class LeaveServiceImpl implements LeaveService {
 		log.info("getLeaveRequestIsNudge: returned {}  for user ID: {} and {}",
 				leaveNotificationNudgeResponseDto.getIsNudge(), userId, leaveRequestId);
 		return leaveNotificationNudgeResponseDto;
+	}
+
+	private void sendLeaveUpdateEmailsAndNotifications(LeaveRequest leaveRequest) {
+		if (leaveRequest.getStatus().equals(LeaveRequestStatus.APPROVED)
+				&& leaveRequest.getStartDate() == leaveRequest.getEndDate()) {
+			leaveEmailService.sendApprovedSingleDayLeaveRequestEmployeeEmail(leaveRequest);
+			leaveNotificationService.sendApprovedSingleDayLeaveRequestEmployeeNotification(leaveRequest);
+
+			leaveEmailService.sendApprovedSingleDayLeaveRequestManagerEmail(leaveRequest);
+			leaveNotificationService.sendApprovedSingleDayLeaveRequestManagerNotification(leaveRequest);
+		}
+		else if (leaveRequest.getStatus().equals(LeaveRequestStatus.APPROVED)) {
+			leaveEmailService.sendApprovedMultiDayLeaveRequestEmployeeEmail(leaveRequest);
+			leaveNotificationService.sendApprovedMultiDayLeaveRequestEmployeeNotification(leaveRequest);
+
+			leaveEmailService.sendApprovedMultiDayLeaveRequestManagerEmail(leaveRequest);
+			leaveNotificationService.sendApprovedMultiDayLeaveRequestManagerNotification(leaveRequest);
+		}
+
+		if (leaveRequest.getStatus().equals(LeaveRequestStatus.REVOKED)
+				&& leaveRequest.getStartDate() == leaveRequest.getEndDate()) {
+			leaveEmailService.sendRevokedSingleDayLeaveRequestEmployeeEmail(leaveRequest);
+			leaveNotificationService.sendRevokedSingleDayLeaveRequestEmployeeNotification(leaveRequest);
+
+			leaveEmailService.sendRevokedSingleDayLeaveRequestManagerEmail(leaveRequest);
+			leaveNotificationService.sendRevokedSingleDayLeaveRequestManagerNotification(leaveRequest);
+		}
+		else if (leaveRequest.getStatus().equals(LeaveRequestStatus.REVOKED)) {
+			leaveEmailService.sendRevokedMultiDayLeaveRequestEmployeeEmail(leaveRequest);
+			leaveNotificationService.sendRevokedMultiDayLeaveRequestEmployeeNotification(leaveRequest);
+
+			leaveEmailService.sendRevokedMultiDayLeaveRequestManagerEmail(leaveRequest);
+			leaveNotificationService.sendRevokedMultiDayLeaveRequestManagerEmail(leaveRequest);
+		}
+
+		if (leaveRequest.getStatus().equals(LeaveRequestStatus.DENIED)
+				&& leaveRequest.getStartDate() == leaveRequest.getEndDate()) {
+			leaveEmailService.sendDeclinedSingleDayLeaveRequestEmployeeEmail(leaveRequest);
+			leaveNotificationService.sendDeclinedSingleDayLeaveRequestEmployeeNotification(leaveRequest);
+
+			leaveEmailService.sendDeclinedSingleDayLeaveRequestManagerEmail(leaveRequest);
+			leaveNotificationService.sendDeclinedSingleDayLeaveRequestManagerNotification(leaveRequest);
+		}
+		else if (leaveRequest.getStatus().equals(LeaveRequestStatus.DENIED)) {
+			leaveEmailService.sendDeclinedMultiDayLeaveRequestEmployeeEmail(leaveRequest);
+			leaveNotificationService.sendDeclinedMultiDayLeaveRequestEmployeeNotification(leaveRequest);
+
+			leaveEmailService.sendDeclinedMultiDayLeaveRequestManagerEmail(leaveRequest);
+			leaveNotificationService.sendDeclinedMultiDayLeaveRequestManagerEmail(leaveRequest);
+		}
 	}
 
 	private boolean isLeaveRequestNudgeAllowed(LocalDateTime lastNudgeNotificationDate) {

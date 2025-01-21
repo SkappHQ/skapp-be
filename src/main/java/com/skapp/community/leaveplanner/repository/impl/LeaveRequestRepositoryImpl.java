@@ -1,10 +1,13 @@
 package com.skapp.community.leaveplanner.repository.impl;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.skapp.community.common.model.Auditable_;
 import com.skapp.community.common.model.OrganizationConfig;
 import com.skapp.community.common.model.OrganizationConfig_;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.model.User_;
+import com.skapp.community.common.type.CriteriaBuilderSqlFunction;
+import com.skapp.community.common.type.CriteriaBuilderSqlLiteral;
 import com.skapp.community.common.type.OrganizationConfigType;
 import com.skapp.community.common.util.CommonModuleUtils;
 import com.skapp.community.common.util.DateTimeUtils;
@@ -92,19 +95,25 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 		Join<EmployeeTeam, Team> team = employeeTeam.join(EmployeeTeam_.team, JoinType.LEFT);
 
 		Expression<String> leavePeriod = cb.concat(
-				cb.concat(cb.function("DATE_FORMAT", String.class, leaveRequest.get(LeaveRequest_.startDate),
-						cb.literal("%d/%m/%Y")), cb.literal(" - ")),
-				cb.function("DATE_FORMAT", String.class, leaveRequest.get(LeaveRequest_.endDate),
-						cb.literal("%d/%m/%Y")));
+				cb.concat(
+						cb.function(CriteriaBuilderSqlFunction.DATE_FORMAT.getFunctionName(), String.class,
+								leaveRequest.get(LeaveRequest_.startDate),
+								cb.literal(CriteriaBuilderSqlLiteral.DASHED_DATE_PATTERN.getValue())),
+						cb.literal(CriteriaBuilderSqlLiteral.DASH.getValue())),
+				cb.function(CriteriaBuilderSqlFunction.DATE_FORMAT.getFunctionName(), String.class,
+						leaveRequest.get(LeaveRequest_.endDate),
+						cb.literal(CriteriaBuilderSqlLiteral.DASHED_DATE_PATTERN.getValue())));
 
 		Expression<String> employeeName = cb.concat(cb.concat(employee.get(Employee_.firstName), " "),
 				employee.get(Employee_.lastName));
 
-		Expression<String> dateRequested = cb.function("DATE_FORMAT", String.class,
-				leaveRequest.get(LeaveRequest_.lastModifiedDate), cb.literal("%d/%m/%Y"));
+		Expression<String> dateRequested = cb.function(CriteriaBuilderSqlFunction.DATE_FORMAT.getFunctionName(),
+				String.class, leaveRequest.get(Auditable_.lastModifiedDate),
+				cb.literal(CriteriaBuilderSqlLiteral.DASHED_DATE_PATTERN.getValue()));
 
-		Expression<String> teams = cb.function("GROUP_CONCAT", String.class,
-				cb.function("DISTINCT", String.class, team.get(Team_.teamName)));
+		Expression<String> teams = cb.function(CriteriaBuilderSqlFunction.GROUP_CONCAT.getFunctionName(), String.class,
+				cb.function(CriteriaBuilderSqlFunction.DISTINCT.getFunctionName(), String.class,
+						team.get(Team_.teamName)));
 
 		query.select(cb.construct(EmployeeLeaveRequestReportExportDto.class, employee.get(Employee_.employeeId),
 				employeeName, teams, leaveType.get(LeaveType_.name), leaveRequest.get(LeaveRequest_.status),
@@ -120,7 +129,7 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 				employee.get(Employee_.lastName), jobFamily.get(JobFamily_.name),
 				leaveRequest.get(LeaveRequest_.startDate), leaveRequest.get(LeaveRequest_.endDate),
 				leaveRequest.get(LeaveRequest_.durationDays), leaveType.get(LeaveType_.name),
-				leaveRequest.get(LeaveRequest_.lastModifiedDate), leaveRequest.get(LeaveRequest_.status),
+				leaveRequest.get(Auditable_.lastModifiedDate), leaveRequest.get(LeaveRequest_.status),
 				leaveRequest.get(LeaveRequest_.requestDesc));
 
 		query.orderBy(cb.asc(employee.get(Employee_.firstName)));

@@ -64,7 +64,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 	@NonNull
 	private final UserService userService;
 
-	private final String ALGORITHM = "AES";
+	private static final String ALGORITHM = "AES";
 
 	@Value("${file.storage.encryption-key}")
 	private String fileStorageEncryptionKey;
@@ -269,13 +269,13 @@ public class FileStorageServiceImpl implements FileStorageService {
 		return new SecretKeySpec(fileStorageEncryptionKey.getBytes(), ALGORITHM);
 	}
 
-	private byte[] readFileToByteArray(File file) throws Exception {
+	private byte[] readFileToByteArray(File file) throws IOException {
 		try (FileInputStream fis = new FileInputStream(file)) {
 			return fis.readAllBytes();
 		}
 	}
 
-	private void writeByteArrayToFile(File file, byte[] bytes) throws Exception {
+	private void writeByteArrayToFile(File file, byte[] bytes) throws IOException {
 		try (FileOutputStream fos = new FileOutputStream(file)) {
 			fos.write(bytes);
 		}
