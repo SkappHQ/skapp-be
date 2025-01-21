@@ -1,6 +1,5 @@
 package com.skapp.community.common.service.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.skapp.community.common.component.ProfileActivator;
 import com.skapp.community.common.constant.CommonConstants;
 import com.skapp.community.common.constant.CommonMessageConstant;
