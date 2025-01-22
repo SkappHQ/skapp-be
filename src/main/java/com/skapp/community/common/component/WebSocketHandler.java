@@ -10,6 +10,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -39,12 +40,18 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
 	@Override
 	protected void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage message) {
+		log.info("Received message: {}", message.getPayload());
 	}
 
 	@Override
 	public void afterConnectionClosed(@NonNull WebSocketSession session, @NonNull CloseStatus status) {
-		String userId = getUserIdFromSession(session);
-		sessions.remove(userId);
+		try (session) {
+			String userId = getUserIdFromSession(session);
+			sessions.remove(userId);
+		}
+		catch (Exception e) {
+			log.error("Error closing WebSocket session", e);
+		}
 	}
 
 	public void sendNotificationToUser(String userId, String message) {
@@ -60,10 +67,15 @@ public class WebSocketHandler extends TextWebSocketHandler {
 	}
 
 	private String getUserIdFromSession(WebSocketSession session) {
+		if (session == null) {
+			return null;
+		}
+
 		String userId = (String) session.getAttributes().get(AuthConstants.USER_ID);
 
-		if (userId == null && session.getPrincipal() != null) {
-			userId = session.getPrincipal().getName();
+		Principal principal = session.getPrincipal();
+		if (userId == null && principal != null) {
+			userId = principal.getName();
 		}
 
 		return userId;

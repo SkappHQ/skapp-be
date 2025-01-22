@@ -24,6 +24,6 @@ public class FileConfigConstants {
 
 	public static final long FILE_UPLOAD_LIMIT_IN_PERCENTAGE = 10L;
 
-	public final static List<String> SUPPORTED_FORMATS = List.of("jpg", "jpeg", "png", "gif", "bmp");
+	public static final List<String> SUPPORTED_FORMATS = List.of("jpg", "jpeg", "png", "gif", "bmp");
 
 }

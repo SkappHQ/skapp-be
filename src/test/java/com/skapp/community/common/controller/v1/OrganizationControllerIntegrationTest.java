@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class OrganizationControllerIntegrationTest {
+class OrganizationControllerIntegrationTest {
 
 	@Autowired
 	private AuthorityService authorityService;
@@ -47,7 +47,7 @@ public class OrganizationControllerIntegrationTest {
 	@Autowired
 	private MockMvc mvc;
 
-	private final String PATH = "/v1/organization";
+	private final String path = "/v1/organization";
 
 	@Autowired
 	private MessageUtil messageUtil;
@@ -88,13 +88,13 @@ public class OrganizationControllerIntegrationTest {
 
 	@Test
 	@Order(2)
-	public void createOrganization_ReturnsCreated() throws Exception {
+	void createOrganization_ReturnsCreated() throws Exception {
 		OrganizationDto organizationDto = new OrganizationDto();
 		organizationDto.setOrganizationName("Org");
 		organizationDto.setCountry("Canada");
 		organizationDto.setOrganizationTimeZone("Asia/Kolkata");
 
-		mvc.perform(post(PATH).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(post(path).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(organizationDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -105,11 +105,11 @@ public class OrganizationControllerIntegrationTest {
 
 	@Test
 	@Order(1)
-	public void createOrganizationOnlyWithName_ReturnsUnprocessedEntity() throws Exception {
+	void createOrganizationOnlyWithName_ReturnsUnprocessedEntity() throws Exception {
 		OrganizationDto organizationDto = new OrganizationDto();
 		organizationDto.setOrganizationName("Org");
 
-		mvc.perform(post(PATH).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(post(path).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(organizationDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -123,9 +123,9 @@ public class OrganizationControllerIntegrationTest {
 
 	@Test
 	@Order(3)
-	public void getOrganizationOnlyWithName_ReturnsOk() throws Exception {
+	void getOrganizationOnlyWithName_ReturnsOk() throws Exception {
 
-		mvc.perform(get(PATH).accept(MediaType.APPLICATION_JSON))
+		mvc.perform(get(path).accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("['status']").value("successful"))
@@ -136,11 +136,11 @@ public class OrganizationControllerIntegrationTest {
 
 	@Test
 	@Order(4)
-	public void updateOrganizationOnlyWithName_ReturnsOk() throws Exception {
+	void updateOrganizationOnlyWithName_ReturnsOk() throws Exception {
 		UpdateOrganizationRequestDto organizationDto = new UpdateOrganizationRequestDto();
 		organizationDto.setOrganizationName("NewOrg");
 
-		mvc.perform(patch(PATH).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(patch(path).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(organizationDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())

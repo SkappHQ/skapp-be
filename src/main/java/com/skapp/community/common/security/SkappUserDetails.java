@@ -19,11 +19,11 @@ public class SkappUserDetails implements UserDetails {
 
 	private final Collection<? extends GrantedAuthority> authorities;
 
-	private final boolean accountNonExpired = true;
+	private static final boolean ACCOUNT_NON_EXPIRED = true;
 
-	private final boolean accountNonLocked = true;
+	private static final boolean ACCOUNT_NON_LOCKED = true;
 
-	private final boolean credentialsNonExpired = true;
+	private static final boolean CREDENTIALS_NON_EXPIRED = true;
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -42,17 +42,17 @@ public class SkappUserDetails implements UserDetails {
 
 	@Override
 	public boolean isAccountNonExpired() {
-		return accountNonExpired;
+		return ACCOUNT_NON_EXPIRED;
 	}
 
 	@Override
 	public boolean isAccountNonLocked() {
-		return accountNonLocked;
+		return ACCOUNT_NON_LOCKED;
 	}
 
 	@Override
 	public boolean isCredentialsNonExpired() {
-		return credentialsNonExpired;
+		return CREDENTIALS_NON_EXPIRED;
 	}
 
 	@Override

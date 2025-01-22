@@ -267,9 +267,4 @@ public class LeaveTypeServiceImpl implements LeaveTypeService {
 		return defineLeaveType != null;
 	}
 
-	private boolean isEmojiExist(String emoji) {
-		LeaveType defineLeaveType = leaveTypeDao.findLeaveTypeByEmojiCode(emoji);
-		return defineLeaveType != null;
-	}
-
 }

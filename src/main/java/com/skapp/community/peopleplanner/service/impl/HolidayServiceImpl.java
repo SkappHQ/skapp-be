@@ -298,6 +298,21 @@ public class HolidayServiceImpl implements HolidayService {
 
 		leaveRequest = leaveRequestDao.save(leaveRequest);
 
+		sendEmailsAndNotifications(leaveRequest, isMultiple, holiday);
+
+		List<LeaveRequestEntitlement> leaveRequestEntitlements = leaveRequestEntitlementDao
+			.findAllByLeaveRequestOrderByLeaveEntitlement_ValidToAsc(leaveRequest);
+
+		if (!leaveRequestEntitlements.isEmpty()) {
+			deductDaysUsed(leaveRequestEntitlements.getFirst(),
+					leaveRequestEntitlements.getFirst().getLeaveEntitlement());
+		}
+		else {
+			log.warn("No LeaveRequestEntitlements found for LeaveRequest ID: {}", leaveRequest.getLeaveRequestId());
+		}
+	}
+
+	private void sendEmailsAndNotifications(LeaveRequest leaveRequest, boolean isMultiple, Holiday holiday) {
 		if (leaveRequest.getStatus() == LeaveRequestStatus.CANCELLED) {
 			if (isMultiple) {
 				peopleEmailService.sendHolidayMultipleDayPendingLeaveRequestUpdatedEmployeeEmail(leaveRequest, holiday);
@@ -340,17 +355,6 @@ public class HolidayServiceImpl implements HolidayService {
 				peopleNotificationService
 					.sendHolidaySingleDayApprovedLeaveRequestRevokedManagerNotification(leaveRequest, holiday);
 			}
-		}
-
-		List<LeaveRequestEntitlement> leaveRequestEntitlements = leaveRequestEntitlementDao
-			.findAllByLeaveRequestOrderByLeaveEntitlement_ValidToAsc(leaveRequest);
-
-		if (!leaveRequestEntitlements.isEmpty()) {
-			deductDaysUsed(leaveRequestEntitlements.getFirst(),
-					leaveRequestEntitlements.getFirst().getLeaveEntitlement());
-		}
-		else {
-			log.warn("No LeaveRequestEntitlements found for LeaveRequest ID: {}", leaveRequest.getLeaveRequestId());
 		}
 	}
 

@@ -492,7 +492,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 		}
 
 		LeaveEntitlement leaveEntitlement = new LeaveEntitlement();
-		if (!leaveTypeOpt.get().getIsActive()) {
+		if (Boolean.FALSE.equals(leaveTypeOpt.get().getIsActive())) {
 			leaveEntitlement.setActive(false);
 		}
 
