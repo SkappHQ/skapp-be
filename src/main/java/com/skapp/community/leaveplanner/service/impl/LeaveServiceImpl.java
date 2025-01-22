@@ -1002,10 +1002,9 @@ public class LeaveServiceImpl implements LeaveService {
 		if (isSingleDayLeave) {
 			validateSingleDayLeave(leaveRequest, holidayDuration);
 		}
-		else if (isHalfDayHoliday(holidayDuration)) {
-			if (leaveRequest.getLeaveType().getLeaveDuration().equals(LeaveDuration.FULL_DAY)) {
-				throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_NOT_APPLICABLE);
-			}
+		else if (isHalfDayHoliday(holidayDuration)
+				&& leaveRequest.getLeaveType().getLeaveDuration().equals(LeaveDuration.FULL_DAY)) {
+			throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_NOT_APPLICABLE);
 		}
 	}
 
