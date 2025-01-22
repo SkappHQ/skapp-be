@@ -38,4 +38,8 @@ public class UserSettings {
 	@Convert(converter = JsonTypeConverter.class)
 	private JsonNode notifications;
 
+	@Column(name = "integrations", columnDefinition = "json")
+	@Convert(converter = JsonTypeConverter.class)
+	private JsonNode integrations;
+
 }

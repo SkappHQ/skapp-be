@@ -1,5 +1,6 @@
 package com.skapp.community.leaveplanner.service.impl;
 
+import com.skapp.community.common.component.ProfileActivator;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.EntityNotFoundException;
 import com.skapp.community.common.exception.ModuleException;
@@ -66,6 +67,7 @@ import com.skapp.community.peopleplanner.repository.TeamDao;
 import com.skapp.community.peopleplanner.service.PeopleService;
 import com.skapp.community.timeplanner.model.TimeConfig;
 import com.skapp.community.timeplanner.repository.TimeConfigDao;
+import com.skapp.enterprise.common.service.EpGoogleCalendarService;
 import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -160,6 +162,12 @@ public class LeaveServiceImpl implements LeaveService {
 	@NonNull
 	private final NotificationDao notificationDao;
 
+	@NonNull
+	private final ProfileActivator profileActivator;
+
+	@NonNull
+	private final EpGoogleCalendarService epGoogleCalendarService;
+
 	@Override
 	@Transactional
 	public ResponseEntityDto applyLeaveRequest(@NonNull LeaveRequestDto leaveRequestDto) {
@@ -200,6 +208,10 @@ public class LeaveServiceImpl implements LeaveService {
 
 		LeaveRequestByIdResponseDto leaveRequestResponseDto = leaveMapper
 			.leaveRequestToLeaveRequestByIdResponseDto(leaveRequest);
+
+		if (profileActivator.isEpProfile()) {
+			epGoogleCalendarService.applyLeaveCalenderEventCreation(user, leaveRequest);
+		}
 
 		boolean isSingleDay = leaveRequest.getStartDate().equals(leaveRequest.getEndDate());
 		List<EmployeeManager> employeeManagers = employeeManagerDao.findByEmployee(user.getEmployee());
