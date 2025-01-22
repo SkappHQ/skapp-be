@@ -17,7 +17,6 @@ import com.skapp.community.leaveplanner.model.LeaveRequest;
 import com.skapp.community.leaveplanner.model.LeaveRequestAttachment;
 import com.skapp.community.leaveplanner.repository.LeaveRequestDao;
 import com.skapp.community.peopleplanner.model.Employee;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
@@ -49,19 +48,14 @@ import java.util.stream.Stream;
 @Slf4j
 public class FileStorageServiceImpl implements FileStorageService {
 
-	@NonNull
 	private final FileStorageConfig fileStorageConfig;
 
-	@NonNull
 	private final OrganizationDao organizationDao;
 
-	@NonNull
 	private final LeaveRequestDao leaveRequestDao;
 
-	@NonNull
 	private final MessageUtil messageUtil;
 
-	@NonNull
 	private final UserService userService;
 
 	private static final String ALGORITHM = "AES";
