@@ -7,6 +7,8 @@ import com.skapp.community.common.model.OrganizationConfig_;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.model.User_;
 import com.skapp.community.common.payload.response.PageDto;
+import com.skapp.community.common.type.CriteriaBuilderSqlFunction;
+import com.skapp.community.common.type.CriteriaBuilderSqlLiteral;
 import com.skapp.community.common.type.OrganizationConfigType;
 import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.common.util.MessageUtil;
@@ -265,13 +267,11 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		}
 
 		if (year > 0) {
-			predicates
-				.add(criteriaBuilder.or(
-						criteriaBuilder.equal(criteriaBuilder.function("YEAR", Integer.class,
-								root.get(LeaveEntitlement_.validFrom)), year),
-						criteriaBuilder.equal(
-								criteriaBuilder.function("YEAR", Integer.class, root.get(LeaveEntitlement_.validTo)),
-								year)));
+			predicates.add(criteriaBuilder.or(
+					criteriaBuilder.equal(criteriaBuilder.function(CriteriaBuilderSqlFunction.YEAR.getFunctionName(),
+							Integer.class, root.get(LeaveEntitlement_.validFrom)), year),
+					criteriaBuilder.equal(criteriaBuilder.function(CriteriaBuilderSqlFunction.YEAR.getFunctionName(),
+							Integer.class, root.get(LeaveEntitlement_.validTo)), year)));
 		}
 
 		if (leaveTypeIds != null && !leaveTypeIds.isEmpty()) {
@@ -623,8 +623,9 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		Expression<String> employeeName = cb.concat(cb.concat(employee.get(Employee_.firstName), cb.literal(" ")),
 				employee.get(Employee_.lastName));
 
-		Expression<String> teams = cb.function("GROUP_CONCAT", String.class,
-				cb.function("DISTINCT", String.class, team.get(Team_.teamName)));
+		Expression<String> teams = cb.function(CriteriaBuilderSqlFunction.GROUP_CONCAT.getFunctionName(), String.class,
+				cb.function(CriteriaBuilderSqlFunction.DISTINCT.getFunctionName(), String.class,
+						team.get(Team_.teamName)));
 
 		query.select(cb.construct(EmployeeCustomEntitlementReportExportDto.class, employee.get(Employee_.employeeId),
 				employeeName, teams, leaveType.get(LeaveType_.name),
@@ -682,14 +683,21 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.teams, JoinType.LEFT);
 		Join<EmployeeTeam, Team> team = employeeTeam.join(EmployeeTeam_.team, JoinType.LEFT);
 
-		Expression<String> teams = cb.function("GROUP_CONCAT", String.class,
-				cb.function("DISTINCT", String.class, team.get(Team_.teamName)));
+		Expression<String> teams = cb.function(CriteriaBuilderSqlFunction.GROUP_CONCAT.getFunctionName(), String.class,
+				cb.function(CriteriaBuilderSqlFunction.DISTINCT.getFunctionName(), String.class,
+						team.get(Team_.teamName)));
 
-		Expression<String> startDateFormatted = cb.function("CONCAT", String.class, cb.function("DATE_FORMAT",
-				String.class, leaveEntitlement.get(LeaveEntitlement_.validFrom), cb.literal("%D %b %Y")));
+		Expression<String> startDateFormatted = cb.function(CriteriaBuilderSqlFunction.CONCAT.getFunctionName(),
+				String.class,
+				cb.function(CriteriaBuilderSqlFunction.DATE_FORMAT.getFunctionName(), String.class,
+						leaveEntitlement.get(LeaveEntitlement_.validFrom),
+						cb.literal(CriteriaBuilderSqlLiteral.SPACE_DATE_PATTERN.getValue())));
 
-		Expression<String> endDateFormatted = cb.function("CONCAT", String.class, cb.function("DATE_FORMAT",
-				String.class, leaveEntitlement.get(LeaveEntitlement_.validTo), cb.literal("%D %b %Y")));
+		Expression<String> endDateFormatted = cb.function(CriteriaBuilderSqlFunction.CONCAT.getFunctionName(),
+				String.class,
+				cb.function(CriteriaBuilderSqlFunction.DATE_FORMAT.getFunctionName(), String.class,
+						leaveEntitlement.get(LeaveEntitlement_.validTo),
+						cb.literal(CriteriaBuilderSqlLiteral.SPACE_DATE_PATTERN.getValue())));
 
 		query.select(cb.construct(EmployeeCustomEntitlementResponseDto.class, employee.get(Employee_.employeeId),
 				employee.get(Employee_.firstName), employee.get(Employee_.lastName), employee.get(Employee_.authPic),
@@ -754,8 +762,9 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		Join<EmployeeTeam, Team> team = employeeTeam.join(EmployeeTeam_.team);
 
 		teamsSubquery
-			.select(cb.function("GROUP_CONCAT", String.class,
-					cb.function("DISTINCT", String.class, team.get(Team_.teamName))))
+			.select(cb.function(CriteriaBuilderSqlFunction.GROUP_CONCAT.getFunctionName(), String.class,
+					cb.function(CriteriaBuilderSqlFunction.DISTINCT.getFunctionName(), String.class,
+							team.get(Team_.teamName))))
 			.where(cb.equal(employeeTeam.get(EmployeeTeam_.employee), employee));
 
 		Expression<String> employeeName = cb.concat(cb.concat(employee.get(Employee_.firstName), cb.literal(" ")),
@@ -808,10 +817,11 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 			throw new IllegalArgumentException(
 					messageUtil.getMessage(LeaveMessageConstant.LEAVE_ERROR_LEAVE_CYCLE_CONFIG_NOT_FOUND));
 		}
-		int startMonth = leaveCycleConfig.get("start").get("month").intValue();
-		int startDate = leaveCycleConfig.get("start").get("date").intValue();
-		int endMonth = leaveCycleConfig.get("end").get("month").intValue();
-		int endDate = leaveCycleConfig.get("end").get("date").intValue();
+		int startMonth = leaveCycleConfig.get(LeaveModuleConstant.START).get(LeaveModuleConstant.MONTH).intValue();
+		int startDate = leaveCycleConfig.get(LeaveModuleConstant.START).get(LeaveModuleConstant.DATE).intValue();
+		int endMonth = leaveCycleConfig.get(LeaveModuleConstant.END).get(LeaveModuleConstant.MONTH).intValue();
+		int endDate = leaveCycleConfig.get(LeaveModuleConstant.END).get(LeaveModuleConstant.DATE).intValue();
+
 		int leaveCycleEndYear = LeaveModuleUtil.getLeaveCycleEndYear(startMonth, startDate);
 		int cycleStartYear = startMonth == 1 && startDate == 1 ? leaveCycleEndYear : leaveCycleEndYear - 1;
 		if (leaveEntitlementsFilterDto != null && (leaveEntitlementsFilterDto.getStartDate() != null
@@ -839,10 +849,11 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 					messageUtil.getMessage(LeaveMessageConstant.LEAVE_ERROR_LEAVE_CYCLE_CONFIG_NOT_FOUND));
 		}
 
-		int startMonth = leaveCycleConfig.get("start").get("month").intValue();
-		int startDate = leaveCycleConfig.get("start").get("date").intValue();
-		int endMonth = leaveCycleConfig.get("end").get("month").intValue();
-		int endDate = leaveCycleConfig.get("end").get("date").intValue();
+		int startMonth = leaveCycleConfig.get(LeaveModuleConstant.START).get(LeaveModuleConstant.MONTH).intValue();
+		int startDate = leaveCycleConfig.get(LeaveModuleConstant.START).get(LeaveModuleConstant.DATE).intValue();
+		int endMonth = leaveCycleConfig.get(LeaveModuleConstant.END).get(LeaveModuleConstant.MONTH).intValue();
+		int endDate = leaveCycleConfig.get(LeaveModuleConstant.END).get(LeaveModuleConstant.DATE).intValue();
+
 		int leaveCycleEndYear = LeaveModuleUtil.getLeaveCycleEndYear(startMonth, startDate);
 		int cycleStartYear = startMonth == 1 && startDate == 1 ? leaveCycleEndYear : leaveCycleEndYear - 1;
 

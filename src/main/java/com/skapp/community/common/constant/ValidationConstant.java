@@ -23,6 +23,4 @@ public class ValidationConstant {
 	 */
 	public static final String JOB_FAMILY_NAME_TITLE_REGEX = "[a-zA-Z\\d\\s-_&/|\\[\\]]+";
 
-	public static final String VALID_IDENTIFICATION_NUMBER_REGEXP = "^[a-zA-Z0-9\\-_]*$";
-
 }

@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureMockMvc
 @SpringBootTest
-public class LeaveAnalyticsControllerIntegrationTest {
+class LeaveAnalyticsControllerIntegrationTest {
 
 	@Autowired
 	private AuthorityService authorityService;
@@ -38,7 +38,7 @@ public class LeaveAnalyticsControllerIntegrationTest {
 	@Autowired
 	private MockMvc mvc;
 
-	private final String PATH = "/v1/leave/analytics";
+	private final String path = "/v1/leave/analytics";
 
 	@BeforeEach
 	public void setup() {
@@ -83,7 +83,7 @@ public class LeaveAnalyticsControllerIntegrationTest {
 		params.add("endDate", String.valueOf(LocalDate.of(LocalDate.now().getYear(), Month.DECEMBER, 30)));
 		params.add("status", "PENDING");
 
-		mvc.perform(get(PATH.concat("/all/leaves")).params(params).accept(MediaType.APPLICATION_JSON))
+		mvc.perform(get(path.concat("/all/leaves")).params(params).accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("['results'][0]['items'][0]['status']").value("PENDING"));
@@ -97,7 +97,7 @@ public class LeaveAnalyticsControllerIntegrationTest {
 		params.add("endDate", String.valueOf(LocalDate.of(LocalDate.now().getYear(), Month.DECEMBER, 30)));
 		params.add("status", "APPROVED");
 
-		mvc.perform(get(PATH.concat("/all/leaves")).params(params).accept(MediaType.APPLICATION_JSON))
+		mvc.perform(get(path.concat("/all/leaves")).params(params).accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("['results'][0]['items'][0]['status']").value("APPROVED"));
@@ -112,7 +112,7 @@ public class LeaveAnalyticsControllerIntegrationTest {
 		params.add("status", "PENDING");
 		params.add("searchKeyword", "Lastname Two");
 
-		mvc.perform(get(PATH.concat("/all/leaves")).params(params).accept(MediaType.APPLICATION_JSON))
+		mvc.perform(get(path.concat("/all/leaves")).params(params).accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("['results'][0]['items'][0]['status']").value("PENDING"))

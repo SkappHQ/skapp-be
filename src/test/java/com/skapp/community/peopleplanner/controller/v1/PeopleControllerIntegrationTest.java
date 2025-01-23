@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureMockMvc
 @SpringBootTest
-public class PeopleControllerIntegrationTest {
+class PeopleControllerIntegrationTest {
 
 	@Autowired
 	private ObjectMapper objectMapper;
@@ -53,7 +53,7 @@ public class PeopleControllerIntegrationTest {
 	@Autowired
 	private MockMvc mvc;
 
-	private final String PATH = "/v1/people";
+	private final String path = "/v1/people";
 
 	@Autowired
 	private MessageUtil messageUtil;
@@ -61,9 +61,7 @@ public class PeopleControllerIntegrationTest {
 	@BeforeEach
 	public void setup() {
 
-		/**
-		 * Set mocked user and a mocked security context
-		 */
+		// Set mocked user and a mocked security context
 		User mockUser = new User();
 		mockUser.setEmail("user1@gmail.com");
 		mockUser.setPassword("$2a$12$CGe4n75Yejv/O8dnOTD7R.x0LruTiKM22kcdc3YNl4RRw01srJsB6");
@@ -94,28 +92,13 @@ public class PeopleControllerIntegrationTest {
 		SecurityContextHolder.setContext(securityContext);
 	}
 
-	// @Test
-	// void addEmployee_withJobRole_and_Level_returnsHttpStatusCreated() throws Exception
-	// {
-	// EmployeeDetailsDto employeeDetailsDto = getEmployeeDetails();
-	// EmployeeProgressionsDto employeeProgressionsDto = new EmployeeProgressionsDto();
-	// employeeProgressionsDto.setJobFamilyId(2L);
-	// employeeProgressionsDto.setJobTitleId(3L);
-	// mvc.perform(post(PATH.concat("/employee")).contentType(MediaType.APPLICATION_JSON)
-	// .content(objectMapper.writeValueAsString(employeeDetailsDto))
-	// .accept(MediaType.APPLICATION_JSON))
-	// .andDo(print())
-	// .andExpect(status().isCreated())
-	// .andExpect(jsonPath("['status']").value("successful"));
-	// }
-
 	@Test
 	void addEmployee_withInvalidManagers_returnsEntityNotFound() throws Exception {
 		EmployeeDetailsDto employeeDetailsDto = getEmployeeDetails();
 		employeeDetailsDto.setWorkEmail("username20@gmail.com");
 		employeeDetailsDto.setPrimaryManager(25L);
 
-		mvc.perform(post(PATH.concat("/employee")).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(post(path.concat("/employee")).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(employeeDetailsDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -124,40 +107,13 @@ public class PeopleControllerIntegrationTest {
 			.andExpect(jsonPath("['results'][0]['message']").value("Manager not found"));
 	}
 
-	// @Test
-	// void addEmployee_withDuplicateManagers_returnsBadRequest() throws Exception {
-	// EmployeeDetailsDto employeeDetailsDto = getEmployeeDetails();
-	// employeeDetailsDto.setWorkEmail("addEmployee_withDuplicateManagers@gmail.com");
-	// employeeDetailsDto.setFirstName("addEmployeeWithDuplicateManagersName");
-	// employeeDetailsDto.setLastName("addEmployeeWithDuplicateManagersName");
-	//
-	// RoleRequestDto role = new RoleRequestDto();
-	// role.setAttendanceRole(Role.ATTENDANCE_ADMIN);
-	// role.setLeaveRole(Role.LEAVE_ADMIN);
-	// role.setPeopleRole(Role.PEOPLE_ADMIN);
-	// role.setIsSuperAdmin(true);
-	//
-	// employeeDetailsDto.setUserRoles(role);
-	//
-	// employeeDetailsDto.setSecondaryManager(1L);
-	// mvc.perform(post(PATH.concat("/employee")).contentType(MediaType.APPLICATION_JSON)
-	// .content(objectMapper.writeValueAsString(employeeDetailsDto))
-	// .accept(MediaType.APPLICATION_JSON))
-	// .andDo(print())
-	// .andExpect(status().isBadRequest())
-	// .andExpect(jsonPath("['status']").value("unsuccessful"))
-	// .andExpect(jsonPath("['results'][0]['message']")
-	// .value("A manager can't be both a direct and a secondary manager of an employee at
-	// the same time"));
-	// }
-
 	@Test
 	void addEmployee_withInvalidLastName_returnsBadRequest() throws Exception {
 		EmployeeDetailsDto employeeDetailsDto = getEmployeeDetails();
 		employeeDetailsDto.setFirstName("first name");
 		employeeDetailsDto.setLastName("last name 456");
 
-		mvc.perform(post(PATH.concat("/employee")).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(post(path.concat("/employee")).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(employeeDetailsDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -173,7 +129,7 @@ public class PeopleControllerIntegrationTest {
 		employeeDetailsDto.setFirstName("first name 123");
 		employeeDetailsDto.setLastName("last name");
 
-		mvc.perform(post(PATH.concat("/employee")).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(post(path.concat("/employee")).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(employeeDetailsDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -187,7 +143,7 @@ public class PeopleControllerIntegrationTest {
 	void deleteEmployeeByIdApi_withoutUserNotExists_returnsHttpStatusNotFound() throws Exception {
 		EmployeeUpdateDto updateDto = new EmployeeUpdateDto();
 		updateDto.setFirstName("newName");
-		mvc.perform(patch(PATH.concat("/employee/100")).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(patch(path.concat("/employee/100")).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(updateDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())

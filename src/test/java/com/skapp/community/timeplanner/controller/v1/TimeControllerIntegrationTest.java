@@ -49,7 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class TimeControllerIntegrationTest {
+class TimeControllerIntegrationTest {
 
 	@Autowired
 	private AuthorityService authorityService;
@@ -60,14 +60,12 @@ public class TimeControllerIntegrationTest {
 	@Autowired
 	private MockMvc mvc;
 
-	private final String PATH = "/v1/time";
+	private final String path = "/v1/time";
 
 	@BeforeEach
 	public void setup() {
 
-		/**
-		 * Set mocked user and a mocked security context
-		 */
+		// Set mocked user and a mocked security context
 		User mockUser = new User();
 		mockUser.setEmail("user1@gmail.com");
 		mockUser.setPassword("$2a$12$CGe4n75Yejv/O8dnOTD7R.x0LruTiKM22kcdc3YNl4RRw01srJsB6");
@@ -125,7 +123,7 @@ public class TimeControllerIntegrationTest {
 	@Test
 	@Order(1)
 	void getActiveTimeSlotWhenTimeRecordAvailable_ButClockedOut_ReturnsHTTPSBadRequest() throws Exception {
-		mvc.perform(get(PATH.concat("/active-slot")).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(get(path.concat("/active-slot")).contentType(MediaType.APPLICATION_JSON)
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isOk())
@@ -143,7 +141,7 @@ public class TimeControllerIntegrationTest {
 		addTimeRecordDto.setRecordActionType(TimeRecordActionTypes.START);
 		addTimeRecordDto.setTime(startTime);
 
-		mvc.perform(post(PATH.concat("/record")).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(post(path.concat("/record")).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(addTimeRecordDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -159,7 +157,7 @@ public class TimeControllerIntegrationTest {
 		addTimeRecordDto.setRecordActionType(TimeRecordActionTypes.START);
 		addTimeRecordDto.setTime(DateTimeUtils.getCurrentUtcDateTime());
 
-		mvc.perform(post(PATH.concat("/record")).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(post(path.concat("/record")).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(addTimeRecordDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -175,7 +173,7 @@ public class TimeControllerIntegrationTest {
 		addTimeRecordDto.setRecordActionType(TimeRecordActionTypes.RESUME);
 		addTimeRecordDto.setTime(DateTimeUtils.getCurrentUtcDateTime().minusDays(2L));
 
-		mvc.perform(post(PATH.concat("/record")).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(post(path.concat("/record")).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(addTimeRecordDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -187,7 +185,7 @@ public class TimeControllerIntegrationTest {
 	@Test
 	@Order(2)
 	void getActiveTimeSlot_ReturnsOk() throws Exception {
-		mvc.perform(get(PATH.concat("/active-slot")).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(get(path.concat("/active-slot")).contentType(MediaType.APPLICATION_JSON)
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isOk())
@@ -208,7 +206,7 @@ public class TimeControllerIntegrationTest {
 		manualEntryRequestDto.setRecordId(1L);
 		manualEntryRequestDto.setZoneId(String.valueOf(ZoneId.systemDefault()));
 
-		mvc.perform(post(PATH.concat("/manual-entry")).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(post(path.concat("/manual-entry")).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(manualEntryRequestDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -229,7 +227,7 @@ public class TimeControllerIntegrationTest {
 		manualEntryRequestDto.setRecordId(1L);
 		manualEntryRequestDto.setZoneId(String.valueOf(ZoneId.systemDefault()));
 
-		mvc.perform(post(PATH.concat("/manual-entry")).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(post(path.concat("/manual-entry")).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(manualEntryRequestDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -250,7 +248,7 @@ public class TimeControllerIntegrationTest {
 		manualEntryRequestDto.setRecordId(3L);
 		manualEntryRequestDto.setZoneId(ZoneId.systemDefault().getId());
 
-		mvc.perform(post(PATH.concat("/manual-entry")).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(post(path.concat("/manual-entry")).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(manualEntryRequestDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -264,7 +262,7 @@ public class TimeControllerIntegrationTest {
 		TimeRequestManagerPatchDto timeRequestManagerPatchDto = new TimeRequestManagerPatchDto();
 		timeRequestManagerPatchDto.setStatus(RequestStatus.APPROVED);
 
-		mvc.perform(patch(PATH.concat("/time-request/1")).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(patch(path.concat("/time-request/1")).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(timeRequestManagerPatchDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -278,21 +276,13 @@ public class TimeControllerIntegrationTest {
 		TimeRequestManagerPatchDto timeRequestManagerPatchDto = new TimeRequestManagerPatchDto();
 		timeRequestManagerPatchDto.setStatus(RequestStatus.APPROVED);
 
-		mvc.perform(patch(PATH.concat("/time-request/100")).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(patch(path.concat("/time-request/100")).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(timeRequestManagerPatchDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("['status']").value("unsuccessful"));
 	}
-
-	// @Test
-	// void
-	// individualWorkTimeUtilizationByAdmin_notSupervisingEmployee_returnsHttpStatusOk()
-	// throws Exception {
-	// mvc.perform(get(PATH.concat("/individual-utilization/1")).contentType(MediaType.APPLICATION_JSON)
-	// .accept(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isOk());
-	// }
 
 	@Test
 	void managerTeamTimeRecordSummary_withInvalidDateRange_returnsBadRequest() throws Exception {
@@ -304,7 +294,7 @@ public class TimeControllerIntegrationTest {
 				String.valueOf(DateTimeUtils.getUtcLocalDate(DateTimeUtils.getCurrentYear(), 3, 29)));
 		queryParams.add("teamId", "1");
 		queryParams.add("filterTime", "DATE_RANGE");
-		mvc.perform(get(PATH.concat("/team-time-record-summary")).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(get(path.concat("/team-time-record-summary")).contentType(MediaType.APPLICATION_JSON)
 			.params(queryParams)
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())

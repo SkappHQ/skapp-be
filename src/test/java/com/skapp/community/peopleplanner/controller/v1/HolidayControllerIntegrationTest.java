@@ -48,7 +48,7 @@ class HolidayControllerIntegrationTest {
 	@Autowired
 	private MockMvc mvc;
 
-	private final String PATH = "/v1/holiday";
+	private final String path = "/v1/holiday";
 
 	@BeforeEach
 	public void setup() {
@@ -87,7 +87,7 @@ class HolidayControllerIntegrationTest {
 	@Test
 	void getAllHolidays_returnSuccessful() throws Exception {
 
-		mvc.perform(get(PATH).accept(MediaType.APPLICATION_JSON))
+		mvc.perform(get(path).accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$['status']").value("successful"))
@@ -103,7 +103,7 @@ class HolidayControllerIntegrationTest {
 		params.add("isPagination", String.valueOf(true));
 		params.add("holidayDurations", "FULL_DAY");
 
-		mvc.perform(get(PATH).params(params).accept(MediaType.APPLICATION_JSON))
+		mvc.perform(get(path).params(params).accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$['status']").value("successful"))
@@ -127,7 +127,7 @@ class HolidayControllerIntegrationTest {
 		holidayBulkRequestDto.setYear(DateTimeUtils.getCurrentYear());
 		holidayBulkRequestDto.setHolidayDtoList(holidayDtoList);
 
-		mvc.perform(post(PATH.concat("/bulk")).content(objectMapper.writeValueAsString(holidayBulkRequestDto))
+		mvc.perform(post(path.concat("/bulk")).content(objectMapper.writeValueAsString(holidayBulkRequestDto))
 			.contentType(MediaType.APPLICATION_JSON)
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -142,7 +142,7 @@ class HolidayControllerIntegrationTest {
 		List<Long> holidayIds = List.of(7L);
 		holidaysDeleteRequestDto.setHolidayIds(holidayIds);
 
-		mvc.perform(delete(PATH.concat("/selected")).content(objectMapper.writeValueAsString(holidaysDeleteRequestDto))
+		mvc.perform(delete(path.concat("/selected")).content(objectMapper.writeValueAsString(holidaysDeleteRequestDto))
 			.contentType(MediaType.APPLICATION_JSON)
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -155,7 +155,7 @@ class HolidayControllerIntegrationTest {
 	@Test
 	void deleteAllHolidays_returnSuccessful() throws Exception {
 
-		mvc.perform(delete(PATH.concat("/" + DateTimeUtils.getCurrentYear())).accept(MediaType.APPLICATION_JSON))
+		mvc.perform(delete(path.concat("/" + DateTimeUtils.getCurrentYear())).accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$['status']").value("successful"))

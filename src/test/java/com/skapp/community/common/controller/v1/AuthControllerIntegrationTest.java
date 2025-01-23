@@ -16,7 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureMockMvc
 @SpringBootTest
-public class AuthControllerIntegrationTest {
+class AuthControllerIntegrationTest {
 
 	@Autowired
 	private ObjectMapper objectMapper;
@@ -24,15 +24,15 @@ public class AuthControllerIntegrationTest {
 	@Autowired
 	private MockMvc mvc;
 
-	private final String PATH = "/v1/auth";
-
 	@Test
-	public void signin_ReturnsOk() throws Exception {
+	void signin_ReturnsOk() throws Exception {
 		SignInRequestDto signInRequestDto = new SignInRequestDto();
 		signInRequestDto.setEmail("user1@gmail.com");
 		signInRequestDto.setPassword("Test@123");
 
-		mvc.perform(post(PATH.concat("/sign-in")).contentType(MediaType.APPLICATION_JSON)
+		String path = "/v1/auth";
+
+		mvc.perform(post(path.concat("/sign-in")).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(signInRequestDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())

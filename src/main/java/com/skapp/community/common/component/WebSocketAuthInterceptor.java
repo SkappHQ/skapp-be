@@ -8,6 +8,7 @@ import com.skapp.community.common.service.JwtService;
 import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Component
 @AllArgsConstructor
 public class WebSocketAuthInterceptor implements HandshakeInterceptor {
@@ -52,6 +54,7 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
 	@Override
 	public void afterHandshake(@NonNull ServerHttpRequest request, @NonNull ServerHttpResponse response,
 			@NonNull WebSocketHandler wsHandler, Exception exception) {
+		log.info("After Handshake {}", request.getURI());
 	}
 
 	private String getQueryParam(String query) {

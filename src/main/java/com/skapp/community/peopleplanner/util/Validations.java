@@ -13,8 +13,6 @@ import com.skapp.community.peopleplanner.payload.request.EmployeeFamilyDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
 import com.skapp.community.peopleplanner.payload.request.EmploymentVisaDto;
 import com.skapp.community.peopleplanner.payload.request.ProbationPeriodDto;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -29,9 +27,11 @@ import static com.skapp.community.common.util.Validation.PHONE_NUMBER_PATTERN;
 import static com.skapp.community.common.util.Validation.VALID_IDENTIFICATION_NUMBER_REGEXP;
 import static com.skapp.community.common.util.Validation.VALID_NIN_NUMBER_REGEXP;
 
-@Component
-@RequiredArgsConstructor
 public class Validations {
+
+	private Validations() {
+		throw new IllegalStateException("Utility class");
+	}
 
 	public static boolean isEmployeeNameValid(String name) {
 		if (!name.matches(NAME_REGEX)) {

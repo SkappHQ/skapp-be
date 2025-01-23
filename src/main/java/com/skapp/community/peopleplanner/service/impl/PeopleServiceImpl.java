@@ -429,11 +429,9 @@ public class PeopleServiceImpl implements PeopleService {
 		boolean isSuperAdmin = currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin();
 		boolean isPeopleAdmin = Role.PEOPLE_ADMIN.equals(currentUser.getEmployee().getEmployeeRole().getPeopleRole());
 
-		if (!isSuperAdmin && !isPeopleAdmin) {
-			if (!Objects.equals(currentUser.getEmployee().getEmployeeId(), employeeId)
-					|| !Objects.equals(currentUser.getEmail(), employeeUpdateDto.getEmail())) {
-				throw new ModuleException(CommonMessageConstant.COMMON_ERROR_UNAUTHORIZED_ACCESS);
-			}
+		if (!isSuperAdmin && !isPeopleAdmin && (!Objects.equals(currentUser.getEmployee().getEmployeeId(), employeeId)
+				|| !Objects.equals(currentUser.getEmail(), employeeUpdateDto.getEmail()))) {
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_UNAUTHORIZED_ACCESS);
 		}
 
 		rolesService.validateRoles(employeeUpdateDto.getUserRoles());
@@ -944,7 +942,7 @@ public class PeopleServiceImpl implements PeopleService {
 			List<Team> supervisedTeams = allTeams.stream()
 				.filter(team -> employeeTeams.stream()
 					.anyMatch(et -> et.getTeam().getTeamId().equals(team.getTeamId()) && et.getIsSupervisor()))
-				.collect(Collectors.toList());
+				.toList();
 
 			List<Employee> allEmployees = employeeDao.findEmployeeByName(keyword);
 
@@ -973,7 +971,7 @@ public class PeopleServiceImpl implements PeopleService {
 			List<Employee> filteredEmployees = allEmployees.stream()
 				.filter(employee -> managedEmployeeIds.contains(employee.getEmployeeId())
 						|| finalSupervisedEmployeeIds.contains(employee.getEmployeeId()))
-				.collect(Collectors.toList());
+				.toList();
 
 			AnalyticsSearchResponseDto analyticsSearchResponseDto = new AnalyticsSearchResponseDto(
 					peopleMapper.employeeListToEmployeeSummarizedResponseDto(filteredEmployees),

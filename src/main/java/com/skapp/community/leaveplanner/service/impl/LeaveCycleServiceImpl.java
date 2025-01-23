@@ -203,7 +203,6 @@ public class LeaveCycleServiceImpl implements LeaveCycleService {
 		start.put(LeaveModuleConstant.MONTH, startMonth);
 		start.put(LeaveModuleConstant.DATE, startDate);
 
-		// TODO: Check cycle end date with existing logic
 		end.put(LeaveModuleConstant.MONTH, cycleEndMonth);
 		end.put(LeaveModuleConstant.DATE, cycleEndDay);
 

@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureMockMvc
 @SpringBootTest
-public class LeaveControllerIntegrationTest {
+class LeaveControllerIntegrationTest {
 
 	@Autowired
 	private ObjectMapper objectMapper;
@@ -41,7 +41,7 @@ public class LeaveControllerIntegrationTest {
 	@Autowired
 	private MockMvc mvc;
 
-	private final String PATH = "/v1/leave";
+	private final String path = "/v1/leave";
 
 	@BeforeEach
 	public void setup() {
@@ -89,7 +89,7 @@ public class LeaveControllerIntegrationTest {
 		leaveRequestDto.setRequestDesc("Full day leave");
 		leaveRequestDto.setLeaveState(LeaveState.FULLDAY);
 
-		mvc.perform(post(PATH).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(post(path).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(leaveRequestDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -112,7 +112,7 @@ public class LeaveControllerIntegrationTest {
 		leaveRequestDto.setTypeId(6L);
 		leaveRequestDto.setLeaveState(LeaveState.HALFDAY_MORNING);
 
-		mvc.perform(post(PATH).contentType(MediaType.APPLICATION_JSON)
+		mvc.perform(post(path).contentType(MediaType.APPLICATION_JSON)
 			.content(objectMapper.writeValueAsString(leaveRequestDto))
 			.accept(MediaType.APPLICATION_JSON))
 			.andDo(print())
