@@ -73,20 +73,21 @@ public class JwtServiceImpl implements JwtService {
 		longDurationRoles.add(AuthConstants.AUTH_ROLE + Role.PEOPLE_ADMIN);
 		longDurationRoles.add(AuthConstants.AUTH_ROLE + Role.LEAVE_ADMIN);
 
-		boolean hasLongDurationRole = userDetails.getAuthorities().stream()
-				.anyMatch(authority -> longDurationRoles.contains(authority.getAuthority()));
+		boolean hasLongDurationRole = userDetails.getAuthorities()
+			.stream()
+			.anyMatch(authority -> longDurationRoles.contains(authority.getAuthority()));
 
 		long jwtRefreshTokenExpirationMs;
 
 		if (hasLongDurationRole) {
 			jwtRefreshTokenExpirationMs = jwtLongDurationRefreshTokenExpirationMs;
-		} else {
+		}
+		else {
 			jwtRefreshTokenExpirationMs = jwtShortDurationRefreshTokenExpirationMs;
 		}
 
 		return generateToken(claims, userDetails, jwtRefreshTokenExpirationMs);
 	}
-
 
 	/**
 	 * Validates the given JWT token by performing two checks:
