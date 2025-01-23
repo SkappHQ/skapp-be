@@ -22,7 +22,6 @@ import com.skapp.community.timeplanner.service.TimeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -46,19 +45,18 @@ import java.util.List;
 @Tag(name = "Time Controller", description = "Operations related to time recordings")
 public class TimeController {
 
-	@NonNull
 	final TimeService timeService;
 
 	@Operation(summary = "Update time configuration",
 			description = "Update time config for a particular day if it not exists creates the config")
 	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ATTENDANCE_ADMIN')")
-	@PatchMapping(value = "config", produces = MediaType.APPLICATION_JSON_VALUE)
+	@PatchMapping(value = "/config", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> updateTimeConfig(@Valid @RequestBody TimeConfigDto timeConfigDto) {
 		return new ResponseEntity<>(timeService.updateTimeConfigs(timeConfigDto), HttpStatus.OK);
 	}
 
 	@Operation(summary = "Get default time configuration", description = "Get all the time configurations available")
-	@GetMapping(value = "config", produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(value = "/config", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> getDefaultTimeConfig() {
 		return new ResponseEntity<>(timeService.getDefaultTimeConfigurations(), HttpStatus.OK);
 	}
@@ -232,9 +230,18 @@ public class TimeController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@Operation(summary = "Get pending time requests",
+			description = "Returns all the pending time requests of the employee")
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ATTENDANCE_MANAGER')")
+	@GetMapping(value = "/pending-requests/count")
+	public ResponseEntity<ResponseEntityDto> getPendingTimeRequestsCount() {
+		ResponseEntityDto response = timeService.getPendingTimeRequestsCount();
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 	@Operation(summary = "Edit Time Request",
 			description = "Edits an existing time request with the updated information provided.")
-	@PatchMapping(value = "/request", produces = "application/json")
+	@PatchMapping(value = "/request")
 	public ResponseEntity<ResponseEntityDto> editTimeRequest(@RequestBody EditTimeRequestDto timeRequestDto) {
 		ResponseEntityDto response = timeService.editTimeRequest(timeRequestDto);
 		return new ResponseEntity<>(response, HttpStatus.CREATED);

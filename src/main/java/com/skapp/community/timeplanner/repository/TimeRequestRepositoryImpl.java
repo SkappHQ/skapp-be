@@ -22,7 +22,6 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -38,7 +37,6 @@ import java.util.List;
 @Repository
 public class TimeRequestRepositoryImpl implements TimeRequestRepository {
 
-	@NonNull
 	private final EntityManager entityManager;
 
 	@Override
@@ -210,6 +208,30 @@ public class TimeRequestRepositoryImpl implements TimeRequestRepository {
 		query.setMaxResults(pageable.getPageSize());
 
 		return new PageImpl<>(query.getResultList(), pageable, totalRows);
+	}
+
+	@Override
+	public Long countSupervisedPendingTimeRequests(Long userId) {
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
+		Root<TimeRequest> timeRequestRoot = criteriaQuery.from(TimeRequest.class);
+
+		Join<TimeRequest, Employee> employee = timeRequestRoot.join(TimeRequest_.employee);
+		Join<Employee, EmployeeManager> managers = employee.join(Employee_.employees);
+		Join<EmployeeManager, Employee> managerEmployee = managers.join(EmployeeManager_.manager);
+		Join<Employee, User> user = employee.join(Employee_.user);
+
+		List<Predicate> predicates = new ArrayList<>();
+		predicates.add(criteriaBuilder.equal(user.get(User_.isActive), true));
+		predicates.add(criteriaBuilder.equal(managerEmployee.get(Employee_.employeeId), userId));
+		predicates.add(criteriaBuilder.equal(timeRequestRoot.get(TimeRequest_.status), RequestStatus.PENDING));
+
+		Predicate[] predicateArray = new Predicate[predicates.size()];
+		predicates.toArray(predicateArray);
+
+		criteriaQuery.select(criteriaBuilder.count(timeRequestRoot)).where(predicateArray).distinct(true);
+
+		return entityManager.createQuery(criteriaQuery).getSingleResult();
 	}
 
 	private List<Predicate> joinTimeRecordTable(EmployeeTimeRequestFilterDto filterDto,

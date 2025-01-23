@@ -29,4 +29,6 @@ public interface TimeRequestRepository {
 	Page<TimeRequest> findAllAssignEmployeesTimeRequests(Long userId, ManagerTimeRequestFilterDto timeRequestFilterDto,
 			Pageable pageable);
 
+	Long countSupervisedPendingTimeRequests(Long userId);
+
 }
