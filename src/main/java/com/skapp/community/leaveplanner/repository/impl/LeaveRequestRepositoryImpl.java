@@ -586,12 +586,12 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 
 			}
 
-			Predicate dateBetween = criteriaBuilder.and(
-					criteriaBuilder.between(root.get(LeaveRequest_.startDate), leaveRequestFilterDto.getStartDate(),
+			Predicate dateOverlap = criteriaBuilder.and(
+					criteriaBuilder.lessThanOrEqualTo(root.get(LeaveRequest_.startDate),
 							leaveRequestFilterDto.getEndDate()),
-					criteriaBuilder.between(root.get(LeaveRequest_.endDate), leaveRequestFilterDto.getStartDate(),
-							leaveRequestFilterDto.getEndDate()));
-			predicates.add(dateBetween);
+					criteriaBuilder.greaterThanOrEqualTo(root.get(LeaveRequest_.endDate),
+							leaveRequestFilterDto.getStartDate()));
+			predicates.add(dateOverlap);
 		}
 	}
 
@@ -690,12 +690,6 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 		criteriaQuery.select(root);
 		TypedQuery<LeaveRequest> typedQuery = entityManager.createQuery(criteriaQuery);
 		return typedQuery.getResultList();
-	}
-
-	@Override
-	public List<LeaveRequest> findRequestsByDateRangeAndEmployee(@NonNull Long employeeId,
-			LeaveRequestFilterDto leaveRequestFilterDto) {
-		return findLeaveRequestsByDateRange(leaveRequestFilterDto, employeeId);
 	}
 
 	public Page<LeaveRequest> findAllRequestsByEmployee(Long employeeId, LeaveRequestFilterDto leaveRequestFilterDto,
