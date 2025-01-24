@@ -32,7 +32,6 @@ import com.skapp.community.peopleplanner.service.RolesService;
 import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -49,29 +48,21 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class RolesServiceImpl implements RolesService {
 
-	@NonNull
 	private final EmployeeRoleDao employeeRoleDao;
 
-	@NonNull
 	@Getter
 	private final UserService userService;
 
-	@NonNull
 	private final EmployeeDao employeeDao;
 
-	@NonNull
 	private final TeamDao teamDao;
 
-	@NonNull
 	private final EmployeeTimelineDao employeeTimelineDao;
 
-	@NonNull
 	private final PeopleMapper peopleMapper;
 
-	@NonNull
 	private final ModuleRoleRestrictionDao moduleRoleRestrictionDao;
 
-	@NonNull
 	private final MessageUtil messageUtil;
 
 	@Override
@@ -393,7 +384,8 @@ public class RolesServiceImpl implements RolesService {
 		log.info("saveEmployeeRoles: execution started");
 	}
 
-	protected EmployeeRole setupBulkEmployeeRoles(Employee employee) {
+	@Override
+	public EmployeeRole setupBulkEmployeeRoles(Employee employee) {
 		EmployeeRole employeeRole = new EmployeeRole();
 		employeeRole.setEmployee(employee);
 		employeeRole.setPeopleRole(Role.PEOPLE_EMPLOYEE);

@@ -27,7 +27,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -36,7 +39,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.InvalidKeyException;
 import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
@@ -239,7 +244,8 @@ public class FileStorageServiceImpl implements FileStorageService {
 		}
 	}
 
-	private void encryptFile(File file) throws Exception {
+	private void encryptFile(File file) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException,
+			InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		Key key = generateKey();
 		Cipher cipher = Cipher.getInstance(ALGORITHM);
 		cipher.init(Cipher.ENCRYPT_MODE, key);
@@ -250,7 +256,8 @@ public class FileStorageServiceImpl implements FileStorageService {
 		writeByteArrayToFile(file, outputBytes);
 	}
 
-	private byte[] decryptFile(File file) throws Exception {
+	private byte[] decryptFile(File file) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException,
+			InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		Key key = generateKey();
 		Cipher cipher = Cipher.getInstance(ALGORITHM);
 		cipher.init(Cipher.DECRYPT_MODE, key);

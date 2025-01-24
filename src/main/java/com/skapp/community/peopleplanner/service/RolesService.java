@@ -3,6 +3,7 @@ package com.skapp.community.peopleplanner.service;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.type.ModuleType;
 import com.skapp.community.peopleplanner.model.Employee;
+import com.skapp.community.peopleplanner.model.EmployeeRole;
 import com.skapp.community.peopleplanner.payload.request.ModuleRoleRestrictionRequestDto;
 import com.skapp.community.peopleplanner.payload.request.RoleRequestDto;
 import com.skapp.community.peopleplanner.payload.response.ModuleRoleRestrictionResponseDto;
@@ -28,5 +29,7 @@ public interface RolesService {
 	void validateRoles(RoleRequestDto userRoles);
 
 	void saveSuperAdminRoles(Employee employee);
+
+	EmployeeRole setupBulkEmployeeRoles(Employee employee);
 
 }
