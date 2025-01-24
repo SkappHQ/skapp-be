@@ -60,9 +60,12 @@ springdoc:
 jwt:
   access-token:
     signing-key: ajsfjkHJKHKHFKDJsafadsfnkjdhkfhadsHJKHkjsadf
-    expiration-time: 86400000 # Expiration time in milliseconds (1 day)
+    expiration-time: 3600000 # Expiration time in milliseconds (1 hour)
   refresh-token:
-    expiration-time: 86400000 # Expiration time in milliseconds (1 day)
+    long-duration:
+      expiration-time: 2592000000 # Expiration time in milliseconds (30 days)
+    short-duration:
+      expiration-time: 21600000 # Expiration time in milliseconds (6 hours)
 
 encryptDecryptAlgorithm:
   secret: ${ENCRYPT_DECRYPT_SECRET}
