@@ -2,6 +2,7 @@ package com.skapp.community.common.service.impl;
 
 import com.skapp.community.common.constant.AuthConstants;
 import com.skapp.community.common.service.JwtService;
+import com.skapp.community.common.type.Role;
 import com.skapp.community.common.type.TokenType;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -16,10 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 @Slf4j
@@ -33,8 +31,11 @@ public class JwtServiceImpl implements JwtService {
 	@Value("${jwt.access-token.expiration-time}")
 	private Long jwtAccessTokenExpirationMs;
 
-	@Value("${jwt.refresh-token.expiration-time}")
-	private Long jwtRefreshTokenExpirationMs;
+	@Value("${jwt.refresh-token.long-duration.expiration-time}")
+	private Long jwtLongDurationRefreshTokenExpirationMs;
+
+	@Value("${jwt.refresh-token.short-duration.expiration-time}")
+	private Long jwtShortDurationRefreshTokenExpirationMs;
 
 	@Override
 	public String extractUserEmail(String token) {
@@ -65,6 +66,26 @@ public class JwtServiceImpl implements JwtService {
 	public String generateRefreshToken(UserDetails userDetails) {
 		Map<String, Object> claims = new HashMap<>();
 		claims.put(AuthConstants.TOKEN_TYPE, TokenType.REFRESH);
+
+		Set<String> longDurationRoles = new HashSet<>();
+		longDurationRoles.add(AuthConstants.AUTH_ROLE + Role.SUPER_ADMIN);
+		longDurationRoles.add(AuthConstants.AUTH_ROLE + Role.ATTENDANCE_ADMIN);
+		longDurationRoles.add(AuthConstants.AUTH_ROLE + Role.PEOPLE_ADMIN);
+		longDurationRoles.add(AuthConstants.AUTH_ROLE + Role.LEAVE_ADMIN);
+
+		boolean hasLongDurationRole = userDetails.getAuthorities()
+			.stream()
+			.anyMatch(authority -> longDurationRoles.contains(authority.getAuthority()));
+
+		long jwtRefreshTokenExpirationMs;
+
+		if (hasLongDurationRole) {
+			jwtRefreshTokenExpirationMs = jwtLongDurationRefreshTokenExpirationMs;
+		}
+		else {
+			jwtRefreshTokenExpirationMs = jwtShortDurationRefreshTokenExpirationMs;
+		}
+
 		return generateToken(claims, userDetails, jwtRefreshTokenExpirationMs);
 	}
 
