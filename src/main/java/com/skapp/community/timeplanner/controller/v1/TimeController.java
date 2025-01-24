@@ -49,14 +49,14 @@ public class TimeController {
 
 	@Operation(summary = "Update time configuration",
 			description = "Update time config for a particular day if it not exists creates the config")
-	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ATTENDANCE_ADMIN')")
-	@PatchMapping(value = "config", produces = MediaType.APPLICATION_JSON_VALUE)
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ATTENDANCE_ADMIN')")
+	@PatchMapping(value = "/config", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> updateTimeConfig(@Valid @RequestBody TimeConfigDto timeConfigDto) {
 		return new ResponseEntity<>(timeService.updateTimeConfigs(timeConfigDto), HttpStatus.OK);
 	}
 
 	@Operation(summary = "Get default time configuration", description = "Get all the time configurations available")
-	@GetMapping(value = "config", produces = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping(value = "/config", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> getDefaultTimeConfig() {
 		return new ResponseEntity<>(timeService.getDefaultTimeConfigurations(), HttpStatus.OK);
 	}
@@ -228,6 +228,15 @@ public class TimeController {
 	@PostMapping(value = "/record")
 	public ResponseEntity<ResponseEntityDto> addTimeRecord(@RequestBody AddTimeRecordDto addTimeRecordDto) {
 		ResponseEntityDto response = timeService.addTimeRecord(addTimeRecordDto);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@Operation(summary = "Get pending time requests",
+			description = "Returns all the pending time requests of the employee")
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ATTENDANCE_MANAGER')")
+	@GetMapping(value = "/pending-requests/count")
+	public ResponseEntity<ResponseEntityDto> getPendingTimeRequestsCount() {
+		ResponseEntityDto response = timeService.getPendingTimeRequestsCount();
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
