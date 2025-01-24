@@ -41,6 +41,7 @@ import com.skapp.community.peopleplanner.model.EmployeeManager;
 import com.skapp.community.peopleplanner.model.EmployeePeriod;
 import com.skapp.community.peopleplanner.model.EmployeePersonalInfo;
 import com.skapp.community.peopleplanner.model.EmployeeProgression;
+import com.skapp.community.peopleplanner.model.EmployeeRole;
 import com.skapp.community.peopleplanner.model.EmployeeTeam;
 import com.skapp.community.peopleplanner.model.EmployeeTimeline;
 import com.skapp.community.peopleplanner.model.EmployeeVisa;
@@ -57,13 +58,13 @@ import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeePersonalInfoDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeProgressionsDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
-import com.skapp.community.peopleplanner.payload.request.EmployeeRolesRequestDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeUpdateDto;
 import com.skapp.community.peopleplanner.payload.request.EmploymentVisaDto;
 import com.skapp.community.peopleplanner.payload.request.JobTitleDto;
 import com.skapp.community.peopleplanner.payload.request.NotificationSettingsPatchRequestDto;
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.request.ProbationPeriodDto;
+import com.skapp.community.peopleplanner.payload.request.RoleRequestDto;
 import com.skapp.community.peopleplanner.payload.response.AnalyticsSearchResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeBulkErrorResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeBulkResponseDto;
@@ -158,79 +159,54 @@ import static com.skapp.community.peopleplanner.constant.EmployeeTimelineConstan
 @RequiredArgsConstructor
 public class PeopleServiceImpl implements PeopleService {
 
-	@NonNull
 	private final UserService userService;
 
-	@NonNull
 	private final MessageUtil messageUtil;
 
-	@NonNull
 	private final PeopleMapper peopleMapper;
 
-	@NonNull
 	private final UserDao userDao;
 
-	@NonNull
 	private final TeamDao teamDao;
 
-	@NonNull
 	private final EmployeeDao employeeDao;
 
-	@NonNull
 	private final JobFamilyDao jobFamilyDao;
 
-	@NonNull
 	private final EmployeeProgressionDao employeeProgressionDao;
 
-	@NonNull
 	private final JobTitleDao jobTitleDao;
 
-	@NonNull
 	private final EmployeePeriodDao employeePeriodDao;
 
-	@NonNull
 	private final EmployeeVisaDao employeeVisaDao;
 
-	@NonNull
 	private final EmployeeEducationDao employeeEducationDao;
 
-	@NonNull
 	private final EmployeeFamilyDao employeeFamilyDao;
 
-	@NonNull
 	private final EmployeeTeamDao employeeTeamDao;
 
-	@NonNull
 	private final EmployeeTimelineDao employeeTimelineDao;
 
-	@NonNull
 	private final EmployeeManagerDao employeeManagerDao;
 
-	@NonNull
 	private final EmployeeTimelineService employeeTimelineService;
 
-	@NonNull
 	private final PasswordEncoder passwordEncoder;
 
-	@NonNull
 	private final RolesService rolesService;
 
-	@NonNull
 	private final PageTransformer pageTransformer;
 
-	@NonNull
 	private final PlatformTransactionManager transactionManager;
 
-	@NonNull
 	private final PeopleEmailService peopleEmailService;
 
-	@NonNull
 	private final ObjectMapper mapper;
 
-	@NonNull
 	private final EncryptionDecryptionService encryptionDecryptionService;
 
-	@NonNull
 	private final BulkContextService bulkContextService;
 
 	private final AsyncEmailServiceImpl asyncEmailServiceImpl;
@@ -275,6 +251,8 @@ public class PeopleServiceImpl implements PeopleService {
 		User user = new User();
 		user.setEmail(employeeDetailsDto.getWorkEmail());
 		user.setIsActive(true);
+		UserSettings userSettings = createNotificationSettings(employeeDetailsDto.getUserRoles(), user);
+		user.setSettings(userSettings);
 
 		String tempPassword = CommonModuleUtils.generateSecureRandomPassword();
 		Optional<User> firstUser = userDao.findById(1L);
@@ -379,6 +357,8 @@ public class PeopleServiceImpl implements PeopleService {
 
 		finalEmployee.setUser(user);
 		user.setEmployee(finalEmployee);
+		UserSettings userSettings = createNotificationSettings(employeeQuickAddDto.getUserRoles(), user);
+		user.setSettings(userSettings);
 
 		userDao.save(user);
 		employeeDao.save(finalEmployee);
@@ -1542,7 +1522,7 @@ public class PeopleServiceImpl implements PeopleService {
 		employee.setAccountStatus(employeeBulkDto.getAccountStatus());
 		employee.setEmploymentAllocation(employeeBulkDto.getEmploymentAllocation());
 
-		UserSettings userSettings = createNotificationSettings(user);
+		UserSettings userSettings = createNotificationSettingsForBulkUser(user);
 		user.setSettings(userSettings);
 
 		userDao.save(user);
@@ -1607,23 +1587,41 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 	}
 
-	private UserSettings createNotificationSettings(User user) {
-		log.info("createNotificationSettings: execution started");
+	private UserSettings createNotificationSettingsForBulkUser(User user) {
+		log.info("createNotificationSettingsForBulkUser: execution started");
 		UserSettings userSettings = new UserSettings();
 
-		EmployeeRolesRequestDto employeeRolesRequestDto = new EmployeeRolesRequestDto();
-		employeeRolesRequestDto.setPeopleRole(Role.PEOPLE_EMPLOYEE);
-		employeeRolesRequestDto.setLeaveRole(Role.LEAVE_EMPLOYEE);
-		employeeRolesRequestDto.setAttendanceRole(Role.ATTENDANCE_EMPLOYEE);
-		employeeRolesRequestDto.setIsSuperAdmin(false);
+		EmployeeRole employeeRole = rolesService.setupBulkEmployeeRoles(user.getEmployee());
+		ObjectNode notificationsObjectNode = mapper.createObjectNode();
+
+		boolean isLeaveRequestNotificationsEnabled = true;
+		boolean isTimeEntryNotificationsEnabled = true;
+		boolean isNudgeNotificationsEnabled = employeeRole.getIsSuperAdmin()
+				|| employeeRole.getLeaveRole() == Role.LEAVE_MANAGER || employeeRole.getLeaveRole() == Role.LEAVE_ADMIN;
+
+		notificationsObjectNode.put(NotificationSettingsType.LEAVE_REQUEST.getKey(),
+				isLeaveRequestNotificationsEnabled);
+		notificationsObjectNode.put(NotificationSettingsType.TIME_ENTRY.getKey(), isTimeEntryNotificationsEnabled);
+		notificationsObjectNode.put(NotificationSettingsType.LEAVE_REQUEST_NUDGE.getKey(), isNudgeNotificationsEnabled);
+
+		userSettings.setNotifications(notificationsObjectNode);
+		userSettings.setUser(user);
+
+		log.info("createNotificationSettingsForBulkUser: execution ended");
+		return userSettings;
+	}
+
+	private UserSettings createNotificationSettings(RoleRequestDto roleRequestDto, User user) {
+		log.info("createNotificationSettings: execution started");
+		UserSettings userSettings = new UserSettings();
 
 		ObjectNode notificationsObjectNode = mapper.createObjectNode();
 
 		boolean isLeaveRequestNotificationsEnabled = true;
 		boolean isTimeEntryNotificationsEnabled = true;
-		boolean isNudgeNotificationsEnabled = employeeRolesRequestDto.getIsSuperAdmin()
-				|| employeeRolesRequestDto.getLeaveRole() == Role.LEAVE_MANAGER
-				|| employeeRolesRequestDto.getLeaveRole() == Role.LEAVE_ADMIN;
+		boolean isNudgeNotificationsEnabled = roleRequestDto.getIsSuperAdmin()
+				|| roleRequestDto.getLeaveRole() == Role.LEAVE_MANAGER
+				|| roleRequestDto.getLeaveRole() == Role.LEAVE_ADMIN;
 
 		notificationsObjectNode.put(NotificationSettingsType.LEAVE_REQUEST.getKey(),
 				isLeaveRequestNotificationsEnabled);
