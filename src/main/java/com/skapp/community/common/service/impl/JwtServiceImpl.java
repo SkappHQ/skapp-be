@@ -67,27 +67,27 @@ public class JwtServiceImpl implements JwtService {
 		Map<String, Object> claims = new HashMap<>();
 		claims.put(AuthConstants.TOKEN_TYPE, TokenType.REFRESH);
 
-		Set<String> longDurationRoles = new HashSet<>();
-		longDurationRoles.add(AuthConstants.AUTH_ROLE + Role.SUPER_ADMIN);
-		longDurationRoles.add(AuthConstants.AUTH_ROLE + Role.ATTENDANCE_ADMIN);
-		longDurationRoles.add(AuthConstants.AUTH_ROLE + Role.PEOPLE_ADMIN);
-		longDurationRoles.add(AuthConstants.AUTH_ROLE + Role.LEAVE_ADMIN);
+		Set<String> shortDurationRoles = new HashSet<>();
+		shortDurationRoles.add(AuthConstants.AUTH_ROLE + Role.SUPER_ADMIN);
+		shortDurationRoles.add(AuthConstants.AUTH_ROLE + Role.ATTENDANCE_ADMIN);
+		shortDurationRoles.add(AuthConstants.AUTH_ROLE + Role.PEOPLE_ADMIN);
+		shortDurationRoles.add(AuthConstants.AUTH_ROLE + Role.LEAVE_ADMIN);
 
-		boolean hasLongDurationRole = userDetails.getAuthorities()
-			.stream()
-			.anyMatch(authority -> longDurationRoles.contains(authority.getAuthority()));
+		boolean hasShortDurationRole = userDetails.getAuthorities()
+				.stream()
+				.anyMatch(authority -> shortDurationRoles.contains(authority.getAuthority()));
 
 		long jwtRefreshTokenExpirationMs;
 
-		if (hasLongDurationRole) {
-			jwtRefreshTokenExpirationMs = jwtLongDurationRefreshTokenExpirationMs;
-		}
-		else {
+		if (hasShortDurationRole) {
 			jwtRefreshTokenExpirationMs = jwtShortDurationRefreshTokenExpirationMs;
+		} else {
+			jwtRefreshTokenExpirationMs = jwtLongDurationRefreshTokenExpirationMs;
 		}
 
 		return generateToken(claims, userDetails, jwtRefreshTokenExpirationMs);
 	}
+
 
 	/**
 	 * Validates the given JWT token by performing two checks:
