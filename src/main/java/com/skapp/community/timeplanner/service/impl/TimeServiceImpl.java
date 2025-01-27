@@ -75,6 +75,7 @@ import com.skapp.community.timeplanner.payload.response.EmployeeDailyTimeRecords
 import com.skapp.community.timeplanner.payload.response.EmployeeTimeRequestResponseDto;
 import com.skapp.community.timeplanner.payload.response.IndividualWorkHoursResponseDto;
 import com.skapp.community.timeplanner.payload.response.ManagerEmployeeDailyRecordsResponseDto;
+import com.skapp.community.timeplanner.payload.response.PendingTimeRequestsCountDto;
 import com.skapp.community.timeplanner.payload.response.TeamTimeRecordSummaryResponseDto;
 import com.skapp.community.timeplanner.payload.response.TimeConfigResponseDto;
 import com.skapp.community.timeplanner.payload.response.TimeRecordChipResponseDto;
@@ -100,7 +101,6 @@ import com.skapp.community.timeplanner.type.TimeRecordActionTypes;
 import com.skapp.community.timeplanner.util.TimeUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.NotNull;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -140,64 +140,44 @@ import static com.skapp.community.common.util.DateTimeUtils.MILLISECONDS_IN_AN_H
 @Slf4j
 public class TimeServiceImpl implements TimeService {
 
-	@NonNull
 	private final TimeConfigDao timeConfigDao;
 
-	@NonNull
 	private final ObjectMapper mapper;
 
-	@NonNull
 	private final MessageUtil messageUtil;
 
-	@NonNull
 	private final UserService userService;
 
-	@NonNull
 	private final TimeRecordDao timeRecordDao;
 
-	@NonNull
 	private final TimeSlotDao timeSlotDao;
 
-	@NonNull
 	private final AttendanceConfigService attendanceConfigService;
 
-	@NonNull
 	private final LeaveRequestDao leaveRequestDao;
 
-	@NonNull
 	private final HolidayDao holidayDao;
 
-	@NonNull
 	private final EmployeeDao employeeDao;
 
-	@NonNull
 	private final PeopleMapper peopleMapper;
 
-	@NonNull
 	private final LeaveMapper leaveMapper;
 
-	@NonNull
 	private final TimeRequestDao timeRequestDao;
 
-	@NonNull
 	private final TeamDao teamDao;
 
-	@NonNull
 	private final TimeMapper timeMapper;
 
-	@NonNull
 	private final CommonMapper commonMapper;
 
-	@NonNull
 	private final TimeEmailService timeEmailService;
 
-	@NonNull
 	private final PageTransformer pageTransformer;
 
-	@NonNull
 	private final EmployeeManagerDao employeeManagerDao;
 
-	@NonNull
 	private final AttendanceNotificationService attendanceNotificationService;
 
 	public static final String DEFAULT_TIME_CONFIG_KEY_HOUR = "hours";
@@ -327,6 +307,20 @@ public class TimeServiceImpl implements TimeService {
 		PageDto pageDto = getEmployeeTimeRecord(timeRecordFilterDto, employeeId);
 		log.info("getEmployeeDailyTimeRecordsByEmployeeId: execution ended by user: {}", userService.getCurrentUser());
 		return new ResponseEntityDto(false, pageDto);
+	}
+
+	@Override
+	public ResponseEntityDto getPendingTimeRequestsCount() {
+		log.info("getPendingTimeRequestsCount: execution started");
+
+		PendingTimeRequestsCountDto pendingTimeRequestsCountDto = new PendingTimeRequestsCountDto();
+		Long pendingRequestCount = timeRequestDao
+			.countSupervisedPendingTimeRequests(userService.getCurrentUser().getUserId());
+
+		pendingTimeRequestsCountDto.setPendingTimeRequestsCount(pendingRequestCount);
+
+		log.info("getPendingTimeRequestsCount: execution ended");
+		return new ResponseEntityDto(false, pendingTimeRequestsCountDto);
 	}
 
 	private PageDto getEmployeeTimeRecord(TimeRecordFilterDto timeRecordFilterDto, Long employeeId) {

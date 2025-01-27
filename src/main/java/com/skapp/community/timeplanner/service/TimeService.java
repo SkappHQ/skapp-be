@@ -89,4 +89,6 @@ public interface TimeService {
 
 	ResponseEntityDto getEmployeeDailyTimeRecordsByEmployeeId(TimeRecordFilterDto timeRecordFilterDto, Long employeeId);
 
+	ResponseEntityDto getPendingTimeRequestsCount();
+
 }

@@ -14,6 +14,7 @@ import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
 import com.skapp.community.peopleplanner.model.Holiday;
 import com.skapp.community.peopleplanner.model.Team;
+import com.skapp.community.peopleplanner.type.HolidayDuration;
 import com.skapp.community.timeplanner.model.TimeConfig;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -142,20 +143,65 @@ public class LeaveModuleUtil {
 		return false;
 	}
 
-	public static int getWorkingDaysBetweenTwoDates(LocalDate startDate, LocalDate endDate,
-			List<TimeConfig> timeConfigs, List<LocalDate> holidays, List<Holiday> holidayObjects,
-			LeaveRequest leaveRequest) {
+	public static HolidayDuration getHolidayAvailabilityOnGivenDate(LocalDate date, List<Holiday> holidayObjects) {
+		return holidayObjects.stream()
+			.filter(holiday -> holiday.getDate().equals(date))
+			.map(Holiday::getHolidayDuration)
+			.findFirst()
+			.orElse(null);
+	}
+
+	public static HolidayDuration getHolidayAvailabilityOnGivenDateRange(LocalDate startDate, LocalDate endDate,
+			List<Holiday> holidayObjects) {
 		if (startDate.isAfter(endDate)) {
 			LocalDate temp = startDate;
 			startDate = endDate;
 			endDate = temp;
 		}
-		int workDays = 0;
+
+		for (LocalDate currentDate = startDate; !currentDate.isAfter(endDate); currentDate = currentDate.plusDays(1)) {
+			LocalDate finalCurrentDate = currentDate;
+			HolidayDuration holidayDuration = holidayObjects.stream()
+				.filter(holiday -> holiday.getDate().equals(finalCurrentDate))
+				.map(Holiday::getHolidayDuration)
+				.findFirst()
+				.orElse(null);
+
+			if (holidayDuration == HolidayDuration.HALF_DAY_MORNING
+					|| holidayDuration == HolidayDuration.HALF_DAY_EVENING) {
+				return holidayDuration;
+			}
+		}
+
+		LocalDate finalStartDate = startDate;
+		LocalDate finalEndDate = endDate;
+		boolean allFullDays = holidayObjects.stream()
+			.filter(holiday -> !holiday.getDate().isBefore(finalStartDate) && !holiday.getDate().isAfter(finalEndDate))
+			.allMatch(holiday -> holiday.getHolidayDuration() == HolidayDuration.FULL_DAY);
+
+		return allFullDays ? HolidayDuration.FULL_DAY : null;
+	}
+
+	public static float getWorkingDaysBetweenTwoDates(LocalDate startDate, LocalDate endDate,
+			List<TimeConfig> timeConfigs, List<Holiday> holidayObjects) {
+		if (startDate.isAfter(endDate)) {
+			LocalDate temp = startDate;
+			startDate = endDate;
+			endDate = temp;
+		}
+		float workDays = 0;
 		LocalDate currentDate = startDate;
 		while (!currentDate.isAfter(endDate)) {
-			if (CommonModuleUtils.checkIfDayIsWorkingDay(currentDate, timeConfigs)
-					&& CommonModuleUtils.checkIfDayIsNotAHoliday(leaveRequest, holidayObjects, holidays, currentDate)) {
-				workDays++;
+			if (CommonModuleUtils.checkIfDayIsWorkingDay(currentDate, timeConfigs)) {
+				HolidayDuration holidayDuration = LeaveModuleUtil.getHolidayAvailabilityOnGivenDate(currentDate,
+						holidayObjects);
+				if (holidayDuration == null) {
+					workDays++;
+				}
+				else if (holidayDuration == HolidayDuration.HALF_DAY_MORNING
+						|| holidayDuration == HolidayDuration.HALF_DAY_EVENING) {
+					workDays += 0.5F;
+				}
 			}
 			currentDate = currentDate.plusDays(1);
 		}

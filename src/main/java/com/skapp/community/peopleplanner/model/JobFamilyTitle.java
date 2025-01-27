@@ -11,15 +11,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.io.Serializable;
-
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @Table(name = "job_family_title")
 @IdClass(JobFamilyTitleId.class)
-public class JobFamilyTitle implements Serializable {
+public class JobFamilyTitle {
 
 	@Id
 	@ManyToOne(fetch = FetchType.LAZY)
