@@ -25,7 +25,6 @@ import com.skapp.community.leaveplanner.service.LeaveCycleService;
 import com.skapp.community.leaveplanner.service.LeaveTypeService;
 import com.skapp.community.timeplanner.service.AttendanceConfigService;
 import com.skapp.community.timeplanner.service.TimeService;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,37 +40,26 @@ import static com.skapp.community.common.util.Validation.isValidThemeColor;
 @Slf4j
 public class OrganizationServiceImpl implements OrganizationService {
 
-	@NonNull
 	private final OrganizationDao organizationDao;
 
-	@NonNull
 	private final CommonMapper commonMapper;
 
-	@NonNull
 	private final MessageUtil messageUtil;
 
-	@NonNull
 	private final AttendanceConfigService attendanceConfigService;
 
-	@NonNull
 	private final LeaveTypeService leaveTypeService;
 
-	@NonNull
 	private final TimeService timeService;
 
-	@NonNull
 	private final LeaveCycleService leaveCycleService;
 
-	@NonNull
 	private final UserService userService;
 
-	@NonNull
 	private final OrganizationConfigDao organizationConfigDao;
 
-	@NonNull
 	private final ObjectMapper objectMapper;
 
-	@NonNull
 	private final EncryptionDecryptionService encryptionDecryptionService;
 
 	@Value("${encryptDecryptAlgorithm.secret}")

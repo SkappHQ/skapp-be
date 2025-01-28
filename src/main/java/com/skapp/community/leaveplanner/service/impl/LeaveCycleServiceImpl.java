@@ -15,7 +15,6 @@ import com.skapp.community.leaveplanner.constant.LeaveModuleConstant;
 import com.skapp.community.leaveplanner.payload.LeaveCycleDetailsDto;
 import com.skapp.community.leaveplanner.service.LeaveCycleService;
 import com.skapp.community.peopleplanner.type.LeaveCycleConfigField;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,10 +28,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class LeaveCycleServiceImpl implements LeaveCycleService {
 
-	@NonNull
 	private final OrganizationConfigDao organizationConfigDao;
 
-	@NonNull
 	private final ObjectMapper mapper;
 
 	@Override
