@@ -173,6 +173,17 @@
 			<artifactId>sendgrid-java</artifactId>
 			<version>4.10.3</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.documents4j</groupId>
+			<artifactId>documents4j-local</artifactId>
+			<version>1.1.7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.documents4j</groupId>
+			<artifactId>documents4j-transformer-msoffice-word</artifactId>
+			<version>1.1.7</version>
+		</dependency>
 	</dependencies>
 
 	<build>
