@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Leave Manager Controller", description = "Operations related to leave functionalities related to managers")
 public class ManagerLeaveController {
 
-	@NonNull
 	private final LeaveService leaveService;
 
 	@PreAuthorize("hasAnyRole('ROLE_LEAVE_MANAGER')")
