@@ -28,23 +28,16 @@ import java.io.IOException;
 @ConditionalOnMissingBean(name = "EpJwtAuthFilter")
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-	@NonNull
 	private final JwtService jwtService;
 
-	@NonNull
 	private final UserDetailsService userDetailsService;
 
-	@NonNull
 	private final ProfileActivator profileActivator;
 
 	@Override
 	protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-		if (profileActivator.isEpProfile()) {
-			log.info("Filtering skipped due to EpProfile being active");
-			return true;
-		}
-		return false;
-	}
+        return profileActivator.isEpProfile();
+    }
 
 	@Override
 	protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
