@@ -28,13 +28,10 @@ import java.io.IOException;
 @ConditionalOnMissingBean(name = "EpJwtAuthFilter")
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-	@NonNull
 	private final JwtService jwtService;
 
-	@NonNull
 	private final UserDetailsService userDetailsService;
 
-	@NonNull
 	private final ProfileActivator profileActivator;
 
 	@Override
