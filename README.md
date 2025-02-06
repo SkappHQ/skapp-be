@@ -23,3 +23,5 @@ To ensure that pre-commit hooks are used in your project, run the following comm
 
 ```bash
 git config core.hooksPath .githooks
+
+
