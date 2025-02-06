@@ -1,5 +1,7 @@
 package com.skapp.community.common.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.skapp.community.common.component.ProfileActivator;
 import com.skapp.community.common.constant.CommonConstants;
 import com.skapp.community.common.constant.CommonMessageConstant;
@@ -7,6 +9,7 @@ import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.mapper.CommonMapper;
 import com.skapp.community.common.model.OrganizationConfig;
 import com.skapp.community.common.model.User;
+import com.skapp.community.common.model.UserSettings;
 import com.skapp.community.common.payload.ReInvitationSkippedCountDto;
 import com.skapp.community.common.payload.request.ChangePasswordRequestDto;
 import com.skapp.community.common.payload.request.ForgotPasswordRequestDto;
@@ -32,6 +35,7 @@ import com.skapp.community.common.service.JwtService;
 import com.skapp.community.common.service.UserService;
 import com.skapp.community.common.type.BulkItemStatus;
 import com.skapp.community.common.type.LoginMethod;
+import com.skapp.community.common.type.NotificationSettingsType;
 import com.skapp.community.common.type.OrganizationConfigType;
 import com.skapp.community.common.util.CommonModuleUtils;
 import com.skapp.community.common.util.DateTimeUtils;
@@ -139,6 +143,8 @@ public class AuthServiceImpl implements AuthService {
 
 	private final OrganizationConfigDao organizationConfigDao;
 
+	private final ObjectMapper objectMapper;
+
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
 
@@ -220,6 +226,10 @@ public class AuthServiceImpl implements AuthService {
 		employee.setAccountStatus(AccountStatus.ACTIVE);
 		employee.setEmploymentAllocation(EmploymentAllocation.FULL_TIME);
 		user.setEmployee(employee);
+
+		UserSettings userSettings = createNotificationSettings(user);
+		user.setSettings(userSettings);
+
 		employee.setUser(user);
 
 		userDao.save(user);
@@ -473,6 +483,28 @@ public class AuthServiceImpl implements AuthService {
 
 		log.info("changePassword: execution ended");
 		return new ResponseEntityDto(false, "User password changed successfully");
+	}
+
+	private UserSettings createNotificationSettings(User user) {
+		log.info("createNotificationSettings: execution started");
+		UserSettings userSettings = new UserSettings();
+
+		ObjectNode notificationsObjectNode = objectMapper.createObjectNode();
+
+		boolean isLeaveRequestNotificationsEnabled = true;
+		boolean isTimeEntryNotificationsEnabled = true;
+		boolean isNudgeNotificationsEnabled = true;
+
+		notificationsObjectNode.put(NotificationSettingsType.LEAVE_REQUEST.getKey(),
+				isLeaveRequestNotificationsEnabled);
+		notificationsObjectNode.put(NotificationSettingsType.TIME_ENTRY.getKey(), isTimeEntryNotificationsEnabled);
+		notificationsObjectNode.put(NotificationSettingsType.LEAVE_REQUEST_NUDGE.getKey(), isNudgeNotificationsEnabled);
+
+		userSettings.setNotifications(notificationsObjectNode);
+		userSettings.setUser(user);
+
+		log.info("createNotificationSettings: execution ended");
+		return userSettings;
 	}
 
 	private boolean isSuperAdminExists() {
