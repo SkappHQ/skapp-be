@@ -743,11 +743,9 @@ public class PeopleServiceImpl implements PeopleService {
 			}
 
 			updateLoggedInUserGeneralDetails(employeeUpdateDto, employee);
-			updateLoggedInUserPersonalDetails(employeeUpdateDto, employee);
-			updateLoggedInUserFamilyDetails(employeeUpdateDto, employee);
-			updateLoggedInUserEducationalDetails(employeeUpdateDto, employee);
-			updateLoggedInUserVisaDetails(employeeUpdateDto, employee);
-			updateLoggedInUserEmergencyDetails(employeeUpdateDto, employee);
+			updateManagers(employeeUpdateDto, employee);
+			List<EmployeeTimeline> employeeTimelines = new ArrayList<>();
+			processAndUpdateEmployeeDetails(employeeUpdateDto, employee, employeeTimelines);
 
 			employee = employeeDao.save(employee);
 			EmployeeResponseDto responseDto = peopleMapper.employeeToEmployeeResponseDto(employee);
