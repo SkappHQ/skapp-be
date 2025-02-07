@@ -12,7 +12,6 @@ import com.skapp.community.common.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -32,7 +31,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Auth Controller", description = "Endpoints for authentication")
 public class AuthController {
 
-	@NonNull
 	private final AuthService authService;
 
 	@Operation(summary = "Sign In", description = "Sign in to the application")

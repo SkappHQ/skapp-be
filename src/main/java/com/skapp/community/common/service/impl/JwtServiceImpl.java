@@ -61,9 +61,7 @@ public class JwtServiceImpl implements JwtService {
 
 	@Override
 	public String generateAccessToken(UserDetails userDetails, Long userId) {
-		Map<String, Object> claims = new HashMap<>();
-		claims.put(AuthConstants.TOKEN_TYPE, TokenType.ACCESS);
-		claims.put(AuthConstants.USER_ID, userId);
+		Map<String, Object> claims = createAccessTokenClaims(userDetails, userId);
 		return generateToken(claims, userDetails, jwtAccessTokenExpirationMs);
 	}
 
@@ -128,10 +126,7 @@ public class JwtServiceImpl implements JwtService {
 	}
 
 	private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails, Long expirationTime) {
-		List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
-
 		Map<String, Object> claims = new HashMap<>();
-		claims.put(AuthConstants.ROLES, roles);
 		if (extraClaims != null) {
 			claims.putAll(extraClaims);
 		}
@@ -156,6 +151,17 @@ public class JwtServiceImpl implements JwtService {
 
 	private Claims extractAllClaims(String token) {
 		return Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token).getBody();
+	}
+
+	protected Map<String, Object> createAccessTokenClaims(UserDetails userDetails, Long userId) {
+		Map<String, Object> claims = new HashMap<>();
+		List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
+
+		claims.put(AuthConstants.TOKEN_TYPE, TokenType.ACCESS);
+		claims.put(AuthConstants.USER_ID, userId);
+		claims.put(AuthConstants.ROLES, roles);
+
+		return claims;
 	}
 
 	public Key getSigningKey() {
