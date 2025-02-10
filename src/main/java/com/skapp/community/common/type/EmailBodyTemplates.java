@@ -104,7 +104,11 @@ public enum EmailBodyTemplates {
 	COMMON_MODULE_EMAIL_VERIFY("common-module-email-verify"),
 	COMMON_MODULE_PASSWORD_RESET_OTP("common-module-password-reset-otp"),
 	COMMON_MODULE_SSO_CREATION_TENANT_URL("common-module-sso-creation-tenant-url"),
-	COMMON_MODULE_CREDENTIAL_BASED_CREATION_TENANT_URL("common-module-credential-based-creation-tenant-url"),;
+	COMMON_MODULE_CREDENTIAL_BASED_CREATION_TENANT_URL("common-module-credential-based-creation-tenant-url"),
+
+	// E-Signature Module Templates
+	ESIGNATURE_MODULE_ENVELOPE_RECIEVER_EMAIL("esignature-module-document-viewer-email"),
+	ESIGNATURE_MODULE_ENVELOPE_SIGNER_EMAIL("esignature-module-document-signer-email");
 
 	private final String templateId;
 
