@@ -192,6 +192,13 @@ en:
     - id: "common-module-credential-based-creation-tenant-url"
       subject: "Welcome to Skapp!"
 
+  esignature:
+    - id: "esignature-module-document-signer-email"
+      subject: "Complete via Skapp: "
+
+    - id: "esignature-module-document-viewer-email"
+      subject: "View via Skapp: "
+
 sv:
   people:
     - id: "people-module-user-invitation"
