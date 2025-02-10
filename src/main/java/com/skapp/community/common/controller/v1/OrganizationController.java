@@ -8,7 +8,6 @@ import com.skapp.community.common.service.OrganizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -27,7 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Organization Controller", description = "Operations related to organization functionalities")
 public class OrganizationController {
 
-	@NonNull
 	private final OrganizationService organizationService;
 
 	@Operation(summary = "Create an Organization",

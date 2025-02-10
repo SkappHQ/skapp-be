@@ -200,11 +200,11 @@ public class OrganizationServiceImpl implements OrganizationService {
 			organization.setThemeColor(organizationDto.getThemeColor());
 		}
 
-		if (organizationDto.getOrganizationWebsite() != null && !organizationDto.getOrganizationWebsite().isBlank()) {
+		if (organizationDto.getOrganizationWebsite() != null) {
 			organization.setOrganizationWebsite(organizationDto.getOrganizationWebsite());
 		}
 
-		if (organizationDto.getOrganizationLogo() != null && !organizationDto.getOrganizationLogo().isBlank()) {
+		if (organizationDto.getOrganizationLogo() != null) {
 			organization.setOrganizationLogo(organizationDto.getOrganizationLogo());
 		}
 	}
