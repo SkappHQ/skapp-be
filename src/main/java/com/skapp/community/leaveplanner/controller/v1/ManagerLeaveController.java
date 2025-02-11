@@ -5,7 +5,6 @@ import com.skapp.community.leaveplanner.payload.LeaveRequestManagerUpdateDto;
 import com.skapp.community.leaveplanner.service.LeaveService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Leave Manager Controller", description = "Operations related to leave functionalities related to managers")
 public class ManagerLeaveController {
 
-	@NonNull
 	private final LeaveService leaveService;
 
 	@PreAuthorize("hasAnyRole('ROLE_LEAVE_MANAGER')")
