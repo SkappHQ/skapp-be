@@ -36,11 +36,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
 	@Override
 	protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-		if (profileActivator.isEpProfile()) {
-			log.info("Filtering skipped due to EpProfile being active");
-			return true;
-		}
-		return false;
+		return profileActivator.isEpProfile();
 	}
 
 	@Override
