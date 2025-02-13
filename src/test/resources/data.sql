@@ -78,7 +78,7 @@ VALUES (default, YEAR(CURRENT_TIMESTAMP) || '-03-06', 'Poya Day', 'FULL_DAY', tr
        (default, YEAR(CURRENT_TIMESTAMP) || '-04-06', 'Poya Day', 'FULL_DAY', true),
        (default, YEAR(CURRENT_TIMESTAMP) || '-02-20', 'Maha Shiva Rathri', 'FULL_DAY', false),
        (default, YEAR(CURRENT_TIMESTAMP) || '-01-18', 'Thai Pongal Day', 'FULL_DAY', true),
-       (default, YEAR(CURRENT_TIMESTAMP) || '-02-05', 'National Chocolate Fondue Day', 'FULL_DAY', true),
+       (default, YEAR(CURRENT_TIMESTAMP) || '-02-04', 'National Chocolate Fondue Day', 'FULL_DAY', true),
        (default, YEAR(CURRENT_TIMESTAMP) || '-12-25', 'Christmas Day', 'FULL_DAY', true),
        (default, YEAR(CURRENT_TIMESTAMP+1) || '-12-31', 'Future holiday', 'FULL_DAY', true);
 
