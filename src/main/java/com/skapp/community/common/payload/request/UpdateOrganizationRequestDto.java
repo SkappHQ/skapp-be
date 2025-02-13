@@ -28,7 +28,7 @@ public class UpdateOrganizationRequestDto {
 
 	@Schema(description = "The logo of the organization. Must be a valid file name with a length between 1 and 100 characters.",
 			example = "logo.png")
-	@Size(max = 100)
+	@Size(max = 255)
 	private String organizationLogo;
 
 	@Schema(description = "The theme color in hexadecimal format (e.g., #FFFFFF). Must match the regex pattern for a valid hexadecimal color.",
