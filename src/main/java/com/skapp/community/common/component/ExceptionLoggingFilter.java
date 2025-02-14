@@ -3,6 +3,7 @@ package com.skapp.community.common.component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.AuthenticationException;
+import com.skapp.community.common.exception.TooManyRequestsException;
 import com.skapp.community.common.payload.response.ErrorResponse;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import jakarta.servlet.Filter;
@@ -67,6 +68,11 @@ public class ExceptionLoggingFilter implements Filter {
 				status = HttpStatus.UNAUTHORIZED;
 				messageKey = (CommonMessageConstant) authenticationException.getMessageKey();
 				message = authenticationException.getMessage();
+			}
+			case TooManyRequestsException tooManyRequestsException -> {
+				status = HttpStatus.TOO_MANY_REQUESTS;
+				messageKey = CommonMessageConstant.COMMON_ERROR_TOO_MANY_REQUESTS_EXCEPTION;
+				message = tooManyRequestsException.getMessage();
 			}
 			case null, default -> {
 				status = HttpStatus.NOT_FOUND;
