@@ -9,6 +9,7 @@ import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.service.UserService;
 import com.skapp.community.common.type.Role;
 import com.skapp.community.common.util.DateTimeUtils;
+import com.skapp.community.common.util.SqlSanitizerUtil;
 import com.skapp.community.leaveplanner.mapper.LeaveMapper;
 import com.skapp.community.leaveplanner.model.LeaveRequest;
 import com.skapp.community.leaveplanner.repository.LeaveRequestDao;
@@ -562,7 +563,7 @@ public class TimeAnalyticsServiceImpl implements TimeAnalyticsService {
 	private List<TimeRecordTrendDto> getTrendBasedOnRecordType(ClockInClockOutTrendFilterDto filterDto) {
 		RecordType recordType = filterDto.getRecordType();
 		List<Long> teamIds = filterDto.getTeams();
-		String timeOffset = filterDto.getTimeOffset();
+		String timeOffset = SqlSanitizerUtil.sanitize(filterDto.getTimeOffset());
 
 		return recordType.equals(RecordType.CLOCK_IN)
 				? timeRecordDao.getEmployeeClockInTrend(teamIds, timeOffset, filterDto.getDate())
