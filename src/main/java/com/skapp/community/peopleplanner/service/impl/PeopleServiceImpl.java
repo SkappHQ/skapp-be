@@ -642,6 +642,7 @@ public class PeopleServiceImpl implements PeopleService {
 	@Override
 	@Transactional
 	public ResponseEntityDto addBulkEmployees(List<EmployeeBulkDto> employeeBulkDtoList) {
+		List<EmployeeBulkDto> validEmployeeBulkDtoList = getValidEmployeeBulkDtoList(employeeBulkDtoList);
 		User currentUser = userService.getCurrentUser();
 		log.info("addEmployeeBulk: execution started by user: {}", currentUser.getUserId());
 
@@ -649,12 +650,17 @@ public class PeopleServiceImpl implements PeopleService {
 		List<EmployeeBulkResponseDto> results = Collections.synchronizedList(new ArrayList<>());
 		AtomicReference<ResponseEntityDto> outValues = new AtomicReference<>(new ResponseEntityDto());
 
-		List<CompletableFuture<Void>> tasks = createEmployeeTasks(employeeBulkDtoList, executorService, results);
+		List<CompletableFuture<Void>> tasks = createEmployeeTasks(validEmployeeBulkDtoList, executorService, results);
 		waitForTaskCompletion(tasks, executorService);
 
 		asyncEmailServiceImpl.sendEmailsInBackground(results);
 
-		generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), results);
+		List<EmployeeBulkDto> overflowedEmployeeBulkDtoList = getOverFlowedEmployeeBulkDtoList(employeeBulkDtoList,
+				validEmployeeBulkDtoList);
+
+		List<EmployeeBulkResponseDto> totalResults = getTotalResultList(results, overflowedEmployeeBulkDtoList);
+
+		generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), totalResults);
 		return outValues.get();
 	}
 
@@ -996,6 +1002,23 @@ public class PeopleServiceImpl implements PeopleService {
 
 		primarySecondaryOrTeamSupervisor.setIsTeamSupervisor(isTeamSupervisor);
 		return new ResponseEntityDto(false, primarySecondaryOrTeamSupervisor);
+	}
+
+	protected List<EmployeeBulkDto> getValidEmployeeBulkDtoList(List<EmployeeBulkDto> employeeBulkDtoList) {
+		return employeeBulkDtoList;
+	}
+
+	private List<EmployeeBulkDto> getOverFlowedEmployeeBulkDtoList(List<EmployeeBulkDto> employeeBulkDtoList,
+			List<EmployeeBulkDto> validList) {
+		return employeeBulkDtoList.stream().filter(e -> !validList.contains(e)).toList();
+	}
+
+	protected List<EmployeeBulkResponseDto> getTotalResultList(List<EmployeeBulkResponseDto> results,
+			List<EmployeeBulkDto> overflowedEmployeeBulkDtoList) {
+		if (!overflowedEmployeeBulkDtoList.isEmpty())
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_BULK_LIMIT_EXCEEDED);
+
+		return results;
 	}
 
 	private void updateLoggedInUserGeneralDetails(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
