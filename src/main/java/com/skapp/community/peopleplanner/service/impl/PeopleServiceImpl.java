@@ -1402,7 +1402,7 @@ public class PeopleServiceImpl implements PeopleService {
 		results.add(bulkResponseDto);
 	}
 
-	private EmployeeBulkResponseDto createErrorResponse(EmployeeBulkDto employeeBulkDto, String message) {
+	protected EmployeeBulkResponseDto createErrorResponse(EmployeeBulkDto employeeBulkDto, String message) {
 		EmployeeBulkResponseDto bulkResponseDto = new EmployeeBulkResponseDto();
 		bulkResponseDto.setEmail(employeeBulkDto.getWorkEmail() != null ? employeeBulkDto.getWorkEmail()
 				: employeeBulkDto.getPersonalEmail());
