@@ -91,6 +91,11 @@
 			<version>4.4.0</version>
 		</dependency>
 		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>28.3.0</version>
+		</dependency>
+		<dependency>
 			<groupId>com.auth0</groupId>
 			<artifactId>jwks-rsa</artifactId>
 			<version>0.22.1</version>
