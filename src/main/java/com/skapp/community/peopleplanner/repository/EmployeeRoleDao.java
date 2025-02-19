@@ -14,12 +14,6 @@ public interface EmployeeRoleDao extends JpaRepository<EmployeeRole, Long> {
 
 	List<EmployeeRole> findEmployeesByPeopleRole(Role roleName);
 
-	long countByAttendanceRoleAndIsSuperAdmin(Role roleName, boolean isSuperAdmin);
-
-	long countByPeopleRoleAndIsSuperAdmin(Role roleName, boolean isSuperAdmin);
-
-	long countByLeaveRoleAndIsSuperAdmin(Role roleName, boolean isSuperAdmin);
-
 	long countByEsignRoleAndIsSuperAdmin(Role roleName, boolean isSuperAdmin);
 
 }
