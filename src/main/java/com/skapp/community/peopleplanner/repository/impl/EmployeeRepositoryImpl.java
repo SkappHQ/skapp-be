@@ -348,7 +348,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 	@Override
 	public AdminOnLeaveDto findAllEmployeesOnLeave(EmployeesOnLeaveFilterDto filterDto, Long currentUserId,
-												   boolean isLeaveAdmin) {
+			boolean isLeaveAdmin) {
 		if (filterDto.getTeamIds() == null || filterDto.getTeamIds().isEmpty()) {
 			return new AdminOnLeaveDto(0L, 0L);
 		}
@@ -367,65 +367,62 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		Subquery<Long> employeesOnLeaveSubquery = criteriaQuery.subquery(Long.class);
 		Root<LeaveRequest> leaveRoot = employeesOnLeaveSubquery.from(LeaveRequest.class);
 		employeesOnLeaveSubquery.select(leaveRoot.get(LeaveRequest_.employee).get(Employee_.employeeId))
-				.where(criteriaBuilder.and(
-						criteriaBuilder.lessThanOrEqualTo(leaveRoot.get(LeaveRequest_.startDate), filterDto.getDate()),
-						criteriaBuilder.greaterThanOrEqualTo(leaveRoot.get(LeaveRequest_.endDate), filterDto.getDate()),
-						leaveRoot.get(LeaveRequest_.status).in(LeaveRequestStatus.APPROVED, LeaveRequestStatus.PENDING)
-				));
+			.where(criteriaBuilder.and(
+					criteriaBuilder.lessThanOrEqualTo(leaveRoot.get(LeaveRequest_.startDate), filterDto.getDate()),
+					criteriaBuilder.greaterThanOrEqualTo(leaveRoot.get(LeaveRequest_.endDate), filterDto.getDate()),
+					leaveRoot.get(LeaveRequest_.status).in(LeaveRequestStatus.APPROVED, LeaveRequestStatus.PENDING)));
 
 		if (filterDto.getTeamIds().contains(-1L)) {
 			if (isLeaveAdmin) {
 				totalEmployeesSubquery.select(criteriaBuilder.countDistinct(totalEmployeeRoot))
-						.where(criteriaBuilder.and(
-								criteriaBuilder.equal(userJoin.get(User_.isActive), true),
-								criteriaBuilder.not(totalEmployeeRoot.get(Employee_.employeeId).in(employeesOnLeaveSubquery)) // Exclude employees on leave
-						));
-			} else {
+					.where(criteriaBuilder.and(criteriaBuilder.equal(userJoin.get(User_.isActive), true),
+							criteriaBuilder
+								.not(totalEmployeeRoot.get(Employee_.employeeId).in(employeesOnLeaveSubquery))));
+			}
+			else {
 				Subquery<Long> managedEmployeesSubquery = criteriaQuery.subquery(Long.class);
 				Root<EmployeeManager> managerRoot = managedEmployeesSubquery.from(EmployeeManager.class);
 				managedEmployeesSubquery.select(managerRoot.get(EmployeeManager_.employee).get(Employee_.employeeId))
-						.where(criteriaBuilder.equal(managerRoot.get(EmployeeManager_.manager).get(Employee_.employeeId),
-								currentUserId));
+					.where(criteriaBuilder.equal(managerRoot.get(EmployeeManager_.manager).get(Employee_.employeeId),
+							currentUserId));
 
 				Subquery<Long> supervisedTeamsSubquery = criteriaQuery.subquery(Long.class);
 				Root<EmployeeTeam> supervisorTeamRoot = supervisedTeamsSubquery.from(EmployeeTeam.class);
 				supervisedTeamsSubquery.select(supervisorTeamRoot.get(EmployeeTeam_.team).get(Team_.teamId))
-						.where(criteriaBuilder.and(criteriaBuilder
-										.equal(supervisorTeamRoot.get(EmployeeTeam_.employee).get(Employee_.employeeId), currentUserId),
-								criteriaBuilder.isTrue(supervisorTeamRoot.get(EmployeeTeam_.isSupervisor))));
+					.where(criteriaBuilder.and(criteriaBuilder
+						.equal(supervisorTeamRoot.get(EmployeeTeam_.employee).get(Employee_.employeeId), currentUserId),
+							criteriaBuilder.isTrue(supervisorTeamRoot.get(EmployeeTeam_.isSupervisor))));
 
 				Subquery<Long> teamMembersSubquery = criteriaQuery.subquery(Long.class);
 				Root<EmployeeTeam> teamRoot = teamMembersSubquery.from(EmployeeTeam.class);
 				teamMembersSubquery.select(teamRoot.get(EmployeeTeam_.employee).get(Employee_.employeeId))
-						.where(teamRoot.get(EmployeeTeam_.team).get(Team_.teamId).in(supervisedTeamsSubquery));
+					.where(teamRoot.get(EmployeeTeam_.team).get(Team_.teamId).in(supervisedTeamsSubquery));
 
 				Subquery<Long> employeesSubquery = criteriaQuery.subquery(Long.class);
 				Root<Employee> employeeRoot = employeesSubquery.from(Employee.class);
 				employeesSubquery.select(employeeRoot.get(Employee_.employeeId))
-						.where(criteriaBuilder.or(employeeRoot.get(Employee_.employeeId).in(managedEmployeesSubquery),
-								employeeRoot.get(Employee_.employeeId).in(teamMembersSubquery)));
+					.where(criteriaBuilder.or(employeeRoot.get(Employee_.employeeId).in(managedEmployeesSubquery),
+							employeeRoot.get(Employee_.employeeId).in(teamMembersSubquery)));
 
 				predicates.add(employee.get(Employee_.employeeId).in(employeesSubquery));
 
 				totalEmployeesSubquery.select(criteriaBuilder.countDistinct(totalEmployeeRoot))
-						.where(criteriaBuilder.and(
-								criteriaBuilder.equal(userJoin.get(User_.isActive), true),
-								totalEmployeeRoot.get(Employee_.employeeId).in(employeesSubquery),
-								criteriaBuilder.not(totalEmployeeRoot.get(Employee_.employeeId).in(employeesOnLeaveSubquery)) // Exclude employees on leave
-						));
+					.where(criteriaBuilder.and(criteriaBuilder.equal(userJoin.get(User_.isActive), true),
+							totalEmployeeRoot.get(Employee_.employeeId).in(employeesSubquery), criteriaBuilder
+								.not(totalEmployeeRoot.get(Employee_.employeeId).in(employeesOnLeaveSubquery))));
 			}
-		} else {
+		}
+		else {
 			Join<Employee, EmployeeTeam> employeeTeamJoin = employee.join(Employee_.teams);
 			Join<Employee, EmployeeTeam> totalEmployeeTeamJoin = totalEmployeeRoot.join(Employee_.teams);
 
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(filterDto.getTeamIds()));
 
 			totalEmployeesSubquery.select(criteriaBuilder.countDistinct(totalEmployeeRoot))
-					.where(criteriaBuilder.and(
-							totalEmployeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(filterDto.getTeamIds()),
-							criteriaBuilder.equal(userJoin.get(User_.isActive), true),
-							criteriaBuilder.not(totalEmployeeRoot.get(Employee_.employeeId).in(employeesOnLeaveSubquery)) // Exclude employees on leave
-					));
+				.where(criteriaBuilder.and(
+						totalEmployeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(filterDto.getTeamIds()),
+						criteriaBuilder.equal(userJoin.get(User_.isActive), true),
+						criteriaBuilder.not(totalEmployeeRoot.get(Employee_.employeeId).in(employeesOnLeaveSubquery))));
 		}
 
 		if (filterDto.getDate() != null) {
