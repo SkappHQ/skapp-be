@@ -158,11 +158,6 @@ public class AuthServiceImpl implements AuthService {
 		}
 		Employee userEmployee = employee.get();
 
-		if (userEmployee.getAccountStatus() == AccountStatus.PENDING) {
-			userEmployee.setAccountStatus(AccountStatus.ACTIVE);
-			employeeDao.save(userEmployee);
-		}
-
 		EmployeeSignInResponseDto employeeSignInResponseDto = peopleMapper
 			.employeeToEmployeeSignInResponseDto(employee.get());
 
@@ -282,6 +277,10 @@ public class AuthServiceImpl implements AuthService {
 
 		String newPassword = resetPasswordRequestDto.getNewPassword();
 		createNewPassword(newPassword, user);
+
+		Employee employee = user.getEmployee();
+		employee.setAccountStatus(AccountStatus.ACTIVE);
+		employeeDao.save(employee);
 
 		log.info("employeeResetPassword: execution ended");
 		return new ResponseEntityDto(false, "User password reset successfully");

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface EmployeeDao
 		extends JpaRepository<Employee, Long>, JpaSpecificationExecutor<Employee>, EmployeeRepository {
@@ -24,5 +25,7 @@ public interface EmployeeDao
 	Employee getEmployeeByEmployeeId(long employeeId);
 
 	long countByAccountStatus(AccountStatus accountStatus);
+
+	long countByAccountStatusIn(Set<AccountStatus> accountStatuses);
 
 }
