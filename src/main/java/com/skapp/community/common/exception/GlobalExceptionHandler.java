@@ -212,7 +212,7 @@ public class GlobalExceptionHandler {
 				new ErrorResponse(status, message, CommonMessageConstant.COMMON_ERROR_IO_EXCEPTION)), status);
 	}
 
-	private void logDetailedException(Exception e, String messageKey, String message, HttpStatus status) {
+	protected void logDetailedException(Exception e, String messageKey, String message, HttpStatus status) {
 		String apiPath = request.getRequestURI();
 		String method = request.getMethod();
 		String redColor = "\u001B[31m";
