@@ -182,7 +182,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(ServletException.class)
 	public ResponseEntity<ResponseEntityDto> handleServletException(ServletException e) {
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-		String message = messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_SERVLET_EXCEPTION);
+		String message = e.getMessage();
 		logDetailedException(e, CommonMessageConstant.COMMON_ERROR_SERVLET_EXCEPTION.name(), message, status);
 
 		return new ResponseEntity<>(
