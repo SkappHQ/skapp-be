@@ -95,8 +95,7 @@ public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 		}
 		else {
 			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeRoot.join(Employee_.teams);
-			predicates.add(criteriaBuilder.and(criteriaBuilder.not(isAdminPredicate),
-					employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamsFilter)));
+			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamsFilter));
 		}
 
 		Subquery<Long> leaveSubquery = criteriaQuery.subquery(Long.class);
