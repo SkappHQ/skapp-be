@@ -364,10 +364,20 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		Root<Employee> totalEmployeeRoot = totalEmployeesSubquery.from(Employee.class);
 		Join<Employee, User> userJoin = totalEmployeeRoot.join(Employee_.user);
 
+		Subquery<Long> employeesOnLeaveSubquery = criteriaQuery.subquery(Long.class);
+		Root<LeaveRequest> leaveRoot = employeesOnLeaveSubquery.from(LeaveRequest.class);
+		employeesOnLeaveSubquery.select(leaveRoot.get(LeaveRequest_.employee).get(Employee_.employeeId))
+			.where(criteriaBuilder.and(
+					criteriaBuilder.lessThanOrEqualTo(leaveRoot.get(LeaveRequest_.startDate), filterDto.getDate()),
+					criteriaBuilder.greaterThanOrEqualTo(leaveRoot.get(LeaveRequest_.endDate), filterDto.getDate()),
+					leaveRoot.get(LeaveRequest_.status).in(LeaveRequestStatus.APPROVED, LeaveRequestStatus.PENDING)));
+
 		if (filterDto.getTeamIds().contains(-1L)) {
 			if (isLeaveAdmin) {
 				totalEmployeesSubquery.select(criteriaBuilder.countDistinct(totalEmployeeRoot))
-					.where(criteriaBuilder.equal(userJoin.get(User_.isActive), true));
+					.where(criteriaBuilder.and(criteriaBuilder.equal(userJoin.get(User_.isActive), true),
+							criteriaBuilder
+								.not(totalEmployeeRoot.get(Employee_.employeeId).in(employeesOnLeaveSubquery))));
 			}
 			else {
 				Subquery<Long> managedEmployeesSubquery = criteriaQuery.subquery(Long.class);
@@ -398,7 +408,8 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 				totalEmployeesSubquery.select(criteriaBuilder.countDistinct(totalEmployeeRoot))
 					.where(criteriaBuilder.and(criteriaBuilder.equal(userJoin.get(User_.isActive), true),
-							totalEmployeeRoot.get(Employee_.employeeId).in(employeesSubquery)));
+							totalEmployeeRoot.get(Employee_.employeeId).in(employeesSubquery), criteriaBuilder
+								.not(totalEmployeeRoot.get(Employee_.employeeId).in(employeesOnLeaveSubquery))));
 			}
 		}
 		else {
@@ -410,7 +421,8 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 			totalEmployeesSubquery.select(criteriaBuilder.countDistinct(totalEmployeeRoot))
 				.where(criteriaBuilder.and(
 						totalEmployeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(filterDto.getTeamIds()),
-						criteriaBuilder.equal(userJoin.get(User_.isActive), true)));
+						criteriaBuilder.equal(userJoin.get(User_.isActive), true),
+						criteriaBuilder.not(totalEmployeeRoot.get(Employee_.employeeId).in(employeesOnLeaveSubquery))));
 		}
 
 		if (filterDto.getDate() != null) {
@@ -422,6 +434,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		predicates.add(root.get(LeaveRequest_.STATUS).in(LeaveRequestStatus.APPROVED, LeaveRequestStatus.PENDING));
 
 		criteriaQuery.where(predicates.toArray(new Predicate[0]));
+
 		criteriaQuery.multiselect(criteriaBuilder.countDistinct(employee), totalEmployeesSubquery);
 
 		return entityManager.createQuery(criteriaQuery).getSingleResult();
