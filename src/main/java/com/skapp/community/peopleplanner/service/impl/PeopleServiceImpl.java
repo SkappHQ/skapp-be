@@ -1010,12 +1010,12 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	private List<EmployeeBulkDto> getOverFlowedEmployeeBulkDtoList(List<EmployeeBulkDto> employeeBulkDtoList,
-																   List<EmployeeBulkDto> validList) {
+			List<EmployeeBulkDto> validList) {
 		return employeeBulkDtoList.stream().filter(e -> !validList.contains(e)).toList();
 	}
 
 	protected List<EmployeeBulkResponseDto> getTotalResultList(List<EmployeeBulkResponseDto> results,
-															   List<EmployeeBulkDto> overflowedEmployeeBulkDtoList) {
+			List<EmployeeBulkDto> overflowedEmployeeBulkDtoList) {
 		if (!overflowedEmployeeBulkDtoList.isEmpty())
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_BULK_LIMIT_EXCEEDED);
 
