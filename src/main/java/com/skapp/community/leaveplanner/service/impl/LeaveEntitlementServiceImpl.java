@@ -1222,22 +1222,12 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 					entitlement.getLeaveType());
 		if (!existingEntitlements.isEmpty()) {
 			isUpdated = true;
-			if (entitlement.getTotalDaysAllocated() >= 0) {
+			if (entitlement.getTotalDaysAllocated() > 0) {
 				for (LeaveEntitlement existingEntitlement : existingEntitlements) {
 					allocatedDays += existingEntitlement.getTotalDaysAllocated();
 					currentBalance = existingEntitlement.getTotalDaysAllocated()
 							- existingEntitlement.getTotalDaysUsed();
-					if (entitlement.getTotalDaysAllocated() == 0) {
-						if (existingEntitlement.getTotalDaysUsed() > 0) {
-							throw new ModuleException(
-									LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_UTILIZE_MORE_THAN_NEW_COUNT);
-						}
-						else {
-							leaveEntitlementDao.delete(existingEntitlement);
-							return new boolean[] { isUpdated, logicFailed };
-						}
-					}
-					else if (existingEntitlement.getTotalDaysUsed() <= entitlement.getTotalDaysAllocated()) {
+					if (existingEntitlement.getTotalDaysUsed() <= entitlement.getTotalDaysAllocated()) {
 						existingEntitlement.setTotalDaysUsed(existingEntitlement.getTotalDaysUsed());
 						existingEntitlement.setTotalDaysAllocated(entitlement.getTotalDaysAllocated());
 					}
@@ -1253,6 +1243,21 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 				leaveEntitlementDao.saveAll(existingEntitlements);
 				newTotalDaysAllocated = entitlement.getLeaveType().getName() + " "
 						+ (usedDays + entitlement.getTotalDaysAllocated());
+			}
+			else if (entitlement.getTotalDaysAllocated() == 0) {
+				for (LeaveEntitlement existingEntitlement : existingEntitlements) {
+					allocatedDays += existingEntitlement.getTotalDaysAllocated();
+					if (existingEntitlement.getTotalDaysUsed() > 0) {
+						throw new ModuleException(
+								LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_UTILIZE_MORE_THAN_NEW_COUNT);
+					}
+					else {
+						leaveEntitlementDao.delete(existingEntitlement);
+					}
+				}
+				timelineTitle = PeopleConstants.TITLE_ENTITLEMENT_DELETED;
+				timelineType = EmployeeTimelineType.ENTITLEMENT_DELETED;
+				newTotalDaysAllocated = null;
 			}
 			else {
 				logicFailed = true;
