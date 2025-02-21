@@ -156,7 +156,6 @@ public class AuthServiceImpl implements AuthService {
 		if (employee.isEmpty()) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND);
 		}
-		Employee userEmployee = employee.get();
 
 		EmployeeSignInResponseDto employeeSignInResponseDto = peopleMapper
 			.employeeToEmployeeSignInResponseDto(employee.get());
