@@ -33,6 +33,8 @@ public enum LeaveMessageConstant implements MessageConstant {
 	LEAVE_ERROR_LEAVE_REQUEST_NOT_VALID_DATE_RANGE("api.error.leave.leave-request-not-valid-date-range"),
 	LEAVE_ERROR_LEAVE_REQUEST_OVERLAP("api.error.leave.leave-request-overlap"),
 	LEAVE_ERROR_LEAVE_ENTITLEMENT_NOT_SUFFICIENT("api.error.leave.leave-entitlement-not-sufficient"),
+	LEAVE_ERROR_LEAVE_ENTITLEMENT_UTILIZE_MORE_THAN_NEW_COUNT(
+			"api.error.leave.leave-entitlement-utilize-more-than-new-count"),
 	LEAVE_ERROR_LEAVE_REQUEST_DESCRIPTION_PASSED_MAX_LENGTH(
 			"api.error.leave.leave-request-description-passed-max-length"),
 	LEAVE_ERROR_LEAVE_CYCLE_CONFIG_NOT_FOUND("api.error.leave.leave-cycle-config-not-found"),

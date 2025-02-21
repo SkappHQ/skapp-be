@@ -1227,12 +1227,14 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 					allocatedDays += existingEntitlement.getTotalDaysAllocated();
 					currentBalance = existingEntitlement.getTotalDaysAllocated()
 							- existingEntitlement.getTotalDaysUsed();
-					if (entitlement.getTotalDaysAllocated() == 0) {
-						leaveEntitlementDao.delete(existingEntitlement);
-					}
-					else if (existingEntitlement.getTotalDaysUsed() <= entitlement.getTotalDaysAllocated()) {
+					if (existingEntitlement.getTotalDaysUsed() <= entitlement.getTotalDaysAllocated()) {
 						existingEntitlement.setTotalDaysUsed(existingEntitlement.getTotalDaysUsed());
 						existingEntitlement.setTotalDaysAllocated(entitlement.getTotalDaysAllocated());
+					}
+					else if (existingEntitlement.getTotalDaysUsed() > 0
+							&& currentBalance > entitlement.getTotalDaysAllocated()) {
+						throw new ModuleException(
+								LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_UTILIZE_MORE_THAN_NEW_COUNT);
 					}
 					else if (currentBalance <= 0) {
 						logicFailed = true;
@@ -1242,11 +1244,23 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 				newTotalDaysAllocated = entitlement.getLeaveType().getName() + " "
 						+ (usedDays + entitlement.getTotalDaysAllocated());
 			}
-			else {
-				leaveEntitlementDao.deleteAll(existingEntitlements);
+			else if (entitlement.getTotalDaysAllocated() == 0) {
+				for (LeaveEntitlement existingEntitlement : existingEntitlements) {
+					allocatedDays += existingEntitlement.getTotalDaysAllocated();
+					if (existingEntitlement.getTotalDaysUsed() > 0) {
+						throw new ModuleException(
+								LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_UTILIZE_MORE_THAN_NEW_COUNT);
+					}
+					else {
+						leaveEntitlementDao.delete(existingEntitlement);
+					}
+				}
 				timelineTitle = PeopleConstants.TITLE_ENTITLEMENT_DELETED;
 				timelineType = EmployeeTimelineType.ENTITLEMENT_DELETED;
 				newTotalDaysAllocated = null;
+			}
+			else {
+				logicFailed = true;
 			}
 		}
 
