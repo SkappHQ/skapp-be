@@ -494,9 +494,7 @@ public class DateTimeUtils {
 	 * @return the corresponding LocalDate in UTC, or null if epochMillis is null
 	 */
 	public static LocalDate epochSecondToUtcLocalDate(Long epochMillis) {
-		return Instant.ofEpochSecond(epochMillis)
-				.atZone(ZoneOffset.UTC)
-				.toLocalDate();
+		return Instant.ofEpochSecond(epochMillis).atZone(ZoneOffset.UTC).toLocalDate();
 	}
 
 	/**
