@@ -201,7 +201,7 @@
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>pdfbox</artifactId>
-			<version>3.0.1</version> <!-- or latest 3.x version -->
+			<version>3.0.1</version>
 		</dependency>
 	</dependencies>
 
