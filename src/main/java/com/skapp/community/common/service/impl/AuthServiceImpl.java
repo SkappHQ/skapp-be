@@ -44,7 +44,6 @@ import com.skapp.community.common.util.Validation;
 import com.skapp.community.peopleplanner.mapper.PeopleMapper;
 import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.payload.response.EmployeeCredentialsResponseDto;
-import com.skapp.community.peopleplanner.payload.response.EmployeeResponseDto;
 import com.skapp.community.peopleplanner.repository.EmployeeDao;
 import com.skapp.community.peopleplanner.repository.EmployeeRoleDao;
 import com.skapp.community.peopleplanner.service.PeopleEmailService;
@@ -88,57 +87,40 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-	@NonNull
 	private final UserDao userDao;
 
-	@NonNull
 	private final UserDetailsService userDetailsService;
 
-	@NonNull
 	private final PeopleMapper peopleMapper;
 
-	@NonNull
 	private final EmployeeDao employeeDao;
 
-	@NonNull
 	private final JwtService jwtService;
 
-	@NonNull
 	private final AuthenticationManager authenticationManager;
 
-	@NonNull
 	private final PasswordEncoder passwordEncoder;
 
-	@NonNull
 	private final EmployeeRoleDao employeeRoleDao;
 
-	@NonNull
 	private final CommonMapper commonMapper;
 
-	@NonNull
 	private final UserService userService;
 
-	@NonNull
 	private final PeopleEmailService peopleEmailService;
 
-	@NonNull
 	private final PeopleNotificationService peopleNotificationService;
 
-	@NonNull
 	private final EncryptionDecryptionService encryptionDecryptionService;
 
-	@NonNull
 	private final ProfileActivator profileActivator;
 
-	@NonNull
 	private final PlatformTransactionManager transactionManager;
 
-	@NonNull
 	private final BulkContextService bulkContextService;
 
 	private final MessageUtil messageUtil;
 
-	@NonNull
 	private final RolesService rolesService;
 
 	private final OrganizationConfigDao organizationConfigDao;
@@ -276,12 +258,10 @@ public class AuthServiceImpl implements AuthService {
 		}
 		User user = optionalUser.get();
 
-		EmployeeResponseDto employeeResponseDto = peopleMapper.employeeToEmployeeResponseDto(user.getEmployee());
 		String accessToken = jwtService.generateAccessToken(userDetails, user.getUserId());
 
 		AccessTokenResponseDto accessTokenResponseDto = new AccessTokenResponseDto();
 		accessTokenResponseDto.setAccessToken(accessToken);
-		accessTokenResponseDto.setEmployee(employeeResponseDto);
 
 		log.info("refreshAccessToken: execution ended");
 		return new ResponseEntityDto(false, accessTokenResponseDto);
