@@ -28,4 +28,6 @@ public interface JwtService {
 
 	<T> T extractClaim(String token, Function<Claims, T> claimsResolvers);
 
+	void checkVersionMismatch(Long userId, String accessToken);
+
 }

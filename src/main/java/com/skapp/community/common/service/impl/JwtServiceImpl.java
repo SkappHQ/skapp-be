@@ -1,6 +1,8 @@
 package com.skapp.community.common.service.impl;
 
 import com.skapp.community.common.constant.AuthConstants;
+import com.skapp.community.common.constant.CommonMessageConstant;
+import com.skapp.community.common.exception.AuthenticationException;
 import com.skapp.community.common.service.JwtService;
 import com.skapp.community.common.service.SystemVersionService;
 import com.skapp.community.common.service.UserVersionService;
@@ -149,6 +151,26 @@ public class JwtServiceImpl implements JwtService {
 	@Override
 	public boolean isTokenExpired(String token) {
 		return extractExpiration(token).before(new Date());
+	}
+
+	@Override
+	public void checkVersionMismatch(Long userId, String accessToken) {
+		String systemVersion = extractClaim(accessToken,
+				claims -> claims.get(AuthConstants.SYSTEM_VERSION, String.class));
+		String latestSystemVersion = systemVersionService.getLatestVersion();
+		if (systemVersion != null && !systemVersion.equals(latestSystemVersion)) {
+			throw new AuthenticationException(CommonMessageConstant.COMMON_ERROR_SYSTEM_VERSION_MISMATCH);
+		}
+
+		if (userId != null) {
+			String userVersion = extractClaim(accessToken,
+					claims -> claims.get(AuthConstants.USER_VERSION, String.class));
+			String latestUserVersion = userVersionService.getUserVersion(userId);
+
+			if (userVersion != null && !userVersion.equals(latestUserVersion)) {
+				throw new AuthenticationException(CommonMessageConstant.COMMON_ERROR_USER_VERSION_MISMATCH);
+			}
+		}
 	}
 
 	private Date extractExpiration(String token) {
