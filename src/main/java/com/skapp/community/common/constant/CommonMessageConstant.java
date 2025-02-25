@@ -106,16 +106,17 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_VALIDATION_PASSPORT_LENGTH("api.error.common.validation.passport-length"),
 	COMMON_ERROR_TOKEN_EXPIRED("api.error.common.token-expired"),
 	COMMON_ERROR_REFRESH_TOKEN_NOT_ALLOWED("api.error.common.refresh-token-not-allowed"),
-	COMMON_ERROR_INVALID_TOKEN("api.error.common.invalid-token"),
 	COMMON_ERROR_INTERNAL_SERVER_ERROR("api.error.common.internal-server-error"),
 	COMMON_ERROR_MAX_RETRIES_REACHED("api.error.common.max-retries-reached"),
-	ERROR_DATE_CANNOT_BE_NULL("api.error.common.date-cannot-be-null"),
-	ERROR_DATE_TIME_CANNOT_BE_NULL("api.error.common.date-time-cannot-be-null"),
-	ERROR_TIME_CANNOT_BE_NULL("api.error.common.time-cannot-be-null"),
-	ERROR_TIME_ZONE_CANNOT_BE_NULL("api.error.common.time-zone-cannot-be-null"),
-	ERROR_START_END_DATE_CANNOT_BE_NULL("api.error.common.start-end-date-cannot-be-null"),
-	ERROR_INVALID_DAY_OF_MONTH("api.error.common.invalid-day-of-month"),
-	ERROR_EPOCH_MILLIS_CANNOT_BE_NULL("api.error.common.epoch-millis-cannot-be-null"),;
+	COMMON_ERROR_DATE_CANNOT_BE_NULL("api.error.common.date-cannot-be-null"),
+	COMMON_ERROR_DATE_TIME_CANNOT_BE_NULL("api.error.common.date-time-cannot-be-null"),
+	COMMON_ERROR_TIME_CANNOT_BE_NULL("api.error.common.time-cannot-be-null"),
+	COMMON_ERROR_TIME_ZONE_CANNOT_BE_NULL("api.error.common.time-zone-cannot-be-null"),
+	COMMON_ERROR_START_END_DATE_CANNOT_BE_NULL("api.error.common.start-end-date-cannot-be-null"),
+	COMMON_ERROR_INVALID_DAY_OF_MONTH("api.error.common.invalid-day-of-month"),
+	COMMON_ERROR_EPOCH_MILLIS_CANNOT_BE_NULL("api.error.common.epoch-millis-cannot-be-null"),
+	COMMON_ERROR_INVALID_TOKEN("api.error.common.invalid-token"),
+	COMMON_ERROR_JWT_SIGNIN_KEY_GENERATION_ISSUE("api.error.common.jwt-signin-key-generation-issue");
 
 	private final String messageKey;
 

@@ -16,7 +16,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
         jdbc:
           time_zone: UTC
     show-sql: true
@@ -69,7 +68,3 @@ jwt:
 
 encryptDecryptAlgorithm:
   secret: ${ENCRYPT_DECRYPT_SECRET}
-
-recaptcha:
-  secret: ${RECAPTCHA_SECRET}
-  verify-url: ${RECAPTCHA_VERIFY_URL}
