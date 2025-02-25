@@ -95,8 +95,7 @@ public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 		}
 		else {
 			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeRoot.join(Employee_.teams);
-			predicates.add(criteriaBuilder.and(criteriaBuilder.not(isAdminPredicate),
-					employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamsFilter)));
+			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamsFilter));
 		}
 
 		Subquery<Long> leaveSubquery = criteriaQuery.subquery(Long.class);
@@ -181,8 +180,7 @@ public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 					criteriaBuilder.or(isAdminPredicate, employeeRoot.get(Employee_.employeeId).in(employeesSubquery)));
 		}
 		else {
-			predicates.add(criteriaBuilder.or(isAdminPredicate,
-					employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teams)));
+			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teams));
 		}
 
 		if (clockInType.contains(ClockInType.NOT_CLOCKED_INS) && !clockInType.contains(ClockInType.LATE_CLOCK_INS)) {

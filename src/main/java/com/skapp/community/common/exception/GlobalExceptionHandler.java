@@ -182,7 +182,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(ServletException.class)
 	public ResponseEntity<ResponseEntityDto> handleServletException(ServletException e) {
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-		String message = messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_SERVLET_EXCEPTION);
+		String message = e.getMessage();
 		logDetailedException(e, CommonMessageConstant.COMMON_ERROR_SERVLET_EXCEPTION.name(), message, status);
 
 		return new ResponseEntity<>(
@@ -212,7 +212,7 @@ public class GlobalExceptionHandler {
 				new ErrorResponse(status, message, CommonMessageConstant.COMMON_ERROR_IO_EXCEPTION)), status);
 	}
 
-	private void logDetailedException(Exception e, String messageKey, String message, HttpStatus status) {
+	protected void logDetailedException(Exception e, String messageKey, String message, HttpStatus status) {
 		String apiPath = request.getRequestURI();
 		String method = request.getMethod();
 		String redColor = "\u001B[31m";
