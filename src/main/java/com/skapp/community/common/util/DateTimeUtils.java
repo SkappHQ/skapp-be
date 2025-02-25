@@ -489,6 +489,15 @@ public class DateTimeUtils {
 	}
 
 	/**
+	 * Converts epoch seconds to UTC LocalDate.
+	 * @param epochMillis the epoch milliseconds to convert
+	 * @return the corresponding LocalDate in UTC, or null if epochMillis is null
+	 */
+	public static LocalDate epochSecondToUtcLocalDate(Long epochMillis) {
+		return Instant.ofEpochSecond(epochMillis).atZone(ZoneOffset.UTC).toLocalDate();
+	}
+
+	/**
 	 * Converts epoch milliseconds to LocalTime using UTC timezone.
 	 * @param epochMillis the epoch milliseconds to convert.
 	 * @return the corresponding LocalTime in UTC.
