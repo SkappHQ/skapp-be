@@ -11,5 +11,3 @@ databaseChangeLog:
       file: classpath:community/db/changelog/ddl-script/common-ddl-script-v1-create-table-system-version.sql
   - include:
       file: classpath:community/db/changelog/ddl-script/common-ddl-script-v1-create-table-user-version.sql
-  - include:
-      file: classpath:community/db/changelog/dml-script/common-dml-script-v1-insert-system-version.sql
