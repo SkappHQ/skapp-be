@@ -4,6 +4,7 @@ import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.service.UserService;
+import com.skapp.community.common.service.UserVersionService;
 import com.skapp.community.common.type.ModuleType;
 import com.skapp.community.common.type.Role;
 import com.skapp.community.common.type.RoleLevel;
@@ -30,6 +31,7 @@ import com.skapp.community.peopleplanner.repository.ModuleRoleRestrictionDao;
 import com.skapp.community.peopleplanner.repository.TeamDao;
 import com.skapp.community.peopleplanner.service.RolesService;
 import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
+import com.skapp.enterprise.common.type.VersionType;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +66,8 @@ public class RolesServiceImpl implements RolesService {
 	private final ModuleRoleRestrictionDao moduleRoleRestrictionDao;
 
 	private final MessageUtil messageUtil;
+
+	private final UserVersionService userVersionService;
 
 	@Override
 	public ResponseEntityDto getSystemRoles() {
@@ -192,6 +196,8 @@ public class RolesServiceImpl implements RolesService {
 		if (!employeeTimelines.isEmpty()) {
 			employeeTimelineDao.saveAll(employeeTimelines);
 		}
+
+		userVersionService.upgradeUserVersion(employee.getUser().getUserId(), VersionType.MINOR);
 
 		log.info("updateEmployeeRoles: execution ended");
 	}

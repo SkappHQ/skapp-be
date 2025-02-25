@@ -17,6 +17,7 @@ import com.skapp.community.common.repository.UserDao;
 import com.skapp.community.common.service.BulkContextService;
 import com.skapp.community.common.service.EncryptionDecryptionService;
 import com.skapp.community.common.service.UserService;
+import com.skapp.community.common.service.UserVersionService;
 import com.skapp.community.common.service.impl.AsyncEmailServiceImpl;
 import com.skapp.community.common.type.LoginMethod;
 import com.skapp.community.common.type.NotificationSettingsType;
@@ -108,6 +109,7 @@ import com.skapp.community.peopleplanner.type.BulkItemStatus;
 import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.util.Validations;
+import com.skapp.enterprise.common.type.VersionType;
 import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -212,6 +214,8 @@ public class PeopleServiceImpl implements PeopleService {
 	private final AsyncEmailServiceImpl asyncEmailServiceImpl;
 
 	private final ApplicationEventPublisher applicationEventPublisher;
+
+	private final UserVersionService userVersionService;
 
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
@@ -802,6 +806,8 @@ public class PeopleServiceImpl implements PeopleService {
 		userDao.save(user);
 		employeeDao.save(employee);
 		applicationEventPublisher.publishEvent(new UserDeactivatedEvent(this, user));
+
+		userVersionService.upgradeUserVersion(employee.getUser().getUserId(), VersionType.MAJOR);
 
 		log.info("updateUserStatus: execution ended");
 		return new ResponseEntityDto(false, "User status updated successfully");

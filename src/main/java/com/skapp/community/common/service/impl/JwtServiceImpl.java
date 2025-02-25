@@ -1,6 +1,8 @@
 package com.skapp.community.common.service.impl;
 
 import com.skapp.community.common.constant.AuthConstants;
+import com.skapp.community.common.repository.SystemVersionDao;
+import com.skapp.community.common.repository.UserVersionDao;
 import com.skapp.community.common.service.JwtService;
 import com.skapp.community.common.type.Role;
 import com.skapp.community.common.type.TokenType;
@@ -29,6 +31,10 @@ import java.util.function.Function;
 @Service
 @RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
+
+	private final SystemVersionDao systemVersionDao;
+
+	private final UserVersionDao userVersionDao;
 
 	@Value("${jwt.access-token.signing-key}")
 	private String jwtSigningKey;
@@ -157,9 +163,16 @@ public class JwtServiceImpl implements JwtService {
 		Map<String, Object> claims = new HashMap<>();
 		List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
 
+		String systemVersion = systemVersionDao.findFirstByOrderByVersionDesc() != null
+				? systemVersionDao.findFirstByOrderByVersionDesc().getVersion() : AuthConstants.DEFAULT_SYSTEM_VERSION;
+		String userVersion = userVersionDao.findByUserId(userId) != null
+				? userVersionDao.findByUserId(userId).getVersion() : AuthConstants.DEFAULT_USER_VERSION;
+
 		claims.put(AuthConstants.TOKEN_TYPE, TokenType.ACCESS);
 		claims.put(AuthConstants.USER_ID, userId);
 		claims.put(AuthConstants.ROLES, roles);
+		claims.put(AuthConstants.SYSTEM_VERSION, systemVersion);
+		claims.put(AuthConstants.USER_VERSION, userVersion);
 
 		return claims;
 	}
