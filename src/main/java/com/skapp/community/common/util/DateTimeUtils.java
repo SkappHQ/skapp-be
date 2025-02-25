@@ -139,7 +139,7 @@ public class DateTimeUtils {
 	 */
 	public static String formatUtcDate(LocalDate date) {
 		if (date == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_CANNOT_BE_NULL);
 		}
 		return date.format(DATE_FORMATTER);
 	}
@@ -152,7 +152,7 @@ public class DateTimeUtils {
 	 */
 	public static String formatUtcDateTime(LocalDateTime dateTime) {
 		if (dateTime == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_TIME_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_TIME_CANNOT_BE_NULL);
 		}
 		return dateTime.format(DATE_TIME_FORMATTER);
 	}
@@ -165,7 +165,7 @@ public class DateTimeUtils {
 	 */
 	public static String formatUtcTime(LocalDateTime time) {
 		if (time == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_TIME_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_TIME_CANNOT_BE_NULL);
 		}
 		return time.format(TIME_FORMATTER);
 	}
@@ -178,7 +178,7 @@ public class DateTimeUtils {
 	 */
 	public static Instant toUtcInstant(Date date) {
 		if (date == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_CANNOT_BE_NULL);
 		}
 		return date.toInstant().atZone(UTC_ZONE_ID).toInstant();
 	}
@@ -205,10 +205,10 @@ public class DateTimeUtils {
 	 */
 	public static LocalDateTime convertToTimeZone(LocalDateTime dateTime, ZoneId targetZoneId) {
 		if (dateTime == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_TIME_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_TIME_CANNOT_BE_NULL);
 		}
 		if (targetZoneId == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_TIME_ZONE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_TIME_ZONE_CANNOT_BE_NULL);
 		}
 		return dateTime.atZone(UTC_ZONE_ID).withZoneSameInstant(targetZoneId).toLocalDateTime();
 	}
@@ -222,10 +222,10 @@ public class DateTimeUtils {
 	 */
 	public static LocalDateTime convertToUtc(LocalDateTime dateTime, ZoneId sourceZoneId) {
 		if (dateTime == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_TIME_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_TIME_CANNOT_BE_NULL);
 		}
 		if (sourceZoneId == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_TIME_ZONE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_TIME_ZONE_CANNOT_BE_NULL);
 		}
 		return dateTime.atZone(sourceZoneId).withZoneSameInstant(UTC_ZONE_ID).toLocalDateTime();
 	}
@@ -240,7 +240,7 @@ public class DateTimeUtils {
 	 */
 	public static LocalDate skipWeekendsIfFriday(LocalDate currentDate) {
 		if (currentDate == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_CANNOT_BE_NULL);
 		}
 		DayOfWeek friday = DayOfWeek.FRIDAY;
 		DayOfWeek currentDayOfWeek = currentDate.getDayOfWeek();
@@ -272,7 +272,7 @@ public class DateTimeUtils {
 	 */
 	public static int getYear(LocalDate date) {
 		if (date == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_CANNOT_BE_NULL);
 		}
 		return date.getYear();
 	}
@@ -294,7 +294,7 @@ public class DateTimeUtils {
 	 */
 	public static LocalDate calculateEndDateAfterYears(LocalDate startDate, int years) {
 		if (startDate == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_CANNOT_BE_NULL);
 		}
 		return startDate.plusYears(years).minusDays(1);
 	}
@@ -307,7 +307,7 @@ public class DateTimeUtils {
 	 */
 	public static LocalDate incrementYearByOne(LocalDate localDate) {
 		if (localDate == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_CANNOT_BE_NULL);
 		}
 		return localDate.plusYears(1);
 	}
@@ -322,7 +322,7 @@ public class DateTimeUtils {
 	 */
 	public static LocalDate incrementDays(LocalDate startDate, int numberOfDays) {
 		if (startDate == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_CANNOT_BE_NULL);
 		}
 		return startDate.plusDays(numberOfDays);
 	}
@@ -335,7 +335,7 @@ public class DateTimeUtils {
 	 */
 	public static int getMonthValue(LocalDate date) {
 		if (date == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_CANNOT_BE_NULL);
 		}
 		return date.getMonthValue();
 	}
@@ -348,7 +348,7 @@ public class DateTimeUtils {
 	 */
 	public static int getDayOfMonth(LocalDate date) {
 		if (date == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_CANNOT_BE_NULL);
 		}
 		return date.getDayOfMonth();
 	}
@@ -363,7 +363,7 @@ public class DateTimeUtils {
 	 */
 	public static boolean isValidDateRange(LocalDate startDate, LocalDate endDate) {
 		if (startDate == null || endDate == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_START_END_DATE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_START_END_DATE_CANNOT_BE_NULL);
 		}
 		return startDate.isBefore(endDate);
 	}
@@ -376,7 +376,7 @@ public class DateTimeUtils {
 	 */
 	public static String getTextTimeFromDate(LocalDate date) {
 		if (date == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_CANNOT_BE_NULL);
 		}
 		int day = date.getDayOfMonth();
 		String month = date.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
@@ -391,7 +391,7 @@ public class DateTimeUtils {
 	 */
 	public static String getDayOfMonthSuffix(int day) {
 		if (day < 1 || day > 31) {
-			throw new ModuleException(CommonMessageConstant.ERROR_INVALID_DAY_OF_MONTH);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_INVALID_DAY_OF_MONTH);
 		}
 		if (day >= 11 && day <= 13) {
 			return "th";
@@ -412,7 +412,7 @@ public class DateTimeUtils {
 	 */
 	public static boolean isCurrentYearOrNext(LocalDate date) {
 		if (date == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_CANNOT_BE_NULL);
 		}
 		int year = date.getYear();
 		int currentYear = Year.now().getValue();
@@ -427,7 +427,7 @@ public class DateTimeUtils {
 	 */
 	public static boolean isValidTimeZone(String timeZone) {
 		if (timeZone == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_TIME_ZONE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_TIME_ZONE_CANNOT_BE_NULL);
 		}
 		Set<String> validIDs = ZoneId.getAvailableZoneIds();
 		return validIDs.contains(timeZone);
@@ -441,7 +441,7 @@ public class DateTimeUtils {
 	 */
 	public static String getTimeStringByTimeZone(ZoneId zoneId) {
 		if (zoneId == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_TIME_ZONE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_TIME_ZONE_CANNOT_BE_NULL);
 		}
 		DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH.mm a");
 		ZonedDateTime zonedDateTime = ZonedDateTime.now(zoneId);
@@ -457,7 +457,7 @@ public class DateTimeUtils {
 	 */
 	public static String getDateStringByTimeZone(ZoneId zoneId) {
 		if (zoneId == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_TIME_ZONE_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_TIME_ZONE_CANNOT_BE_NULL);
 		}
 		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 		ZonedDateTime zonedDateTime = ZonedDateTime.now(zoneId);
@@ -505,7 +505,7 @@ public class DateTimeUtils {
 	 */
 	public static LocalTime epochMillisToUtcLocalTime(Long epochMillis) {
 		if (epochMillis == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_EPOCH_MILLIS_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EPOCH_MILLIS_CANNOT_BE_NULL);
 		}
 		return Instant.ofEpochMilli(epochMillis).atZone(ZoneOffset.UTC).toLocalTime();
 	}
@@ -518,7 +518,7 @@ public class DateTimeUtils {
 	 */
 	public static long localDateTimeToEpochMillis(LocalDateTime localDateTime) {
 		if (localDateTime == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_TIME_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_TIME_CANNOT_BE_NULL);
 		}
 		return localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
 	}
@@ -531,7 +531,7 @@ public class DateTimeUtils {
 	 */
 	public static LocalDate toLocalDate(LocalDateTime localDateTime) {
 		if (localDateTime == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_DATE_TIME_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_DATE_TIME_CANNOT_BE_NULL);
 		}
 		return localDateTime.toLocalDate();
 	}
@@ -544,7 +544,7 @@ public class DateTimeUtils {
 	 */
 	public static LocalDate getLocalDateFromEpoch(Long epochDateTime) {
 		if (epochDateTime == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_EPOCH_MILLIS_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EPOCH_MILLIS_CANNOT_BE_NULL);
 		}
 		return Instant.ofEpochMilli(epochDateTime).atZone(ZoneOffset.UTC).toLocalDate();
 	}
@@ -577,7 +577,7 @@ public class DateTimeUtils {
 
 	public static String epochMillisToAmPmString(Long epochMillis) {
 		if (epochMillis == null) {
-			throw new ModuleException(CommonMessageConstant.ERROR_EPOCH_MILLIS_CANNOT_BE_NULL);
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EPOCH_MILLIS_CANNOT_BE_NULL);
 		}
 		LocalTime time = Instant.ofEpochMilli(epochMillis).atZone(ZoneOffset.UTC).toLocalTime();
 		return time.format(AM_PM_FORMATTER);
