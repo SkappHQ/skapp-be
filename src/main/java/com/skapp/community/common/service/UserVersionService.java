@@ -1,6 +1,6 @@
 package com.skapp.community.common.service;
 
-import com.skapp.enterprise.common.type.VersionType;
+import com.skapp.community.common.type.VersionType;
 
 public interface UserVersionService {
 

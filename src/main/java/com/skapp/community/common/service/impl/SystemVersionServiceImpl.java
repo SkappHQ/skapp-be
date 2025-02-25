@@ -7,7 +7,7 @@ import com.skapp.community.common.service.CacheService;
 import com.skapp.community.common.service.SystemVersionService;
 import com.skapp.community.common.type.CacheKeys;
 import com.skapp.community.common.type.SystemVersionTypes;
-import com.skapp.enterprise.common.type.VersionType;
+import com.skapp.community.common.type.VersionType;
 import com.skapp.enterprise.common.util.VersionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

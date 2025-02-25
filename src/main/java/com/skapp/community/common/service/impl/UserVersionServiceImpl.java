@@ -6,7 +6,7 @@ import com.skapp.community.common.repository.UserVersionDao;
 import com.skapp.community.common.service.CacheService;
 import com.skapp.community.common.service.UserVersionService;
 import com.skapp.community.common.type.CacheKeys;
-import com.skapp.enterprise.common.type.VersionType;
+import com.skapp.community.common.type.VersionType;
 import com.skapp.enterprise.common.util.VersionUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
