@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SystemVersionDao extends JpaRepository<SystemVersion, String> {
 
-	SystemVersion findFirstByOrderByVersionDesc();
+	SystemVersion findFirstByOrderByCreatedDateDesc();
 
 }
