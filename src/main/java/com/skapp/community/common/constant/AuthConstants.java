@@ -24,4 +24,12 @@ public class AuthConstants {
 
 	public static final String TIER = "tier";
 
+	public static final String SYSTEM_VERSION = "system_version";
+
+	public static final String USER_VERSION = "user_version";
+
+	public static final String DEFAULT_SYSTEM_VERSION = "1.0.0";
+
+	public static final String DEFAULT_USER_VERSION = "1.0.0";
+
 }
