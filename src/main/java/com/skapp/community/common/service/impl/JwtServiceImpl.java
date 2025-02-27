@@ -157,7 +157,7 @@ public class JwtServiceImpl implements JwtService {
 	public void checkVersionMismatch(Long userId, String accessToken) {
 		String systemVersion = extractClaim(accessToken,
 				claims -> claims.get(AuthConstants.SYSTEM_VERSION, String.class));
-		String latestSystemVersion = systemVersionService.getLatestVersion();
+		String latestSystemVersion = systemVersionService.getLatestSystemVersion();
 		if (systemVersion != null && !systemVersion.equals(latestSystemVersion)) {
 			throw new AuthenticationException(CommonMessageConstant.COMMON_ERROR_SYSTEM_VERSION_MISMATCH);
 		}
@@ -185,7 +185,7 @@ public class JwtServiceImpl implements JwtService {
 		Map<String, Object> claims = new HashMap<>();
 		List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
 
-		String systemVersion = systemVersionService.getLatestVersion();
+		String systemVersion = systemVersionService.getLatestSystemVersion();
 		String userVersion = userVersionService.getUserVersion(userId);
 
 		claims.put(AuthConstants.TOKEN_TYPE, TokenType.ACCESS);
