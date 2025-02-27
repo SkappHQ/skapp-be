@@ -7,6 +7,6 @@ public interface SystemVersionService {
 
 	void upgradeSystemVersion(VersionType versionType, SystemVersionTypes systemVersionType);
 
-	String getLatestVersion();
+	String getLatestSystemVersion();
 
 }

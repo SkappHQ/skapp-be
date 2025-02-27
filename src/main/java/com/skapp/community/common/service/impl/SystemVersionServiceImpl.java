@@ -25,7 +25,7 @@ public class SystemVersionServiceImpl implements SystemVersionService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public String getLatestVersion() {
+	public String getLatestSystemVersion() {
 		CacheKeys cacheKey = CacheKeys.SYSTEM_VERSION_CACHE_KEY;
 
 		String cachedVersion = cacheService.get(cacheKey.getKey());
@@ -33,7 +33,7 @@ public class SystemVersionServiceImpl implements SystemVersionService {
 			return cachedVersion;
 		}
 
-		SystemVersion latestVersion = systemVersionDao.findFirstByOrderByVersionDesc();
+		SystemVersion latestVersion = systemVersionDao.findFirstByOrderByCreatedDateDesc();
 		String version = (latestVersion != null) ? latestVersion.getVersion() : AuthConstants.DEFAULT_SYSTEM_VERSION;
 
 		cacheService.put(cacheKey.getKey(), version, cacheKey.getTtl(), cacheKey.getTimeUnit());
@@ -43,7 +43,7 @@ public class SystemVersionServiceImpl implements SystemVersionService {
 
 	@Override
 	public void upgradeSystemVersion(VersionType versionType, SystemVersionTypes systemVersionType) {
-		SystemVersion latestVersion = systemVersionDao.findFirstByOrderByVersionDesc();
+		SystemVersion latestVersion = systemVersionDao.findFirstByOrderByCreatedDateDesc();
 		String currentVersion = (latestVersion != null) ? latestVersion.getVersion()
 				: AuthConstants.DEFAULT_SYSTEM_VERSION;
 		String newVersion = VersionUtil.incrementVersion(currentVersion, versionType);
