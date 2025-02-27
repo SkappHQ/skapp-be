@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.skapp.community.common.component.AsyncEmailSender;
 import com.skapp.community.common.model.Organization;
+import com.skapp.community.common.payload.email.CommonEmailDynamicFields;
 import com.skapp.community.common.payload.email.EmailTemplateMetadata;
 import com.skapp.community.common.payload.request.TestEmailServerRequestDto;
 import com.skapp.community.common.repository.OrganizationDao;
@@ -80,7 +81,11 @@ public class EmailServiceImpl implements EmailService {
 					&& emailTemplate != EmailBodyTemplates.COMMON_MODULE_SSO_CREATION_TENANT_URL
 					&& emailTemplate != EmailBodyTemplates.COMMON_MODULE_CREDENTIAL_BASED_CREATION_TENANT_URL) {
 				Optional<Organization> organization = organizationDao.findTopByOrderByOrganizationIdDesc();
-				organization.ifPresent(value -> placeholders.put("appUrl", value.getAppUrl()));
+				organization.ifPresent(value -> {
+					placeholders.put("appUrl", value.getAppUrl());
+					placeholders.put("organizationName", value.getOrganizationName());
+				});
+
 			}
 
 			String emailBody = buildEmailBody(templateDetails, module, placeholders);
