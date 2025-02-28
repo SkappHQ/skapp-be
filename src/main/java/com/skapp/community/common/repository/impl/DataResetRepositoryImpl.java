@@ -3,17 +3,17 @@ package com.skapp.community.common.repository.impl;
 import com.skapp.community.common.repository.DataResetRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Repository
 @RequiredArgsConstructor
 public class DataResetRepositoryImpl implements DataResetRepository {
 
-	@NonNull
-	private EntityManager entityManager;
+	private final EntityManager entityManager;
 
 	@Value("${spring.datasource.url}")
 	private String dataSourceUrl;

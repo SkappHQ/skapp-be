@@ -31,20 +31,18 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 
-	@NonNull
-	private EntityManager entityManager;
+	private final EntityManager entityManager;
 
 	@Override
 	public Long countAvailableEmployeesByTeamIdsAndDate(List<Long> teamsFilter, LocalDate currentDate,
@@ -259,7 +257,7 @@ public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 						employeeRoot.get(Employee_.employeeId).in(supervisedTeamsSubquery)));
 			}
 			else if (teams != null && !teams.isEmpty()) {
-				// Filter by specific teams
+				// Filter by specific teamSupervisors
 				Join<Employee, EmployeeTeam> employeeTeamJoin = employeeRoot.join(Employee_.teams, JoinType.LEFT);
 				Predicate teamPredicate = employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teams);
 				predicates.add(teamPredicate);

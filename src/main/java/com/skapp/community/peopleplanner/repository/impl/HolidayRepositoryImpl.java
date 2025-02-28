@@ -11,25 +11,23 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.query.QueryUtils;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class HolidayRepositoryImpl implements HolidayRepository {
 
-	@NonNull
-	private EntityManager entityManager;
+	private final EntityManager entityManager;
 
 	public Page<Holiday> findAllHolidays(HolidayFilterDto holidayFilterDto, Pageable page) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();

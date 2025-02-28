@@ -3,7 +3,6 @@ package com.skapp.community.peopleplanner.mapper;
 import com.skapp.community.common.payload.request.SuperAdminSignUpRequestDto;
 import com.skapp.community.common.payload.response.EmployeeSignInResponseDto;
 import com.skapp.community.leaveplanner.payload.EmployeeLeaveEntitlementsDto;
-import com.skapp.community.leaveplanner.payload.EmployeeLeaveRequestDto;
 import com.skapp.community.leaveplanner.payload.EmployeeSummarizedResponseDto;
 import com.skapp.community.leaveplanner.payload.ManagerSummarizedTeamResponseDto;
 import com.skapp.community.leaveplanner.payload.response.EmployeeLeaveEntitlementReportExportDto;
@@ -42,7 +41,6 @@ import com.skapp.community.peopleplanner.payload.request.TeamRequestDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeDataExportResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeDetailedResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeJobFamilyDto;
-import com.skapp.community.peopleplanner.payload.response.EmployeeManagerResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeePeriodResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeRoleResponseDto;
@@ -209,20 +207,14 @@ public interface PeopleMapper {
 
 	List<HolidayBasicDetailsResponseDto> holidaysToHolidayBasicDetailsResponseDtos(List<Holiday> holidays);
 
-	List<EmployeeBasicDetailsResponseDto> employeeLeaveRequestDtosToEmployeeBasicDetailsResponseDtos(
-			List<EmployeeLeaveRequestDto> onLeaveEmployees);
-
-	List<EmployeeBasicDetailsResponseDto> employeesToEmployeeBasicDetailsResponseDtos(List<Employee> employees);
-
 	JobTitleDto jobTitleToJobTitleDto(JobTitle jobTitle);
-
-	List<EmployeeManagerResponseDto> employeeManagerListToEmployeeManagerResponseDtoList(
-			List<EmployeeManager> byEmployee);
 
 	List<EmployeeSummarizedResponseDto> employeeListToEmployeeSummarizedResponseDto(List<Employee> employee);
 
 	List<TeamDetailResponseDto> teamToTeamDetailResponseDto(List<Team> team);
 
 	List<TeamBasicDetailsResponseDto> teamListToTeamBasicDetailsResponseDtoList(List<Team> teams);
+
+	TeamBasicDetailsResponseDto teamToTeamBasicDetailsResponseDto(Team team);
 
 }

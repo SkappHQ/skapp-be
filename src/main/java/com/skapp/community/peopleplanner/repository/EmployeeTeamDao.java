@@ -4,10 +4,12 @@ import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.EmployeeTeam;
 import com.skapp.community.peopleplanner.model.Team;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
 
+@Repository
 public interface EmployeeTeamDao extends JpaRepository<EmployeeTeam, Long>, EmployeeTeamRepository {
 
 	List<EmployeeTeam> findEmployeeTeamsByTeam(Team team);

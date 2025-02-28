@@ -52,7 +52,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -61,7 +61,7 @@ import java.util.Optional;
 
 import static com.skapp.community.peopleplanner.util.PeopleUtil.getSearchString;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class EmployeeRepositoryImpl implements EmployeeRepository {
 
