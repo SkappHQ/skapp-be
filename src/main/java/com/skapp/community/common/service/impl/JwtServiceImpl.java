@@ -1,7 +1,11 @@
 package com.skapp.community.common.service.impl;
 
 import com.skapp.community.common.constant.AuthConstants;
+import com.skapp.community.common.constant.CommonMessageConstant;
+import com.skapp.community.common.exception.AuthenticationException;
 import com.skapp.community.common.service.JwtService;
+import com.skapp.community.common.service.SystemVersionService;
+import com.skapp.community.common.service.UserVersionService;
 import com.skapp.community.common.type.Role;
 import com.skapp.community.common.type.TokenType;
 import io.jsonwebtoken.Claims;
@@ -29,6 +33,10 @@ import java.util.function.Function;
 @Service
 @RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
+
+	private final SystemVersionService systemVersionService;
+
+	private final UserVersionService userVersionService;
 
 	@Value("${jwt.access-token.signing-key}")
 	private String jwtSigningKey;
@@ -145,6 +153,26 @@ public class JwtServiceImpl implements JwtService {
 		return extractExpiration(token).before(new Date());
 	}
 
+	@Override
+	public void checkVersionMismatch(Long userId, String accessToken) {
+		String systemVersion = extractClaim(accessToken,
+				claims -> claims.get(AuthConstants.SYSTEM_VERSION, String.class));
+		String latestSystemVersion = systemVersionService.getLatestSystemVersion();
+		if (systemVersion != null && !systemVersion.equals(latestSystemVersion)) {
+			throw new AuthenticationException(CommonMessageConstant.COMMON_ERROR_SYSTEM_VERSION_MISMATCH);
+		}
+
+		if (userId != null) {
+			String userVersion = extractClaim(accessToken,
+					claims -> claims.get(AuthConstants.USER_VERSION, String.class));
+			String latestUserVersion = userVersionService.getUserVersion(userId);
+
+			if (userVersion != null && !userVersion.equals(latestUserVersion)) {
+				throw new AuthenticationException(CommonMessageConstant.COMMON_ERROR_USER_VERSION_MISMATCH);
+			}
+		}
+	}
+
 	private Date extractExpiration(String token) {
 		return extractClaim(token, Claims::getExpiration);
 	}
@@ -157,9 +185,14 @@ public class JwtServiceImpl implements JwtService {
 		Map<String, Object> claims = new HashMap<>();
 		List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
 
+		String systemVersion = systemVersionService.getLatestSystemVersion();
+		String userVersion = userVersionService.getUserVersion(userId);
+
 		claims.put(AuthConstants.TOKEN_TYPE, TokenType.ACCESS);
 		claims.put(AuthConstants.USER_ID, userId);
 		claims.put(AuthConstants.ROLES, roles);
+		claims.put(AuthConstants.SYSTEM_VERSION, systemVersion);
+		claims.put(AuthConstants.USER_VERSION, userVersion);
 
 		return claims;
 	}

@@ -535,7 +535,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		leaveUtilizationFilterDto.setEndDate(cycleEndDate);
 
 		Long employeeId = leaveUtilizationFilterDto.getEmployeeId();
-		Optional<Employee> employeeOptional = employeeDao.findEmployeeByEmployeeIdAndUserActiveNot(employeeId, false);
+		Optional<Employee> employeeOptional = employeeDao.findByEmployeeId(employeeId);
 		List<Long> leaveTypeIds = leaveUtilizationFilterDto.getLeaveTypeIds();
 		List<LeaveType> leaveTypes = getLeaveTypes(leaveUtilizationFilterDto.getLeaveTypeIds());
 		if (leaveTypeIds.getFirst() == -1) {

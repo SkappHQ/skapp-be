@@ -7,3 +7,7 @@ databaseChangeLog:
       file: classpath:community/db/changelog/ddl-script/common-ddl-script-v1-add-employee-esign-role.sql
   - include:
       file: classpath:community/db/changelog/ddl-script/common-ddl-script-v1-edit-organization.sql
+  - include:
+      file: classpath:community/db/changelog/ddl-script/common-ddl-script-v1-create-table-system-version.sql
+  - include:
+      file: classpath:community/db/changelog/ddl-script/common-ddl-script-v1-create-table-user-version.sql
