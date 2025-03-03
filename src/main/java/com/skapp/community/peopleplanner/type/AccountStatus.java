@@ -2,6 +2,6 @@ package com.skapp.community.peopleplanner.type;
 
 public enum AccountStatus {
 
-	ACTIVE, TERMINATED, PENDING, INACTIVE
+	ACTIVE, TERMINATED, PENDING, DEACTIVATED
 
 }
