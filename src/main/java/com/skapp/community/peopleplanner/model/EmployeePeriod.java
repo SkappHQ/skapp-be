@@ -40,4 +40,14 @@ public class EmployeePeriod {
 	@Column(name = "is_active")
 	private boolean isActive;
 
+	public EmployeePeriod(EmployeePeriod other) {
+		if (other != null) {
+			this.id = other.id;
+			this.startDate = other.startDate;
+			this.endDate = other.endDate;
+			this.isActive = other.isActive;
+			this.employee = other.employee;
+		}
+	}
+
 }

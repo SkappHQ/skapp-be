@@ -31,7 +31,6 @@ import com.skapp.community.common.util.event.UserCreatedEvent;
 import com.skapp.community.common.util.event.UserDeactivatedEvent;
 import com.skapp.community.common.util.transformer.PageTransformer;
 import com.skapp.community.leaveplanner.type.ManagerType;
-import com.skapp.community.peopleplanner.constant.EmployeeTimelineConstant;
 import com.skapp.community.peopleplanner.constant.PeopleConstants;
 import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
 import com.skapp.community.peopleplanner.mapper.PeopleMapper;
@@ -45,11 +44,11 @@ import com.skapp.community.peopleplanner.model.EmployeePersonalInfo;
 import com.skapp.community.peopleplanner.model.EmployeeProgression;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
 import com.skapp.community.peopleplanner.model.EmployeeTeam;
-import com.skapp.community.peopleplanner.model.EmployeeTimeline;
 import com.skapp.community.peopleplanner.model.EmployeeVisa;
 import com.skapp.community.peopleplanner.model.JobFamily;
 import com.skapp.community.peopleplanner.model.JobTitle;
 import com.skapp.community.peopleplanner.model.Team;
+import com.skapp.community.peopleplanner.payload.CurrentEmployeeDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeBulkDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDataValidationDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDetailsDto;
@@ -96,22 +95,19 @@ import com.skapp.community.peopleplanner.repository.EmployeeManagerDao;
 import com.skapp.community.peopleplanner.repository.EmployeePeriodDao;
 import com.skapp.community.peopleplanner.repository.EmployeeProgressionDao;
 import com.skapp.community.peopleplanner.repository.EmployeeTeamDao;
-import com.skapp.community.peopleplanner.repository.EmployeeTimelineDao;
 import com.skapp.community.peopleplanner.repository.EmployeeVisaDao;
 import com.skapp.community.peopleplanner.repository.JobFamilyDao;
 import com.skapp.community.peopleplanner.repository.JobTitleDao;
 import com.skapp.community.peopleplanner.repository.TeamDao;
-import com.skapp.community.peopleplanner.service.EmployeeTimelineService;
 import com.skapp.community.peopleplanner.service.PeopleEmailService;
 import com.skapp.community.peopleplanner.service.PeopleService;
 import com.skapp.community.peopleplanner.service.RolesService;
 import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.BulkItemStatus;
-import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.util.Validations;
+import jakarta.persistence.EntityManager;
 import jakarta.validation.constraints.NotNull;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -144,7 +140,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.skapp.community.common.util.Validation.ADDRESS_REGEX;
@@ -152,9 +147,6 @@ import static com.skapp.community.common.util.Validation.ALPHANUMERIC_REGEX;
 import static com.skapp.community.common.util.Validation.NAME_REGEX;
 import static com.skapp.community.common.util.Validation.SPECIAL_CHAR_REGEX;
 import static com.skapp.community.common.util.Validation.VALID_NIN_NUMBER_REGEXP;
-import static com.skapp.community.peopleplanner.constant.EmployeeTimelineConstant.TITLE_EMPLOYMENT_TYPE_CHANGED;
-import static com.skapp.community.peopleplanner.constant.EmployeeTimelineConstant.TITLE_JOB_FAMILY_CHANGED;
-import static com.skapp.community.peopleplanner.constant.EmployeeTimelineConstant.TITLE_JOB_TITLE_CHANGED;
 
 @Service
 @Slf4j
@@ -189,11 +181,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 	private final EmployeeTeamDao employeeTeamDao;
 
-	private final EmployeeTimelineDao employeeTimelineDao;
-
 	private final EmployeeManagerDao employeeManagerDao;
-
-	private final EmployeeTimelineService employeeTimelineService;
 
 	private final PasswordEncoder passwordEncoder;
 
@@ -217,6 +205,8 @@ public class PeopleServiceImpl implements PeopleService {
 
 	private final UserVersionService userVersionService;
 
+	private final EntityManager entityManager;
+
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
 
@@ -226,7 +216,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 	@Override
 	@Transactional(propagation = Propagation.REQUIRED)
-	public ResponseEntityDto addNewEmployee(@NonNull EmployeeDetailsDto employeeDetailsDto) {
+	public ResponseEntityDto addNewEmployee(EmployeeDetailsDto employeeDetailsDto) {
 		log.info("addNewEmployee: execution started");
 
 		Optional<User> existingUser = userDao.findByEmail(employeeDetailsDto.getWorkEmail());
@@ -234,10 +224,8 @@ public class PeopleServiceImpl implements PeopleService {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_USER_EMAIL_ALREADY_EXIST);
 		}
 
-		// Validate the roles
 		rolesService.validateRoles(employeeDetailsDto.getUserRoles());
 
-		// Validate the employee details
 		Validations.validateEmployeeDetails(employeeDetailsDto);
 
 		Employee finalEmployee = peopleMapper.employeeDetailsDtoToEmployee(employeeDetailsDto);
@@ -298,7 +286,6 @@ public class PeopleServiceImpl implements PeopleService {
 
 		employeeDao.save(finalEmployee);
 
-		employeeTimelineService.addNewEmployeeTimeLineRecords(finalEmployee, employeeDetailsDto);
 		rolesService.assignRolesToEmployee(employeeDetailsDto.getUserRoles(), finalEmployee);
 
 		EmployeeDetailedResponseDto employeeResponseDto = peopleMapper
@@ -317,6 +304,8 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 
 		peopleEmailService.sendUserInvitationEmail(user);
+
+		addNewEmployeeTimeLineRecords(finalEmployee, employeeDetailsDto);
 
 		return new ResponseEntityDto(false, employeeResponseDto);
 	}
@@ -391,22 +380,26 @@ public class PeopleServiceImpl implements PeopleService {
 		log.info("updateEmployee: execution started");
 
 		Optional<Employee> optionalEmployee = employeeDao.findById(employeeId);
+
 		if (optionalEmployee.isEmpty()) {
 			log.info("updateEmployee: employee with ID {} not found", employeeId);
 			throw new EntityNotFoundException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND);
 		}
 
-		if (optionalEmployee.get().getAccountStatus().equals(AccountStatus.TERMINATED)) {
+		CurrentEmployeeDto currentEmployeeDto = getEmployeeDeepCopy(optionalEmployee.get());
+
+		Employee employee = optionalEmployee.get();
+
+		if (employee.getAccountStatus().equals(AccountStatus.TERMINATED)) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_TERMINATED);
 		}
 
-		if (optionalEmployee.get().getAccountStatus().equals(AccountStatus.PENDING)
-				&& employeeUpdateDto.getEmail() != null
-				&& !Objects.equals(optionalEmployee.get().getUser().getEmail(), employeeUpdateDto.getEmail())) {
+		if (employee.getAccountStatus().equals(AccountStatus.PENDING) && employeeUpdateDto.getEmail() != null
+				&& !Objects.equals(employee.getUser().getEmail(), employeeUpdateDto.getEmail())) {
 			if (userDao.findByEmail(employeeUpdateDto.getEmail()).isPresent()) {
 				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_USER_EMAIL_ALREADY_EXIST);
 			}
-			updateEmailAndSendReInvitation(optionalEmployee.get(), employeeUpdateDto.getEmail());
+			updateEmailAndSendReInvitation(employee, employeeUpdateDto.getEmail());
 		}
 
 		User currentUser = userService.getCurrentUser();
@@ -420,14 +413,9 @@ public class PeopleServiceImpl implements PeopleService {
 
 		rolesService.validateRoles(employeeUpdateDto.getUserRoles());
 
-		String employeePreviousName = optionalEmployee.get().getFirstName();
-		String employeePreviousLastName = optionalEmployee.get().getLastName();
-
-		Employee employee = optionalEmployee.get();
 		rolesService.updateEmployeeRoles(employeeUpdateDto.getUserRoles(), employee);
 
-		List<EmployeeTimeline> employeeTimelines = new ArrayList<>();
-		processAndUpdateEmployeeDetails(employeeUpdateDto, employee, employeeTimelines);
+		processAndUpdateEmployeeDetails(employeeUpdateDto, employee);
 
 		updateManagers(employeeUpdateDto, employee);
 
@@ -437,7 +425,6 @@ public class PeopleServiceImpl implements PeopleService {
 				if (Boolean.TRUE.equals(progression.getIsCurrent())) {
 					JobFamily jobFamily = jobFamilyDao.getJobFamilyById(progression.getJobFamilyId());
 					JobTitle jobTitle = jobTitleDao.getJobTitleById(progression.getJobTitleId());
-
 					employee.setJobFamily(jobFamily);
 					employee.setJobTitle(jobTitle);
 				}
@@ -445,10 +432,10 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 
 		employee = employeeDao.save(employee);
-		employeeTimelineDao.saveAll(employeeTimelines);
-		modifyManagerEmployeesHistory(employeePreviousName, employeePreviousLastName, employee);
 		EmployeeDetailedResponseDto responseDto = peopleMapper.employeeToEmployeeDetailedResponseDto(employee);
 		setEmployeePeriodDto(responseDto);
+
+		addUpdatedEmployeeTimeLineRecords(currentEmployeeDto, employeeUpdateDto);
 
 		log.info("updateEmployee: execution ended");
 		return new ResponseEntityDto(false, responseDto);
@@ -755,8 +742,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 			updateLoggedInUserGeneralDetails(employeeUpdateDto, employee);
 			updateManagers(employeeUpdateDto, employee);
-			List<EmployeeTimeline> employeeTimelines = new ArrayList<>();
-			processAndUpdateEmployeeDetails(employeeUpdateDto, employee, employeeTimelines);
+			processAndUpdateEmployeeDetails(employeeUpdateDto, employee);
 
 			employee = employeeDao.save(employee);
 			EmployeeResponseDto responseDto = peopleMapper.employeeToEmployeeResponseDto(employee);
@@ -1072,295 +1058,6 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 	}
 
-	private void updateLoggedInUserEmergencyDetails(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employeeUpdateDto.getEmployeeEmergency() != null) {
-			List<EmployeeEmergency> emergencies = employee.getEmployeeEmergencies();
-			for (EmployeeEmergencyDto employeeEmergencyDto : employeeUpdateDto.getEmployeeEmergency()) {
-				updateLoggedInUserEmergencyDetailsFromDto(employeeEmergencyDto, emergencies, employee);
-			}
-		}
-	}
-
-	private void updateLoggedInUserEmergencyDetailsFromDto(EmployeeEmergencyDto employeeEmergencyDto,
-			List<EmployeeEmergency> emergencies, Employee employee) {
-		EmployeeEmergency emergency = null;
-		if (employeeEmergencyDto.getEmergencyId() != null) {
-			for (EmployeeEmergency existingEmergency : emergencies) {
-				if (existingEmergency.getEmergencyId().equals(employeeEmergencyDto.getEmergencyId())) {
-					emergency = existingEmergency;
-					break;
-				}
-			}
-		}
-		else {
-			emergency = new EmployeeEmergency();
-			emergency.setEmployee(employee);
-			emergencies.add(emergency);
-		}
-		if (emergency != null) {
-			setEmergencyDetails(emergency, employeeEmergencyDto);
-		}
-
-	}
-
-	private void setEmergencyDetails(EmployeeEmergency emergency, EmployeeEmergencyDto dto) {
-		emergency.setName(dto.getName() != null ? dto.getName() : emergency.getName());
-		emergency.setEmergencyRelationship(dto.getEmergencyRelationship() != null ? dto.getEmergencyRelationship()
-				: emergency.getEmergencyRelationship());
-		emergency.setContactNo(dto.getContactNo() != null ? dto.getContactNo() : emergency.getContactNo());
-		emergency.setIsPrimary(dto.getIsPrimary() != null ? dto.getIsPrimary() : emergency.getIsPrimary());
-	}
-
-	private void updateLoggedInUserVisaDetails(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employeeUpdateDto.getEmployeeVisas() != null) {
-			List<EmployeeVisa> visas = employee.getEmployeeVisas();
-			Validations.validateVisaDates(employeeUpdateDto.getEmployeeVisas());
-			List<Long> currentIdList = employee.getEmployeeVisas().stream().map(EmployeeVisa::getVisaId).toList();
-			List<Long> updatingIdList = new ArrayList<>();
-			updateLoggedInUserVisaFromDto(employeeUpdateDto, updatingIdList, visas, employee);
-			if (!currentIdList.isEmpty() && currentIdList.size() > updatingIdList.size()) {
-				for (Long item : currentIdList) {
-					if (!updatingIdList.contains(item)) {
-						removeUnusedVisaDetails(item, employee);
-					}
-				}
-			}
-		}
-	}
-
-	private void removeUnusedVisaDetails(Long id, Employee employee) {
-		Optional<EmployeeVisa> visaOptional = employeeVisaDao.findByVisaId(id);
-		if (visaOptional.isPresent()) {
-			employeeVisaDao.deleteById(visaOptional.get().getVisaId());
-			employee.getEmployeeVisas().remove(visaOptional.get());
-		}
-	}
-
-	private void updateLoggedInUserVisaFromDto(EmployeeUpdateDto employeeUpdateDto, List<Long> updatingIdList,
-			List<EmployeeVisa> visas, Employee employee) {
-		for (EmploymentVisaDto employeeVisaDto : employeeUpdateDto.getEmployeeVisas()) {
-			setCurrentUserSetVisaDetails(employeeVisaDto, visas, updatingIdList, employee);
-		}
-	}
-
-	private void setCurrentUserSetVisaDetails(EmploymentVisaDto employeeVisaDto, List<EmployeeVisa> visas,
-			List<Long> updatingIdList, Employee employee) {
-		EmployeeVisa visa = null;
-		if (employeeVisaDto.getVisaId() != null) {
-			for (EmployeeVisa existingVisa : visas) {
-				if (existingVisa.getVisaId().equals(employeeVisaDto.getVisaId())) {
-					visa = existingVisa;
-					updatingIdList.add(existingVisa.getVisaId());
-					break;
-				}
-			}
-		}
-		else {
-			visa = new EmployeeVisa();
-			visa.setEmployee(employee);
-			visas.add(visa);
-		}
-
-		if (visa != null) {
-			setVisaDetails(visa, employeeVisaDto);
-		}
-	}
-
-	private void setVisaDetails(EmployeeVisa visa, EmploymentVisaDto dto) {
-		visa.setVisaType(dto.getVisaType() != null ? dto.getVisaType() : visa.getVisaType());
-		visa.setIssuingCountry(dto.getIssuingCountry() != null ? dto.getIssuingCountry() : visa.getIssuingCountry());
-		visa.setIssuedDate(dto.getIssuedDate() != null ? dto.getIssuedDate() : visa.getIssuedDate());
-		visa.setExpirationDate(dto.getExpirationDate() != null ? dto.getExpirationDate() : visa.getExpirationDate());
-	}
-
-	private void updateLoggedInUserEducationalDetails(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employeeUpdateDto.getEmployeeEducations() != null) {
-			List<EmployeeEducation> employeeEducation = employee.getEmployeeEducations();
-			List<Long> currentIdList = employee.getEmployeeEducations()
-				.stream()
-				.map(EmployeeEducation::getEducationId)
-				.toList();
-			List<Long> updatingIdList = new ArrayList<>();
-			updateLoggedInUserEducationDetailsFromDto(employeeUpdateDto, employeeEducation, employee, updatingIdList);
-			if (!currentIdList.isEmpty() && currentIdList.size() > updatingIdList.size()) {
-				for (Long educationDetailsId : currentIdList) {
-					if (!updatingIdList.contains(educationDetailsId)) {
-						removeUnusedEducationDetails(educationDetailsId, employee);
-					}
-				}
-			}
-		}
-	}
-
-	private void removeUnusedEducationDetails(Long id, Employee employee) {
-		Optional<EmployeeEducation> eduOptional = employeeEducationDao.findByEducationId(id);
-		if (eduOptional.isPresent()) {
-			employeeEducationDao.deleteById(eduOptional.get().getEducationId());
-			employee.getEmployeeEducations().remove(eduOptional.get());
-		}
-	}
-
-	private void updateLoggedInUserEducationDetailsFromDto(EmployeeUpdateDto employeeUpdateDto,
-			List<EmployeeEducation> employeeEducation, Employee employee, List<Long> updatingIdList) {
-		for (EmployeeEducationDto employeeEducationDto : employeeUpdateDto.getEmployeeEducations()) {
-			setCurrentUserEducationDetailsExists(employeeEducation, employeeEducationDto, updatingIdList, employee);
-		}
-	}
-
-	private void setCurrentUserEducationDetailsExists(List<EmployeeEducation> employeeEducation,
-			EmployeeEducationDto employeeEducationDto, List<Long> updatingIdList, Employee employee) {
-		EmployeeEducation education = null;
-		if (employeeEducationDto.getEducationId() != null) {
-			for (EmployeeEducation existingEducation : employeeEducation) {
-				if (existingEducation.getEducationId().equals(employeeEducationDto.getEducationId())) {
-					education = existingEducation;
-					updatingIdList.add(existingEducation.getEducationId());
-					break;
-				}
-			}
-		}
-		else {
-			education = new EmployeeEducation();
-			education.setEmployee(employee);
-			employeeEducation.add(education);
-		}
-
-		if (education != null) {
-			setEducationDetails(education, employeeEducationDto);
-		}
-
-	}
-
-	private void setEducationDetails(EmployeeEducation education, EmployeeEducationDto dto) {
-		education.setInstitution(dto.getInstitution() != null ? dto.getInstitution() : education.getInstitution());
-		education.setDegree(dto.getDegree() != null ? dto.getDegree() : education.getDegree());
-		education.setSpecialization(
-				dto.getSpecialization() != null ? dto.getSpecialization() : education.getSpecialization());
-		education.setStartDate(dto.getStartDate() != null ? dto.getStartDate() : education.getStartDate());
-		education.setEndDate(dto.getEndDate() != null ? dto.getEndDate() : education.getEndDate());
-	}
-
-	private void updateLoggedInUserFamilyDetails(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employeeUpdateDto.getEmployeeFamilies() != null) {
-			List<EmployeeFamily> employeeFamilies = employee.getEmployeeFamilies();
-			List<Long> currentIdList = employee.getEmployeeFamilies()
-				.stream()
-				.map(EmployeeFamily::getFamilyId)
-				.toList();
-			List<Long> updatingIdList = new ArrayList<>();
-			updateLoggedInUserFamilyDetailsFromDto(employeeUpdateDto, employee, employeeFamilies, updatingIdList);
-			if (!currentIdList.isEmpty() && currentIdList.size() > updatingIdList.size()) {
-				for (Long familyId : currentIdList) {
-					if (!updatingIdList.contains(familyId)) {
-						removeUnusedFamilyDetails(familyId, employee);
-					}
-				}
-			}
-		}
-	}
-
-	private void removeUnusedFamilyDetails(Long id, Employee employee) {
-		Optional<EmployeeFamily> famOptional = employeeFamilyDao.findByFamilyId(id);
-		if (famOptional.isPresent()) {
-			employeeFamilyDao.deleteById(famOptional.get().getFamilyId());
-			employee.getEmployeeFamilies().remove(famOptional.get());
-		}
-	}
-
-	private void updateLoggedInUserFamilyDetailsFromDto(EmployeeUpdateDto employeeUpdateDto, Employee employee,
-			List<EmployeeFamily> employeeFamilies, List<Long> updatingIdList) {
-		for (EmployeeFamilyDto employeeFamilyDto : employeeUpdateDto.getEmployeeFamilies()) {
-			setCurrentUserFamilyDetailsExists(employeeFamilyDto, employeeFamilies, updatingIdList, employee);
-		}
-	}
-
-	private void setCurrentUserFamilyDetailsExists(EmployeeFamilyDto employeeFamilyDto,
-			List<EmployeeFamily> employeeFamilies, List<Long> updatingIdList, Employee employee) {
-		EmployeeFamily family = null;
-		if (employeeFamilyDto.getFamilyId() != null) {
-			for (EmployeeFamily existingFamily : employeeFamilies) {
-				if (existingFamily.getFamilyId().equals(employeeFamilyDto.getFamilyId())) {
-					family = existingFamily;
-					updatingIdList.add(existingFamily.getFamilyId());
-					break;
-				}
-			}
-		}
-		else {
-			family = new EmployeeFamily();
-			family.setEmployee(employee);
-			employeeFamilies.add(family);
-		}
-		if (family != null) {
-			setFamilyDetails(family, employeeFamilyDto);
-		}
-	}
-
-	private void setFamilyDetails(EmployeeFamily family, EmployeeFamilyDto dto) {
-		family.setFirstName(dto.getFirstName() != null ? dto.getFirstName() : family.getFirstName());
-		family.setLastName(dto.getLastName() != null ? dto.getLastName() : family.getLastName());
-		family.setGender(dto.getGender() != null ? dto.getGender() : family.getGender());
-		family.setBirthDate(dto.getBirthDate() != null ? dto.getBirthDate() : family.getBirthDate());
-		family.setFamilyRelationship(
-				dto.getFamilyRelationship() != null ? dto.getFamilyRelationship() : family.getFamilyRelationship());
-		family.setParentName(dto.getParentName() != null ? dto.getParentName() : family.getParentName());
-	}
-
-	private void updateLoggedInUserPersonalDetails(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employeeUpdateDto.getEmployeePersonalInfo() == null) {
-			return;
-		}
-
-		EmployeePersonalInfo personalInfo = getOrCreatePersonalInfo(employee);
-		EmployeePersonalInfoDto dtoInfo = employeeUpdateDto.getEmployeePersonalInfo();
-
-		setPersonalInfoFields(personalInfo, dtoInfo);
-		employee.setPersonalInfo(personalInfo);
-	}
-
-	private EmployeePersonalInfo getOrCreatePersonalInfo(Employee employee) {
-		EmployeePersonalInfo personalInfo = employee.getPersonalInfo();
-		if (personalInfo == null) {
-			personalInfo = new EmployeePersonalInfo();
-			personalInfo.setEmployee(employee);
-		}
-		return personalInfo;
-	}
-
-	private void setPersonalInfoFields(EmployeePersonalInfo personalInfo, EmployeePersonalInfoDto dtoInfo) {
-		setIfNotNull(dtoInfo.getBirthDate(), personalInfo::setBirthDate);
-		setIfNotNull(dtoInfo.getNationality(), personalInfo::setNationality);
-		setIfNotNull(dtoInfo.getNin(), personalInfo::setNin);
-		setStringField(dtoInfo.getPassportNo(), personalInfo::setPassportNo);
-		setIfNotNull(dtoInfo.getMaritalStatus(), personalInfo::setMaritalStatus);
-		setIfNotNull(dtoInfo.getCity(), personalInfo::setCity);
-		setIfNotNull(dtoInfo.getState(), personalInfo::setState);
-		setStringField(dtoInfo.getPostalCode(), personalInfo::setPostalCode);
-		setIfNotNull(dtoInfo.getExtraInfo(), personalInfo::setExtraInfo);
-		setIfNotNull(dtoInfo.getBloodGroup(), personalInfo::setBloodGroup);
-		setStringField(dtoInfo.getSsn(), personalInfo::setSsn);
-		setIfNotNull(dtoInfo.getEthnicity(), personalInfo::setEthnicity);
-
-		if (dtoInfo.getPreviousEmploymentDetails() != null) {
-			validateEmploymentDates(dtoInfo.getPreviousEmploymentDetails());
-			personalInfo.setPreviousEmploymentDetails(dtoInfo.getPreviousEmploymentDetails());
-		}
-
-		setIfNotNull(dtoInfo.getSocialMediaDetails(), personalInfo::setSocialMediaDetails);
-	}
-
-	private <T> void setIfNotNull(T value, Consumer<T> setter) {
-		if (value != null) {
-			setter.accept(value);
-		}
-	}
-
-	private void setStringField(String value, Consumer<String> setter) {
-		if (value != null) {
-			setter.accept(value.isBlank() ? null : value);
-		}
-	}
-
 	private List<CompletableFuture<Void>> createEmployeeTasks(List<EmployeeBulkDto> employeeBulkDtoList,
 			ExecutorService executorService, List<EmployeeBulkResponseDto> results) {
 		List<CompletableFuture<Void>> tasks = new ArrayList<>();
@@ -1400,7 +1097,7 @@ public class PeopleServiceImpl implements PeopleService {
 	private void saveEmployeeInTransaction(EmployeeBulkDto employeeBulkDto, TransactionTemplate transactionTemplate) {
 		transactionTemplate.execute(new TransactionCallbackWithoutResult() {
 			@Override
-			protected void doInTransactionWithoutResult(@NonNull TransactionStatus status) {
+			protected void doInTransactionWithoutResult(TransactionStatus status) {
 				createNewEmployeeFromBulk(employeeBulkDto);
 			}
 		});
@@ -1566,10 +1263,6 @@ public class PeopleServiceImpl implements PeopleService {
 		if (employeeBulkDto.getEmployeePeriod() != null) {
 			saveEmployeePeriod(employee, employeeBulkDto.getEmployeePeriod());
 		}
-
-		EmployeeTimeline employeeTimeline = getEmployeeTimeline(employee, EmployeeTimelineType.JOINED_DATE,
-				EmployeeTimelineConstant.TITLE_JOINED_DATE_CHANGED, null, String.valueOf(employee.getJoinDate()));
-		employeeTimelineDao.save(employeeTimeline);
 	}
 
 	private void saveEmployeeTeams(Employee employee, EmployeeBulkDto employeeBulkDto) {
@@ -2012,8 +1705,7 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 	}
 
-	private void processAndUpdateEmployeeDetails(EmployeeUpdateDto updateDto, Employee employee,
-			List<EmployeeTimeline> employeeTimelines) {
+	private void processAndUpdateEmployeeDetails(EmployeeUpdateDto updateDto, Employee employee) {
 		if (updateDto.getIdentificationNo() != null) {
 			updateDto.setIdentificationNo(updateDto.getIdentificationNo().toUpperCase());
 
@@ -2042,7 +1734,7 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 
 		if (updateDto.getEmployeeProgressions() != null) {
-			updateEmployeeProgression(updateDto, employee, employeeTimelines);
+			updateEmployeeProgression(updateDto, employee);
 		}
 
 		if (updateDto.getTeams() != null) {
@@ -2052,12 +1744,11 @@ public class PeopleServiceImpl implements PeopleService {
 		if (updateDto.getEmployeeFamilies() != null) {
 			updateEmployeeFamilies(updateDto, employee);
 		}
-		validateAndUpdateEmploymentData(updateDto, employee, employeeTimelines);
+		validateAndUpdateEmploymentData(updateDto, employee);
 
 	}
 
-	private void validateAndUpdateEmploymentData(EmployeeUpdateDto employeeUpdateDto, Employee employee,
-			List<EmployeeTimeline> employeeTimelines) {
+	private void validateAndUpdateEmploymentData(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
 		if (employeeUpdateDto.getEmploymentAllocation() != null) {
 			employee.setEmploymentAllocation(employeeUpdateDto.getEmploymentAllocation());
 		}
@@ -2072,22 +1763,13 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 
 		if (employeeUpdateDto.getJoinDate() != null) {
-			List<EmployeeTimeline> joinedDateHistoryRecords = employeeTimelineDao
-				.findByEmployeeAndTimelineType(employee, EmployeeTimelineType.JOINED_DATE);
-			employeeTimelineDao.deleteAllById(joinedDateHistoryRecords.stream().map(EmployeeTimeline::getId).toList());
 			employee.setJoinDate(employeeUpdateDto.getJoinDate());
-			employeeTimelines.add(getEmployeeTimeline(employee, EmployeeTimelineType.JOINED_DATE,
-					EmployeeTimelineConstant.TITLE_JOINED_DATE, null, String.valueOf(employeeUpdateDto.getJoinDate())));
 		}
 
-		updateEmployeePeriod(employeeUpdateDto, employee, employeeTimelines);
-		updateEmploymentTypeTimeline(employee, employeeUpdateDto, employeeTimelines);
-		updateEmploymentAllocationTimeline(employee, employeeUpdateDto, employeeTimelines);
-		updateJobProgressionTimeline(employee, employeeUpdateDto, employeeTimelines);
+		updateEmployeePeriod(employeeUpdateDto, employee);
 	}
 
-	private void updateEmployeePeriod(EmployeeUpdateDto employeeUpdateDto, Employee employee,
-			List<EmployeeTimeline> employeeTimelines) {
+	private void updateEmployeePeriod(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
 		if (employeeUpdateDto.getEmployeePeriod() == null) {
 			return;
 		}
@@ -2097,119 +1779,27 @@ public class PeopleServiceImpl implements PeopleService {
 
 		if (employeePeriodOpt.isPresent()) {
 			EmployeePeriod employeePeriod = employeePeriodOpt.get();
-			updateExistingEmployeePeriod(employeeUpdateDto, employee, employeeTimelines, employeePeriod);
+			updateExistingEmployeePeriod(employeeUpdateDto, employeePeriod);
 		}
 		else {
 			saveEmployeePeriod(employee, employeeUpdateDto.getEmployeePeriod());
 		}
 	}
 
-	private void updateExistingEmployeePeriod(EmployeeUpdateDto employeeUpdateDto, Employee employee,
-			List<EmployeeTimeline> employeeTimelines, EmployeePeriod employeePeriod) {
-		updateStartDate(employeeUpdateDto, employee, employeeTimelines, employeePeriod);
-		updateEndDate(employeeUpdateDto, employee, employeeTimelines, employeePeriod);
+	private void updateExistingEmployeePeriod(EmployeeUpdateDto employeeUpdateDto, EmployeePeriod employeePeriod) {
+		updateStartDate(employeeUpdateDto, employeePeriod);
+		updateEndDate(employeeUpdateDto, employeePeriod);
 		employeePeriod.setActive(false);
 	}
 
-	private void updateStartDate(EmployeeUpdateDto employeeUpdateDto, Employee employee,
-			List<EmployeeTimeline> employeeTimelines, EmployeePeriod employeePeriod) {
+	private void updateStartDate(EmployeeUpdateDto employeeUpdateDto, EmployeePeriod employeePeriod) {
 		LocalDate newStartDate = employeeUpdateDto.getEmployeePeriod().getStartDate();
-
 		employeePeriod.setStartDate(newStartDate);
-
-		if (newStartDate == null) {
-			newStartDate = LocalDate.now();
-			addTimelineEntry(employee, employeeTimelines, EmployeeTimelineType.PROBATION_START_DATE,
-					EmployeeTimelineConstant.TITLE_PROBATION_START_DATE_ADDED, null, newStartDate.toString());
-		}
-		else if (employeePeriod.getStartDate() != null && !employeePeriod.getStartDate().equals(newStartDate)) {
-			addTimelineEntry(employee, employeeTimelines, EmployeeTimelineType.PROBATION_START_DATE,
-					EmployeeTimelineConstant.TITLE_PROBATION_START_DATE_CHANGED,
-					employeePeriod.getStartDate().toString(), newStartDate.toString());
-		}
 	}
 
-	private void updateEndDate(EmployeeUpdateDto employeeUpdateDto, Employee employee,
-			List<EmployeeTimeline> employeeTimelines, EmployeePeriod employeePeriod) {
+	private void updateEndDate(EmployeeUpdateDto employeeUpdateDto, EmployeePeriod employeePeriod) {
 		LocalDate newEndDate = employeeUpdateDto.getEmployeePeriod().getEndDate();
-
 		employeePeriod.setEndDate(newEndDate);
-
-		if (newEndDate == null) {
-			newEndDate = LocalDate.now();
-			addTimelineEntry(employee, employeeTimelines, EmployeeTimelineType.PROBATION_START_DATE,
-					EmployeeTimelineConstant.TITLE_PROBATION_START_DATE_ADDED, null, newEndDate.toString());
-		}
-
-		if (employeePeriod.getEndDate() != null && !employeePeriod.getEndDate().equals(newEndDate)) {
-			addTimelineEntry(employee, employeeTimelines, EmployeeTimelineType.PROBATION_END_DATE,
-					EmployeeTimelineConstant.TITLE_PROBATION_END_DATE_CHANGED, employeePeriod.getEndDate().toString(),
-					newEndDate.toString());
-		}
-		else if (employeePeriod.getEndDate() == null) {
-			addTimelineEntry(employee, employeeTimelines, EmployeeTimelineType.PROBATION_END_DATE,
-					EmployeeTimelineConstant.TITLE_PROBATION_END_DATE_ADDED, null, newEndDate.toString());
-		}
-	}
-
-	private void updateEmploymentAllocationTimeline(Employee employee, EmployeeUpdateDto employeeUpdateDto,
-			List<EmployeeTimeline> employeeTimelines) {
-		if (employeeUpdateDto.getEmploymentAllocation() != null) {
-			EmployeeTimeline employmentAllocationRecord = getEmployeeTimeline(employee,
-					EmployeeTimelineType.EMPLOYMENT_ALLOCATION_CHANGED, "Title Employment Allocation Changed", null,
-					employeeUpdateDto.getEmploymentAllocation().toString());
-
-			employeeTimelines.add(employmentAllocationRecord);
-		}
-	}
-
-	private void updateEmploymentTypeTimeline(Employee employee, EmployeeUpdateDto employeeUpdateDto,
-			List<EmployeeTimeline> employeeTimelines) {
-		if (employeeUpdateDto.getEmployeeProgressions() != null
-				&& !employeeUpdateDto.getEmployeeProgressions().isEmpty()
-				&& employeeUpdateDto.getEmployeeProgressions().getFirst().getEmployeeType() != null) {
-
-			EmployeeType currentEmploymentType = employeeUpdateDto.getEmployeeProgressions()
-				.getFirst()
-				.getEmployeeType();
-
-			EmployeeTimeline employmentTypeRecord = getEmployeeTimeline(employee,
-					EmployeeTimelineType.EMPLOYMENT_TYPE_CHANGED, TITLE_EMPLOYMENT_TYPE_CHANGED, null,
-					currentEmploymentType.toString());
-
-			employeeTimelines.add(employmentTypeRecord);
-		}
-	}
-
-	private void updateJobProgressionTimeline(Employee employee, EmployeeUpdateDto employeeUpdateDto,
-			List<EmployeeTimeline> employeeTimelines) {
-		if (employeeUpdateDto.getEmployeeProgressions() != null
-				&& !employeeUpdateDto.getEmployeeProgressions().isEmpty()) {
-			EmployeeProgressionsDto currentProgression = employeeUpdateDto.getEmployeeProgressions().getFirst();
-
-			if (currentProgression.getJobTitleId() != null) {
-				Optional<JobTitle> jobTitle = jobTitleDao.findById(currentProgression.getJobTitleId());
-				if (jobTitle.isPresent()) {
-					String newTitle = jobTitle.get().getName();
-					employeeTimelines.add(getEmployeeTimeline(employee, EmployeeTimelineType.JOB_TITLE_CHANGED,
-							TITLE_JOB_TITLE_CHANGED, null, newTitle));
-				}
-			}
-
-			if (currentProgression.getJobFamilyId() != null) {
-				Optional<JobFamily> jobFamily = jobFamilyDao.findById(currentProgression.getJobFamilyId());
-				if (jobFamily.isPresent()) {
-					String newFamily = jobFamily.get().getName();
-					employeeTimelines.add(getEmployeeTimeline(employee, EmployeeTimelineType.JOB_FAMILY_CHANGED,
-							TITLE_JOB_FAMILY_CHANGED, null, newFamily));
-				}
-			}
-		}
-	}
-
-	private void addTimelineEntry(Employee employee, List<EmployeeTimeline> employeeTimelines,
-			EmployeeTimelineType timelineType, String title, String previousValue, String newValue) {
-		employeeTimelines.add(getEmployeeTimeline(employee, timelineType, title, previousValue, newValue));
 	}
 
 	private void processEmployeeProgressions(EmployeeDetailsDto employeeDetailsDto, Employee finalEmployee) {
@@ -2395,11 +1985,8 @@ public class PeopleServiceImpl implements PeopleService {
 
 	private void addManagersToEmployee(Employee manager, Employee finalEmployee, Set<EmployeeManager> employeeManagers,
 			boolean directManager) {
-
 		EmployeeManager employeeManager = createEmployeeManager(manager, finalEmployee, directManager);
 		employeeManagers.add(employeeManager);
-
-		addTimelineRecord(finalEmployee, employeeManager, manager);
 	}
 
 	private Employee getManager(Long managerId) {
@@ -2414,20 +2001,6 @@ public class PeopleServiceImpl implements PeopleService {
 		employeeManager.setPrimaryManager(directManager);
 		employeeManager.setManagerType(directManager ? ManagerType.PRIMARY : ManagerType.SECONDARY);
 		return employeeManager;
-	}
-
-	private void addTimelineRecord(Employee employee, EmployeeManager employeeManager, Employee manager) {
-
-		String managerTypeTitle;
-		if (employeeManager.isPrimaryManager()) {
-			managerTypeTitle = EmployeeTimelineConstant.TITLE_PRIMARY_MANAGER_CHANGED;
-		}
-		else {
-			managerTypeTitle = EmployeeTimelineConstant.TITLE_SECONDARY_MANAGER_ASSIGNED;
-		}
-
-		employeeTimelineService.addEmployeeTimelineRecord(employee, EmployeeTimelineType.MANAGER_ASSIGNED,
-				managerTypeTitle, null, manager.getFirstName() + " " + manager.getLastName());
 	}
 
 	private void saveCareerProgression(Employee finalEmployee, List<EmployeeProgressionsDto> employeeProgressions) {
@@ -2960,18 +2533,6 @@ public class PeopleServiceImpl implements PeopleService {
 		return famDetail;
 	}
 
-	private EmployeeTimeline getEmployeeTimeline(Employee employee, EmployeeTimelineType timelineType, String title,
-			String previousValue, String newValue) {
-		EmployeeTimeline timeline = new EmployeeTimeline();
-		timeline.setEmployee(employee);
-		timeline.setTimelineType(timelineType);
-		timeline.setTitle(title);
-		timeline.setPreviousValue(previousValue);
-		timeline.setNewValue(newValue);
-		timeline.setDisplayDate(DateTimeUtils.getCurrentUtcDate());
-		return timeline;
-	}
-
 	private void updateEmployeeTeam(Set<Long> teamIds, Employee employee) {
 		List<Team> teams = teamDao.findAllById(teamIds);
 
@@ -2989,17 +2550,10 @@ public class PeopleServiceImpl implements PeopleService {
 				.filter(empTeam -> teamsToRemove.contains(empTeam.getTeam()))
 				.toList();
 			employeeTeamDao.deleteAllInBatch(employeeTeamsToRemove);
-			List<EmployeeTimeline> timeLineNewTeamList = new ArrayList<>();
-			for (Team team : teamsToRemove) {
-				timeLineNewTeamList.add(getEmployeeTimeline(employee, EmployeeTimelineType.TEAM_REMOVED,
-						EmployeeTimelineConstant.TITLE_TEAM_REMOVED, team.getTeamName(), null));
-			}
-			employeeTimelineDao.saveAll(timeLineNewTeamList);
 		}
 
 		Set<EmployeeTeam> newEmployeeTeams = new HashSet<>();
 		if (!teamsToAdd.isEmpty()) {
-			List<EmployeeTimeline> timeLineNewTeamList = new ArrayList<>();
 
 			for (Team team : teamsToAdd) {
 				EmployeeTeam employeeTeam = new EmployeeTeam();
@@ -3007,11 +2561,8 @@ public class PeopleServiceImpl implements PeopleService {
 				employeeTeam.setEmployee(employee);
 				newEmployeeTeams.add(employeeTeam);
 				employeeTeam.setIsSupervisor(false);
-				timeLineNewTeamList.add(getEmployeeTimeline(employee, EmployeeTimelineType.TEAM_ASSIGNED,
-						PeopleConstants.TITLE_TEAM_CHANGED, null, team.getTeamName()));
 			}
 			employeeTeamDao.saveAll(newEmployeeTeams);
-			employeeTimelineDao.saveAll(timeLineNewTeamList);
 		}
 		else {
 			log.info("updateEmployee: no teams to assign");
@@ -3098,18 +2649,13 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 	}
 
-	private void updateEmployeeProgression(EmployeeUpdateDto employeeUpdateDto, Employee employee,
-			List<EmployeeTimeline> employeeTimelines) {
+	private void updateEmployeeProgression(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
 		if (employeeUpdateDto.getEmployeeProgressions().isEmpty()) {
 			clearEmployeeProgression(employee);
 			return;
 		}
-		JobFamily previousJobFamily = employee.getJobFamily() != null ? employee.getJobFamily() : null;
-		JobTitle previousJobTitle = employee.getJobTitle() != null ? employee.getJobTitle() : null;
 		validateCareerProgressionData(employeeUpdateDto.getEmployeeProgressions());
 		saveCareerProgression(employee, employeeUpdateDto.getEmployeeProgressions());
-		updateCareerProgressionTimeline(employeeUpdateDto, employee, employeeTimelines, previousJobTitle,
-				previousJobFamily);
 	}
 
 	private void clearEmployeeProgression(Employee employee) {
@@ -3124,70 +2670,6 @@ public class PeopleServiceImpl implements PeopleService {
 				employee.getEmployeeProgressions().remove(progressionOptional.get());
 			}
 		});
-	}
-
-	private void updateCareerProgressionTimeline(EmployeeUpdateDto employeeUpdateDto, Employee employee,
-			List<EmployeeTimeline> employeeTimelines, JobTitle previousJobTitle, JobFamily previousJobFamily) {
-		Optional<EmployeeProgressionsDto> currentEmployeeProgression = employeeUpdateDto.getEmployeeProgressions()
-			.stream()
-			.filter(EmployeeProgressionsDto::getIsCurrent)
-			.findFirst();
-
-		if (currentEmployeeProgression.isPresent()) {
-			if (currentEmployeeProgression.get().getJobTitleId() != null) {
-				if (previousJobTitle == null && employee.getJobTitle() != null) {
-					employeeTimelines.add(getEmployeeTimeline(employee, EmployeeTimelineType.JOB_FAMILY_CHANGED,
-							EmployeeTimelineConstant.TITLE_JOB_TITLE_ASSIGNED, null, employee.getJobTitle().getName()));
-				}
-				else if (previousJobTitle != null && previousJobTitle.getJobTitleId() != null
-						&& !previousJobTitle.getJobTitleId().equals(currentEmployeeProgression.get().getJobTitleId())
-						&& employee.getJobTitle() != null) {
-					employeeTimelines.add(getEmployeeTimeline(employee, EmployeeTimelineType.JOB_FAMILY_CHANGED,
-							TITLE_JOB_TITLE_CHANGED, previousJobTitle.getName(), employee.getJobTitle().getName()));
-				}
-			}
-
-			if (currentEmployeeProgression.get().getJobFamilyId() != null) {
-				if (previousJobFamily == null && employee.getJobFamily() != null) {
-					employeeTimelines.add(getEmployeeTimeline(employee, EmployeeTimelineType.DEPARTMENT_CHANGED,
-							TITLE_JOB_FAMILY_CHANGED, null, employee.getJobFamily().getName()));
-				}
-				else if (previousJobFamily != null && previousJobFamily.getJobFamilyId() != null
-						&& !previousJobFamily.getJobFamilyId()
-							.equals(currentEmployeeProgression.get().getJobFamilyId())) {
-					employeeTimelines.add(getEmployeeTimeline(employee, EmployeeTimelineType.DEPARTMENT_CHANGED,
-							TITLE_JOB_FAMILY_CHANGED, previousJobFamily.getName(), employee.getJobFamily().getName()));
-				}
-			}
-
-		}
-	}
-
-	private void modifyManagerEmployeesHistory(String employeePreviousName, String employeePreviousLastName,
-			Employee employee) {
-		boolean isEmployeeOnly = employee.getEmployeeRole().getAttendanceRole().equals(Role.ATTENDANCE_EMPLOYEE)
-				|| employee.getEmployeeRole().getLeaveRole().equals(Role.LEAVE_EMPLOYEE)
-				|| employee.getEmployeeRole().getPeopleRole().equals(Role.PEOPLE_EMPLOYEE);
-		if ((!isEmployeeOnly && (!employeePreviousName.equals(employee.getFirstName())
-				|| !employeePreviousLastName.equals(employee.getLastName())))) {
-
-			employee.getManagers().forEach(assignedEmployee -> {
-				String managerTypeTitle = null;
-				if (!assignedEmployee.getManagerType().equals(ManagerType.INFORMANT)) {
-					if (assignedEmployee.getManagerType().equals(ManagerType.PRIMARY)) {
-						managerTypeTitle = EmployeeTimelineConstant.TITLE_PRIMARY_SUPERVISOR_NAME_CHANGED;
-					}
-					else if (assignedEmployee.getManagerType().equals(ManagerType.SECONDARY)) {
-						managerTypeTitle = EmployeeTimelineConstant.TITLE_SECONDARY_SUPERVISOR_NAME_CHANGED;
-					}
-
-					employeeTimelineService.addEmployeeTimelineRecord(assignedEmployee.getEmployee(),
-							EmployeeTimelineType.MANAGER_CHANGED, managerTypeTitle,
-							employeePreviousName + " " + employeePreviousLastName,
-							employee.getFirstName() + " " + employee.getLastName());
-				}
-			});
-		}
 	}
 
 	private void setEmployeePeriodDto(EmployeeDetailedResponseDto employeeResponseDto) {
@@ -3232,6 +2714,19 @@ public class PeopleServiceImpl implements PeopleService {
 
 		userDao.save(user);
 		peopleEmailService.sendUserInvitationEmail(user);
+	}
+
+	protected CurrentEmployeeDto getEmployeeDeepCopy(Employee currentEmployee) {
+		return null;
+	}
+
+	public void addNewEmployeeTimeLineRecords(Employee savedEmployee, EmployeeDetailsDto employeeDetailsDto) {
+
+	}
+
+	public void addUpdatedEmployeeTimeLineRecords(CurrentEmployeeDto currentEmployee,
+			EmployeeUpdateDto employeeUpdateDto) {
+
 	}
 
 }
