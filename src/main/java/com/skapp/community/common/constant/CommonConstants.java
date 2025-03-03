@@ -9,4 +9,6 @@ public class CommonConstants {
 
 	public static final long MAX_RETRIES_COUNT = 3;
 
+	public static final String Subscription = "subscription";
+
 }
