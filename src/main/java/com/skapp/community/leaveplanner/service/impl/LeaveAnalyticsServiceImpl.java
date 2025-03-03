@@ -1463,7 +1463,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		User currentUser = userService.getCurrentUser();
 		Optional<Employee> employee = employeeDao.findById(id);
 
-		if (employee.isEmpty() || Boolean.TRUE.equals(!employee.get().getUser().getIsActive())) {
+		if (employee.isEmpty()) {
 			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
 		}
 
