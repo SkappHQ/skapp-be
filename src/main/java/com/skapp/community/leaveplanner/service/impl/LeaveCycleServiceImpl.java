@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -36,10 +37,10 @@ public class LeaveCycleServiceImpl implements LeaveCycleService {
 	public LeaveCycleDetailsDto getLeaveCycleConfigs() {
 		Map<String, Object> leaveCycle = null;
 		Optional<OrganizationConfig> organizationConfig = organizationConfigDao
-			.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.LEAVE_CYCLE);
+			.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.LEAVE_CYCLE.name());
 
-		if (organizationConfig.isPresent()
-				&& organizationConfig.get().getOrganizationConfigType() == OrganizationConfigType.LEAVE_CYCLE) {
+		if (organizationConfig.isPresent() && Objects.equals(organizationConfig.get().getOrganizationConfigType(),
+				OrganizationConfigType.LEAVE_CYCLE.name())) {
 			try {
 				leaveCycle = mapper.readValue(organizationConfig.get().getOrganizationConfigValue(),
 						new TypeReference<>() {
@@ -176,7 +177,7 @@ public class LeaveCycleServiceImpl implements LeaveCycleService {
 		ObjectNode leaveCycle = saveLeaveCycleConfigs(1, 1, true);
 		try {
 			String jsonObject = mapper.writeValueAsString(leaveCycle);
-			organizationConfigDao.save(new OrganizationConfig(OrganizationConfigType.LEAVE_CYCLE, jsonObject));
+			organizationConfigDao.save(new OrganizationConfig(OrganizationConfigType.LEAVE_CYCLE.name(), jsonObject));
 		}
 		catch (JsonProcessingException e) {
 			log.error("setLeaveCycleDefaultConfigs: An error occurred while converting object node to JSON string: {}",
