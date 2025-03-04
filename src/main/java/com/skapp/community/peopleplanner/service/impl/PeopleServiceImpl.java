@@ -2723,9 +2723,8 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	/**
-	 * Retrieves a deep copy of the given employee.
-	 * This method is only available for Pro tenants.
-	 *
+	 * Retrieves a deep copy of the given employee. This method is only available for Pro
+	 * tenants.
 	 * @param currentEmployee The employee to create a deep copy from.
 	 * @return A deep copy of the given employee as a CurrentEmployeeDto.
 	 */
@@ -2734,39 +2733,35 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	/**
-	 * Adds a new timeline record when a new employee is created.
-	 * This feature is available only for Pro tenants.
-	 *
+	 * Adds a new timeline record when a new employee is created. This feature is
+	 * available only for Pro tenants.
 	 * @param savedEmployee The newly saved employee entity.
 	 * @param employeeDetailsDto The details of the newly created employee.
 	 */
-	public void addNewEmployeeTimeLineRecords(Employee savedEmployee, EmployeeDetailsDto employeeDetailsDto) {
+	protected void addNewEmployeeTimeLineRecords(Employee savedEmployee, EmployeeDetailsDto employeeDetailsDto) {
 		// This feature is available only for Pro tenants.
 	}
 
 	/**
-	 * Adds a new timeline record for employees who are added via quick upload.
-	 * This feature is available only for Pro tenants.
-	 *
+	 * Adds a new timeline record for employees who are added via quick upload. This
+	 * feature is available only for Pro tenants.
 	 * @param savedEmployee The employee added through quick upload.
 	 * @param employeeQuickAddDto The quick-add details of the employee.
 	 */
-	public void addNewQuickUploadedEmployeeTimeLineRecords(Employee savedEmployee,
-														   EmployeeQuickAddDto employeeQuickAddDto) {
+	protected void addNewQuickUploadedEmployeeTimeLineRecords(Employee savedEmployee,
+			EmployeeQuickAddDto employeeQuickAddDto) {
 		// This feature is available only for Pro tenants.
 	}
 
 	/**
-	 * Adds a new timeline record when an existing employee's details are updated.
-	 * This feature is available only for Pro tenants.
-	 *
+	 * Adds a new timeline record when an existing employee's details are updated. This
+	 * feature is available only for Pro tenants.
 	 * @param currentEmployee The current state of the employee before the update.
 	 * @param employeeUpdateDto The updated details of the employee.
 	 */
-	public void addUpdatedEmployeeTimeLineRecords(CurrentEmployeeDto currentEmployee,
-												  EmployeeUpdateDto employeeUpdateDto) {
+	protected void addUpdatedEmployeeTimeLineRecords(CurrentEmployeeDto currentEmployee,
+			EmployeeUpdateDto employeeUpdateDto) {
 		// This feature is available only for Pro tenants.
 	}
-
 
 }

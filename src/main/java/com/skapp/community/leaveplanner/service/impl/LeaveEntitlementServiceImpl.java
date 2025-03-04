@@ -218,6 +218,8 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 		leaveEntitlementDao.saveAll(leaveEntitlements);
 
+		addBulkLeaveEntitlementsTimeLineRecords(optionalEmployee.get(), leaveEntitlements, false);
+
 		log.info("processLeaveEntitlements: execution ended");
 		return message;
 	}
@@ -235,6 +237,9 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 		LeaveEntitlement leaveEntitlement = optionalLeaveEntitlement.get();
 
+		String oldHistoryRecord = leaveEntitlement.getLeaveType().getName() + " "
+				+ leaveEntitlement.getTotalDaysAllocated();
+
 		if (!leaveEntitlement.isActive()) {
 			log.warn("Entitlement {} is inactive, no updates performed", entitlementId);
 			return;
@@ -247,6 +252,12 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 			editLeaveEntitlement(leaveEntitlementPatchRequestDto, leaveEntitlement);
 		}
 		leaveEntitlementDao.save(leaveEntitlement);
+
+		String newHistoryRecord = leaveEntitlement.getLeaveType().getName() + " "
+				+ (leaveEntitlement.getTotalDaysAllocated() == null ? 0.0 : leaveEntitlement.getTotalDaysAllocated());
+
+		addUpdatedLeaveEntitlementsTimeLineRecords(leaveEntitlement.getEmployee(), oldHistoryRecord, newHistoryRecord,
+				false);
 
 		log.info("updateLeaveEntitlements: execution ended");
 	}
@@ -264,6 +275,9 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 		LeaveEntitlement customLeaveEntitlement = optionalCustomLeaveEntitlement.get();
 
+		String oldHistoryRecord = customLeaveEntitlement.getLeaveType().getName() + " "
+				+ customLeaveEntitlement.getTotalDaysAllocated();
+
 		if (!customLeaveEntitlement.isActive()) {
 			log.warn("Custom entitlement {} is inactive, no updates performed", entitlementId);
 			return;
@@ -272,6 +286,13 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 		editCustomLeaveEntitlement(customLeaveEntitlementPatchRequestDto, customLeaveEntitlement);
 
 		leaveEntitlementDao.save(customLeaveEntitlement);
+
+		String newHistoryRecord = customLeaveEntitlement.getLeaveType().getName() + " "
+				+ (customLeaveEntitlement.getTotalDaysAllocated() == null ? 0.0
+						: customLeaveEntitlement.getTotalDaysAllocated());
+
+		addUpdatedLeaveEntitlementsTimeLineRecords(customLeaveEntitlement.getEmployee(), oldHistoryRecord,
+				newHistoryRecord, true);
 
 		log.info("updateCustomLeaveEntitlements: execution ended");
 	}
@@ -456,6 +477,8 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 		LeaveEntitlementResponseDto leaveEntitlementResponseDto = leaveMapper
 			.leaveEntitlementToEntitlementResponseDto(leaveEntitlement);
+
+		addCustomLeaveEntitlementsTimeLineRecords(employeeOpt.get(), leaveEntitlement);
 
 		log.info("createCustomEntitlementForEmployee: execution ended");
 		return new ResponseEntityDto(false, leaveEntitlementResponseDto);
@@ -996,6 +1019,8 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 			leaveEntitlementDao.saveAll(entitlements);
 
+			addBulkLeaveEntitlementsTimeLineRecords(employee, entitlements, true);
+
 			bulkStatusSummary.incrementSuccessCount();
 
 		}
@@ -1299,6 +1324,41 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 	private boolean validateEmployeeEmail(String email) {
 		Optional<User> userOpt = userDao.findByEmail(email);
 		return userOpt.isPresent();
+	}
+
+	/**
+	 * Adds a timeline record when custom leave entitlements are assigned to an employee.
+	 * This feature is available only for Pro tenants.
+	 * @param employee The employee for whom the leave entitlements are assigned.
+	 * @param leaveEntitlement The leave entitlement details being assigned.
+	 */
+	protected void addCustomLeaveEntitlementsTimeLineRecords(Employee employee, LeaveEntitlement leaveEntitlement) {
+		// This feature is available only for Pro tenants.
+	}
+
+	/**
+	 * Adds a timeline record when leave entitlements are updated. This feature is
+	 * available only for Pro tenants.
+	 * @param employee The employee whose leave entitlements are updated.
+	 * @param oldHistoryRecord The previous state of the leave entitlement.
+	 * @param newHistoryRecord The new state of the leave entitlement.
+	 * @param isCustom Indicates whether the entitlement is a custom leave policy.
+	 */
+	protected void addUpdatedLeaveEntitlementsTimeLineRecords(Employee employee, String oldHistoryRecord,
+			String newHistoryRecord, boolean isCustom) {
+		// This feature is available only for Pro tenants.
+	}
+
+	/**
+	 * Adds timeline records when leave entitlements are assigned in bulk. This feature is
+	 * available only for Pro tenants.
+	 * @param employee The employee for whom bulk leave entitlements are assigned.
+	 * @param entitlements The list of leave entitlements assigned.
+	 * @param isCustom Indicates whether the entitlements are custom leave policies.
+	 */
+	protected void addBulkLeaveEntitlementsTimeLineRecords(Employee employee, List<LeaveEntitlement> entitlements,
+			boolean isCustom) {
+		// This feature is available only for Pro tenants.
 	}
 
 }
