@@ -311,7 +311,11 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 			if (leaveEntitlement.getTotalDaysUsed() > 0) {
 				throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_ENTITLEMENT_IN_USE_CANT_DELETED);
 			}
+			String oldHistoryRecord = leaveEntitlement.getLeaveType().getName() + " "
+					+ leaveEntitlement.getTotalDaysAllocated();
+			Employee employee = leaveEntitlement.getEmployee();
 			leaveEntitlementDao.delete(leaveEntitlement);
+			addDeletedLeaveEntitlementsTimeLineRecords(employee, oldHistoryRecord);
 		}
 
 		log.info("deleteCustomLeaveEntitlements: execution ended");
@@ -1019,7 +1023,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 			leaveEntitlementDao.saveAll(entitlements);
 
-			addBulkLeaveEntitlementsTimeLineRecords(employee, entitlements, true);
+			addBulkLeaveEntitlementsTimeLineRecords(employee, entitlements, false);
 
 			bulkStatusSummary.incrementSuccessCount();
 
@@ -1358,6 +1362,16 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 	 */
 	protected void addBulkLeaveEntitlementsTimeLineRecords(Employee employee, List<LeaveEntitlement> entitlements,
 			boolean isCustom) {
+		// This feature is available only for Pro tenants.
+	}
+
+	/**
+	 * Adds timeline records when leave entitlements are deleted. This feature is
+	 * available only for Pro tenants.
+	 * @param employee The employee for whom bulk leave entitlements are assigned.
+	 * @param oldHistoryRecord The previous state of the leave entitlement.
+	 */
+	protected void addDeletedLeaveEntitlementsTimeLineRecords(Employee employee, String oldHistoryRecord) {
 		// This feature is available only for Pro tenants.
 	}
 
