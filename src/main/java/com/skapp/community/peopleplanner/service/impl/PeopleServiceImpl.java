@@ -106,7 +106,6 @@ import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.BulkItemStatus;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.util.Validations;
-import jakarta.persistence.EntityManager;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -204,8 +203,6 @@ public class PeopleServiceImpl implements PeopleService {
 	private final ApplicationEventPublisher applicationEventPublisher;
 
 	private final UserVersionService userVersionService;
-
-	private final EntityManager entityManager;
 
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
@@ -369,6 +366,8 @@ public class PeopleServiceImpl implements PeopleService {
 		employeeCredentials.setTempPassword(tempPassword);
 
 		employeeResponseDto.setEmployeeCredentials(employeeCredentials);
+
+		addNewQuickUploadedEmployeeTimeLineRecords(finalEmployee, employeeQuickAddDto);
 
 		log.info("quickAddEmployee: execution ended by user: {}", currentUser.getUserId());
 		return new ResponseEntityDto(false, employeeResponseDto);
@@ -729,6 +728,8 @@ public class PeopleServiceImpl implements PeopleService {
 				throw new EntityNotFoundException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND);
 			}
 
+			CurrentEmployeeDto currentEmployeeDto = getEmployeeDeepCopy(employeeResult.get());
+
 			Employee employee = employeeResult.get();
 
 			if (employeeUpdateDto.getIdentificationNo() != null) {
@@ -746,6 +747,9 @@ public class PeopleServiceImpl implements PeopleService {
 
 			employee = employeeDao.save(employee);
 			EmployeeResponseDto responseDto = peopleMapper.employeeToEmployeeResponseDto(employee);
+
+			addUpdatedEmployeeTimeLineRecords(currentEmployeeDto, employeeUpdateDto);
+
 			return new ResponseEntityDto(false, responseDto);
 		}
 	}
@@ -1263,6 +1267,8 @@ public class PeopleServiceImpl implements PeopleService {
 		if (employeeBulkDto.getEmployeePeriod() != null) {
 			saveEmployeePeriod(employee, employeeBulkDto.getEmployeePeriod());
 		}
+
+		addNewEmployeeTimeLineRecords(employee, employeeDetailsDto);
 	}
 
 	private void saveEmployeeTeams(Employee employee, EmployeeBulkDto employeeBulkDto) {
@@ -2716,17 +2722,51 @@ public class PeopleServiceImpl implements PeopleService {
 		peopleEmailService.sendUserInvitationEmail(user);
 	}
 
+	/**
+	 * Retrieves a deep copy of the given employee.
+	 * This method is only available for Pro tenants.
+	 *
+	 * @param currentEmployee The employee to create a deep copy from.
+	 * @return A deep copy of the given employee as a CurrentEmployeeDto.
+	 */
 	protected CurrentEmployeeDto getEmployeeDeepCopy(Employee currentEmployee) {
 		return null;
 	}
 
+	/**
+	 * Adds a new timeline record when a new employee is created.
+	 * This feature is available only for Pro tenants.
+	 *
+	 * @param savedEmployee The newly saved employee entity.
+	 * @param employeeDetailsDto The details of the newly created employee.
+	 */
 	public void addNewEmployeeTimeLineRecords(Employee savedEmployee, EmployeeDetailsDto employeeDetailsDto) {
-
+		// This feature is available only for Pro tenants.
 	}
 
+	/**
+	 * Adds a new timeline record for employees who are added via quick upload.
+	 * This feature is available only for Pro tenants.
+	 *
+	 * @param savedEmployee The employee added through quick upload.
+	 * @param employeeQuickAddDto The quick-add details of the employee.
+	 */
+	public void addNewQuickUploadedEmployeeTimeLineRecords(Employee savedEmployee,
+														   EmployeeQuickAddDto employeeQuickAddDto) {
+		// This feature is available only for Pro tenants.
+	}
+
+	/**
+	 * Adds a new timeline record when an existing employee's details are updated.
+	 * This feature is available only for Pro tenants.
+	 *
+	 * @param currentEmployee The current state of the employee before the update.
+	 * @param employeeUpdateDto The updated details of the employee.
+	 */
 	public void addUpdatedEmployeeTimeLineRecords(CurrentEmployeeDto currentEmployee,
-			EmployeeUpdateDto employeeUpdateDto) {
-
+												  EmployeeUpdateDto employeeUpdateDto) {
+		// This feature is available only for Pro tenants.
 	}
+
 
 }
