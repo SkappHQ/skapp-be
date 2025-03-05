@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.skapp.community.common.component.AsyncEmailSender;
 import com.skapp.community.common.model.Organization;
-import com.skapp.community.common.payload.email.CommonEmailDynamicFields;
 import com.skapp.community.common.payload.email.EmailTemplateMetadata;
 import com.skapp.community.common.payload.request.TestEmailServerRequestDto;
 import com.skapp.community.common.repository.OrganizationDao;
