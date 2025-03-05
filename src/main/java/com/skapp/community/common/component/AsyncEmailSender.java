@@ -9,4 +9,8 @@ public interface AsyncEmailSender {
 	void sendMail(String to, String subject, String htmlBody, EmailBodyTemplates emailTemplate,
 			Map<String, String> placeholders);
 
+	String getSendGridEmailBatchId();
+
+	void cancelScheduledEmails(String batchId, String status);
+
 }

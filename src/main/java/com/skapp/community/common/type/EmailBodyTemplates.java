@@ -109,6 +109,10 @@ public enum EmailBodyTemplates {
 	// E-Signature Module Templates esignature-module-document-viewer-email
 	ESIGNATURE_MODULE_ENVELOPE_CC_EMAIL("esignature-module-document-viewer-email"),
 	ESIGNATURE_MODULE_ENVELOPE_SIGNER_EMAIL("esignature-module-document-signer-email"),
+	ESIGNATURE_MODULE_ENVELOPE_VOIDED_RECIEVER_EMAIL("esignature-module-document-voided-reciever"),
+	ESIGNATURE_MODULE_ENVELOPE_VOIDED_SENDER_EMAIL("esignature-module-document-voided-sender"),
+	ESIGNATURE_MODULE_ENVELOPE_DECLINED_RECIEVER_EMAIL("esignature-module-document-declined-reciever"),
+	ESIGNATURE_MODULE_ENVELOPE_DECLINED_SENDER_EMAIL("esignature-module-document-declined-sender"),
 
 	// Payment Templates for stripe
 	PAYMENT_STRIPE_PAYMENT_WAS_UNSUCCESSFUL_TRIAL_END_DATE("payment-stripe-payment-was-unsuccessful-trial-end-date"),

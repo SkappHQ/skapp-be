@@ -29,7 +29,7 @@ import java.util.Properties;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class AsyncEmailSenderImpl implements AsyncEmailSender {
+public abstract class AsyncEmailSenderImpl implements AsyncEmailSender {
 
 	@NonNull
 	private final OrganizationConfigDao organizationConfigDao;

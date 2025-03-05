@@ -199,6 +199,18 @@ en:
     - id: "esignature-module-document-viewer-email"
       subject: "View via Skapp: "
 
+    - id: "esignature-module-document-voided-reciever"
+      subject: "Voided - Complete via Skapp: "
+
+    - id: "esignature-module-document-voided-sender"
+      subject: "Voided - Complete via Skapp: "
+
+    - id: "esignature-module-document-declined-reciever"
+      subject: "Declined - Complete via Skapp: "
+
+    - id: "esignature-module-document-declined-sender"
+      subject: "Declined - Complete via Skapp: "
+
   payment:
     - id: "payment-stripe-payment-was-unsuccessful-trial-end-date"
       subject: "Your payment was unsuccessful"

@@ -91,6 +91,16 @@ public class EmailServiceImpl implements EmailService {
 		}
 	}
 
+	@Override
+	public String obtainSendGridBatchId() {
+		return asyncEmailSender.getSendGridEmailBatchId();
+	}
+
+	@Override
+	public void cancelScheduledEmail(String batchId, String status) {
+		asyncEmailSender.cancelScheduledEmails(batchId, status);
+	}
+
 	private void loadTemplateDetails() {
 		if (templateDetailsMap == null) {
 			try (InputStream inputStream = new ClassPathResource("community/templates/email/email-templates.yml")
