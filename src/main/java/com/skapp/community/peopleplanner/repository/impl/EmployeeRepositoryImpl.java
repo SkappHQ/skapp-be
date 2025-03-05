@@ -1008,6 +1008,11 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 				(Boolean) result[2]);
 	}
 
+	@Override
+	public Long findAllActiveAndPendingEmployeesCount() {
+		return 0L;
+	}
+
 	private Predicate findByEmailName(String keyword, CriteriaBuilder criteriaBuilder, Root<Employee> employee,
 			Join<Employee, User> userJoin) {
 		keyword = getSearchString(keyword);
