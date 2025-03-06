@@ -11,7 +11,6 @@ import com.skapp.community.common.repository.OrganizationDao;
 import com.skapp.community.common.service.EmailService;
 import com.skapp.community.common.type.EmailBodyTemplates;
 import com.skapp.community.common.type.EmailMainTemplates;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cglib.beans.BeanMap;
@@ -34,7 +33,6 @@ public class EmailServiceImpl implements EmailService {
 
 	private static final String EMAIL_LANGUAGE = "en";
 
-	@NonNull
 	private final AsyncEmailSender asyncEmailSender;
 
 	private final ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
@@ -43,8 +41,7 @@ public class EmailServiceImpl implements EmailService {
 
 	private Map<String, Map<String, Map<String, String>>> enumTranslationsMap;
 
-	@NonNull
-	private OrganizationDao organizationDao;
+	private final OrganizationDao organizationDao;
 
 	@Override
 	public void testEmailServer(TestEmailServerRequestDto testEmailServerRequestDto) {
@@ -91,20 +88,6 @@ public class EmailServiceImpl implements EmailService {
 		}
 	}
 
-	private void loadTemplateDetails() {
-		if (templateDetailsMap == null) {
-			try (InputStream inputStream = new ClassPathResource("community/templates/email/email-templates.yml")
-				.getInputStream()) {
-				templateDetailsMap = yamlMapper.readValue(inputStream, new TypeReference<>() {
-				});
-			}
-			catch (IOException e) {
-				log.error("Failed to load email-templates.yml: {}", e.getMessage());
-				templateDetailsMap = new HashMap<>();
-			}
-		}
-	}
-
 	private void loadEnumTranslations() {
 		if (enumTranslationsMap == null) {
 			try (InputStream inputStream = new ClassPathResource("community/templates/common/enum-translations.yml")
@@ -125,6 +108,41 @@ public class EmailServiceImpl implements EmailService {
 			.map(langMap -> langMap.get(enumKey))
 			.map(enumMap -> enumMap.get(enumValue))
 			.orElse(enumValue);
+	}
+
+	protected void loadTemplateDetails() {
+		if (templateDetailsMap == null) {
+			templateDetailsMap = new HashMap<>();
+
+			addTemplatesFromPath("community/templates/email/email-templates.yml");
+		}
+	}
+
+	protected void addTemplatesFromPath(String path) {
+		try (InputStream inputStream = new ClassPathResource(path).getInputStream()) {
+			Map<String, Map<String, List<EmailTemplateMetadata>>> templates = yamlMapper.readValue(inputStream,
+					new TypeReference<>() {
+					});
+
+			if (templates != null) {
+				for (Map.Entry<String, Map<String, List<EmailTemplateMetadata>>> outerEntry : templates.entrySet()) {
+					String outerKey = outerEntry.getKey();
+					Map<String, List<EmailTemplateMetadata>> innerMap = outerEntry.getValue();
+
+					templateDetailsMap.computeIfAbsent(outerKey, k -> new HashMap<>());
+
+					for (Map.Entry<String, List<EmailTemplateMetadata>> innerEntry : innerMap.entrySet()) {
+						String innerKey = innerEntry.getKey();
+						List<EmailTemplateMetadata> metadataList = innerEntry.getValue();
+
+						templateDetailsMap.get(outerKey).put(innerKey, metadataList);
+					}
+				}
+			}
+		}
+		catch (IOException e) {
+			log.warn("Failed to load templates from {}: {}", path, e.getMessage());
+		}
 	}
 
 	private EmailTemplateMetadata getTemplateDetails(String templateId) {
@@ -151,13 +169,33 @@ public class EmailServiceImpl implements EmailService {
 
 	private String buildEmailBody(EmailTemplateMetadata templateDetails, String module,
 			Map<String, String> placeholders) throws IOException {
-		String templatePath = String.format("community/templates/email/%s/%s/%s.html", EMAIL_LANGUAGE, module,
-				templateDetails.getId());
+		String templatePath = buildTemplatePath(module, templateDetails.getId());
 		String body = replaceValuesToTemplate(templatePath, placeholders);
-		String mainTemplatePath = String.format("community/templates/email/%s/%s.html", EMAIL_LANGUAGE,
-				EmailMainTemplates.MAIN_TEMPLATE_V1.getTemplateId());
-		placeholders.put("body", body);
-		return replaceValuesToTemplate(mainTemplatePath, placeholders);
+
+		String mainTemplatePath = buildMainTemplatePath();
+		Map<String, String> updatedPlaceholders = new HashMap<>(placeholders);
+		updatedPlaceholders.put("body", body);
+
+		return replaceValuesToTemplate(mainTemplatePath, updatedPlaceholders);
+	}
+
+	protected String buildTemplatePath(String module, String templateId) {
+		return findExistingPath(
+				String.format("community/templates/email/%s/%s/%s.html", EMAIL_LANGUAGE, module, templateId));
+	}
+
+	protected String buildMainTemplatePath() {
+		return findExistingPath(String.format("community/templates/email/%s/%s.html", EMAIL_LANGUAGE,
+				EmailMainTemplates.MAIN_TEMPLATE_V1.getTemplateId()));
+	}
+
+	protected String findExistingPath(String... paths) {
+		for (String path : paths) {
+			if (new ClassPathResource(path).exists()) {
+				return path;
+			}
+		}
+		throw new IllegalArgumentException("No valid template found in community or enterprise directories.");
 	}
 
 	private String replaceValuesToTemplate(String templatePath, Map<String, String> placeholders) throws IOException {

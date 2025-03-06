@@ -1,11 +1,12 @@
 package com.skapp.community.common.type;
 
+import com.skapp.enterprise.common.type.EmailTemplates;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum EmailBodyTemplates {
+public enum EmailBodyTemplates implements EmailTemplates {
 
 	// People Module Templates
 	PEOPLE_MODULE_USER_INVITATION_V1("people-module-user-invitation"),
