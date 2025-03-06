@@ -11,13 +11,11 @@ import com.skapp.community.peopleplanner.payload.request.EmployeeUpdateDto;
 import com.skapp.community.peopleplanner.payload.request.NotificationSettingsPatchRequestDto;
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeManagerResponseDto;
-import com.skapp.community.peopleplanner.service.EmployeeTimelineService;
 import com.skapp.community.peopleplanner.service.PeopleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -40,11 +38,7 @@ import java.util.List;
 @Tag(name = "People Controller", description = "Endpoints for managing employees")
 public class PeopleController {
 
-	@NonNull
 	private final PeopleService peopleService;
-
-	@NonNull
-	private final EmployeeTimelineService employeeService;
 
 	@Operation(summary = "Create a new employee",
 			description = "This endpoint creates a new employee with the provided details.")
@@ -98,15 +92,6 @@ public class PeopleController {
 	public ResponseEntity<ResponseEntityDto> getEmployeeById(@PathVariable Long id) {
 		ResponseEntityDto employeeResponse = peopleService.getEmployeeById(id);
 		return new ResponseEntity<>(employeeResponse, HttpStatus.OK);
-	}
-
-	@Operation(summary = "Get timeline records of an employee",
-			description = "This endpoint fetches the timeline records of an employee by their ID.")
-	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_PEOPLE_ADMIN','ROLE_PEOPLE_MANAGER')")
-	@GetMapping(value = "/employees/timeline/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ResponseEntityDto> employeeTimelineRecords(@PathVariable Long id) {
-		ResponseEntityDto response = employeeService.getEmployeeTimelineRecords(id);
-		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@Operation(summary = "Get current logged-in employee",
