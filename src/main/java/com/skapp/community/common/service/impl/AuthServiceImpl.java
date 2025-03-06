@@ -348,7 +348,7 @@ public class AuthServiceImpl implements AuthService {
 
 		if (!profileActivator.isEpProfile()) {
 			Optional<OrganizationConfig> optionalOrganizationConfig = organizationConfigDao
-				.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.EMAIL_CONFIGS);
+				.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.EMAIL_CONFIGS.name());
 
 			if (optionalOrganizationConfig.isEmpty()) {
 				log.error("Email configuration not found");

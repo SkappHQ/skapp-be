@@ -106,15 +106,16 @@ public class OrganizationServiceImpl implements OrganizationService {
 		log.info("saveEmailServerConfigs: execution started");
 
 		Optional<OrganizationConfig> existingConfigOptional = organizationConfigDao
-			.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.EMAIL_CONFIGS);
+			.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.EMAIL_CONFIGS.name());
 
 		try {
 			emailServerRequestDto.setAppPassword(
 					encryptionDecryptionService.encrypt(emailServerRequestDto.getAppPassword(), encryptSecret));
 
 			String updatedJsonEmailServiceConfigs = objectMapper.writeValueAsString(emailServerRequestDto);
-			OrganizationConfig organizationConfig = existingConfigOptional.orElseGet(
-					() -> new OrganizationConfig(OrganizationConfigType.EMAIL_CONFIGS, updatedJsonEmailServiceConfigs));
+			OrganizationConfig organizationConfig = existingConfigOptional
+				.orElseGet(() -> new OrganizationConfig(OrganizationConfigType.EMAIL_CONFIGS.name(),
+						updatedJsonEmailServiceConfigs));
 
 			organizationConfig.setOrganizationConfigValue(updatedJsonEmailServiceConfigs);
 			organizationConfigDao.save(organizationConfig);
@@ -137,7 +138,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		log.info("getEmailServiceConfigs: execution started");
 
 		Optional<OrganizationConfig> configOptional = organizationConfigDao
-			.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.EMAIL_CONFIGS);
+			.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.EMAIL_CONFIGS.name());
 
 		if (configOptional.isEmpty()) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EMAIL_CONFIG_NOT_FOUND);
