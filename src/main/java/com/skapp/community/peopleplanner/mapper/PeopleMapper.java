@@ -16,7 +16,6 @@ import com.skapp.community.peopleplanner.model.EmployeePersonalInfo;
 import com.skapp.community.peopleplanner.model.EmployeeProgression;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
 import com.skapp.community.peopleplanner.model.EmployeeTeam;
-import com.skapp.community.peopleplanner.model.EmployeeTimeline;
 import com.skapp.community.peopleplanner.model.EmployeeVisa;
 import com.skapp.community.peopleplanner.model.Holiday;
 import com.skapp.community.peopleplanner.model.JobFamily;
@@ -44,7 +43,6 @@ import com.skapp.community.peopleplanner.payload.response.EmployeeJobFamilyDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeePeriodResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeRoleResponseDto;
-import com.skapp.community.peopleplanner.payload.response.EmployeeTimelineResponseDto;
 import com.skapp.community.peopleplanner.payload.response.HolidayBasicDetailsResponseDto;
 import com.skapp.community.peopleplanner.payload.response.HolidayResponseDto;
 import com.skapp.community.peopleplanner.payload.response.JobFamilyResponseDetailDto;
@@ -186,10 +184,6 @@ public interface PeopleMapper {
 	ModuleRoleRestrictionResponseDto restrictRoleToRestrictRoleResponseDto(ModuleRoleRestriction restrictedRole);
 
 	List<EmployeeDetailedResponseDto> employeeListToEmployeeDetailedResponseDtoList(List<Employee> employees);
-
-	@Mapping(target = "id", source = "timeline_id")
-	List<EmployeeTimelineResponseDto> employeeTimelinesToEmployeeTimelineResponseDtoList(
-			List<EmployeeTimeline> employeeTimelines);
 
 	EmployeeLeaveEntitlementsDto employeeLeaveEntitlementTeamJobRoleToEmployeeLeaveEntitlementsDto(
 			EmployeeLeaveEntitlementReportExportDto etj);
