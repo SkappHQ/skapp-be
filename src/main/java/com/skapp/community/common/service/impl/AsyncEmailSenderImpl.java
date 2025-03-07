@@ -1,19 +1,17 @@
-package com.skapp.community.common.component.impl;
+package com.skapp.community.common.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.skapp.community.common.component.AsyncEmailSender;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.model.OrganizationConfig;
 import com.skapp.community.common.payload.response.EmailServerConfigResponseDto;
 import com.skapp.community.common.repository.OrganizationConfigDao;
+import com.skapp.community.common.service.AsyncEmailSender;
 import com.skapp.community.common.service.EncryptionDecryptionService;
-import com.skapp.community.common.type.EmailBodyTemplates;
 import com.skapp.community.common.type.OrganizationConfigType;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,21 +29,17 @@ import java.util.Properties;
 @Slf4j
 public class AsyncEmailSenderImpl implements AsyncEmailSender {
 
-	@NonNull
 	private final OrganizationConfigDao organizationConfigDao;
 
-	@NonNull
 	private final EncryptionDecryptionService encryptionDecryptionService;
 
-	@NonNull
 	private final ObjectMapper objectMapper;
 
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
 
 	@Override
-	public void sendMail(String to, String subject, String htmlBody, EmailBodyTemplates emailTemplate,
-			Map<String, String> placeholders) {
+	public void sendMail(String to, String subject, String htmlBody, Map<String, String> placeholders) {
 		try {
 			JavaMailSender emailSender = createJavaMailSender();
 			MimeMessage mimeMessage = emailSender.createMimeMessage();

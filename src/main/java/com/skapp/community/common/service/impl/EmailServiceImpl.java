@@ -3,14 +3,12 @@ package com.skapp.community.common.service.impl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.skapp.community.common.component.AsyncEmailSender;
-import com.skapp.community.common.model.Organization;
 import com.skapp.community.common.payload.email.EmailTemplateMetadata;
 import com.skapp.community.common.payload.request.TestEmailServerRequestDto;
-import com.skapp.community.common.repository.OrganizationDao;
+import com.skapp.community.common.service.AsyncEmailSender;
 import com.skapp.community.common.service.EmailService;
-import com.skapp.community.common.type.EmailBodyTemplates;
 import com.skapp.community.common.type.EmailMainTemplates;
+import com.skapp.enterprise.common.type.EmailTemplates;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cglib.beans.BeanMap;
@@ -37,20 +35,29 @@ public class EmailServiceImpl implements EmailService {
 
 	private final ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
 
-	private Map<String, Map<String, List<EmailTemplateMetadata>>> templateDetailsMap;
+	protected Map<String, Map<String, List<EmailTemplateMetadata>>> templateDetailsMap;
 
 	private Map<String, Map<String, Map<String, String>>> enumTranslationsMap;
-
-	private final OrganizationDao organizationDao;
 
 	@Override
 	public void testEmailServer(TestEmailServerRequestDto testEmailServerRequestDto) {
 		asyncEmailSender.sendMail(testEmailServerRequestDto.getEmail(), testEmailServerRequestDto.getSubject(),
-				testEmailServerRequestDto.getBody(), null, null);
+				testEmailServerRequestDto.getBody(), null);
 	}
 
 	@Override
-	public void sendEmail(EmailBodyTemplates emailTemplate, Object dynamicFieldsObject, String recipient) {
+	public void sendEmail(EmailTemplates emailMainTemplate, EmailTemplates emailTemplate, Object dynamicFieldsObject,
+			String recipient) {
+		processEmailDetails(emailMainTemplate, emailTemplate, dynamicFieldsObject, recipient);
+	}
+
+	@Override
+	public void sendEmail(EmailTemplates emailTemplate, Object dynamicFieldsObject, String recipient) {
+		processEmailDetails(EmailMainTemplates.MAIN_TEMPLATE_V1, emailTemplate, dynamicFieldsObject, recipient);
+	}
+
+	private void processEmailDetails(EmailTemplates emailMainTemplate, EmailTemplates emailTemplate,
+			Object dynamicFieldsObject, String recipient) {
 		try {
 			if (emailTemplate == null || recipient == null) {
 				log.error("Email template or recipient is null");
@@ -71,25 +78,21 @@ public class EmailServiceImpl implements EmailService {
 
 			Map<String, String> placeholders = convertDtoToMap(dynamicFieldsObject);
 			placeholders.replaceAll(this::getLocalizedEnumValue);
-			placeholders.put("subject", templateDetails.getSubject());
 
-			if (emailTemplate != EmailBodyTemplates.COMMON_MODULE_EMAIL_VERIFY
-					&& emailTemplate != EmailBodyTemplates.COMMON_MODULE_SSO_CREATION_TENANT_URL
-					&& emailTemplate != EmailBodyTemplates.COMMON_MODULE_CREDENTIAL_BASED_CREATION_TENANT_URL) {
-				Optional<Organization> organization = organizationDao.findTopByOrderByOrganizationIdDesc();
-				organization.ifPresent(value -> {
-					placeholders.put("appUrl", value.getAppUrl());
-					placeholders.put("organizationName", value.getOrganizationName());
-				});
+			setTemplatePlaceholderData(emailTemplate, placeholders, templateDetails);
 
-			}
+			String emailBody = buildEmailBody(templateDetails, module, placeholders, emailMainTemplate);
 
-			String emailBody = buildEmailBody(templateDetails, module, placeholders);
-			asyncEmailSender.sendMail(recipient, templateDetails.getSubject(), emailBody, emailTemplate, placeholders);
+			asyncEmailSender.sendMail(recipient, templateDetails.getSubject(), emailBody, placeholders);
 		}
 		catch (Exception e) {
 			log.error("Unexpected error in email sending process: {}", e.getMessage(), e);
 		}
+	}
+
+	protected void setTemplatePlaceholderData(EmailTemplates emailTemplate, Map<String, String> placeholders,
+			EmailTemplateMetadata templateDetails) {
+		placeholders.put("subject", templateDetails.getSubject());
 	}
 
 	private void loadEnumTranslations() {
@@ -172,11 +175,11 @@ public class EmailServiceImpl implements EmailService {
 	}
 
 	private String buildEmailBody(EmailTemplateMetadata templateDetails, String module,
-			Map<String, String> placeholders) throws IOException {
+			Map<String, String> placeholders, EmailTemplates emailMainTemplate) throws IOException {
 		String templatePath = buildTemplatePath(module, templateDetails.getId());
 		String body = replaceValuesToTemplate(templatePath, placeholders);
 
-		String mainTemplatePath = buildMainTemplatePath();
+		String mainTemplatePath = buildMainTemplatePath(emailMainTemplate);
 		Map<String, String> updatedPlaceholders = new HashMap<>(placeholders);
 		updatedPlaceholders.put("body", body);
 
@@ -188,9 +191,9 @@ public class EmailServiceImpl implements EmailService {
 				String.format("community/templates/email/%s/%s/%s.html", EMAIL_LANGUAGE, module, templateId));
 	}
 
-	protected String buildMainTemplatePath() {
+	protected String buildMainTemplatePath(EmailTemplates emailMainTemplate) {
 		return findExistingPath(String.format("community/templates/email/%s/%s.html", EMAIL_LANGUAGE,
-				EmailMainTemplates.MAIN_TEMPLATE_V1.getTemplateId()));
+				emailMainTemplate.getTemplateId()));
 	}
 
 	protected String findExistingPath(String... paths) {
