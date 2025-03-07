@@ -5,7 +5,9 @@ import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.repository.UserDao;
 import com.skapp.community.common.service.UserService;
-import lombok.NonNull;
+import com.skapp.enterprise.common.payload.request.AdditionalDetailsDto;
+import com.skapp.enterprise.common.payload.request.AuthenticationDetailsDto;
+import com.skapp.enterprise.common.type.Tier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -17,7 +19,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserServiceImpl implements UserService {
 
-	@NonNull
 	private final UserDao userDao;
 
 	@Override
@@ -27,6 +28,19 @@ public class UserServiceImpl implements UserService {
 
 		return userDao.findByEmail(email)
 			.orElseThrow(() -> new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND));
+	}
+
+	public Tier getCurrentUserTier() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		AuthenticationDetailsDto authenticationDetails = (AuthenticationDetailsDto) authentication.getDetails();
+		AdditionalDetailsDto additionalDetails = authenticationDetails.getAdditionalDetails();
+
+		if (additionalDetails != null && additionalDetails.getTier() != null) {
+			return Tier.valueOf(additionalDetails.getTier());
+		}
+
+		return Tier.FREE;
 	}
 
 }
