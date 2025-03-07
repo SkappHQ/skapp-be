@@ -24,6 +24,7 @@ import com.skapp.community.peopleplanner.model.Employee_;
 import com.skapp.community.peopleplanner.model.JobFamily_;
 import com.skapp.community.peopleplanner.model.Team;
 import com.skapp.community.peopleplanner.model.Team_;
+import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeCountDto;
@@ -178,6 +179,100 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		query.setMaxResults(page.getPageSize());
 
 		return new PageImpl<>(query.getResultList(), page, totalRows);
+	}
+
+	@Override
+	public List<Employee> findEmployeesForExport(EmployeeExportFilterDto employeeExportFilterDto) {
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
+		Root<Employee> root = criteriaQuery.from(Employee.class);
+
+		root.fetch(Employee_.personalInfo, JoinType.LEFT);
+		root.fetch(Employee_.employeeEmergencies, JoinType.LEFT);
+		Join<Employee, User> userJoin = root.join(Employee_.user);
+		Join<Employee, EmployeePersonalInfo> personalInfoJoin = root.join(Employee_.personalInfo, JoinType.LEFT);
+		Join<Employee, EmployeeRole> roleJoin = root.join((Employee_.employeeRole));
+
+		List<Predicate> predicates = new ArrayList<>();
+
+		if (employeeExportFilterDto.getRole() != null && !employeeExportFilterDto.getRole().isEmpty()) {
+			predicates.add(
+					root.get(Employee_.JOB_FAMILY).get(JobFamily_.JOB_FAMILY_ID).in(employeeExportFilterDto.getRole()));
+		}
+
+		if (employeeExportFilterDto.getTeam() != null && !employeeExportFilterDto.getTeam().isEmpty()) {
+			Join<Employee, EmployeeTeam> employeeTeam = root.join(Employee_.teams);
+			predicates
+				.add(employeeTeam.get(EmployeeTeam_.TEAM).get(Team_.TEAM_ID).in(employeeExportFilterDto.getTeam()));
+		}
+
+		if (employeeExportFilterDto.getNationality() != null && !employeeExportFilterDto.getNationality().isEmpty()) {
+			predicates.add(personalInfoJoin.get(EmployeePersonalInfo_.NATIONALITY)
+				.in(employeeExportFilterDto.getNationality()));
+		}
+
+		if (employeeExportFilterDto.getGender() != null) {
+			predicates.add(criteriaBuilder.equal(root.get(Employee_.GENDER), employeeExportFilterDto.getGender()));
+		}
+
+		if (employeeExportFilterDto.getEmploymentTypes() != null
+				&& !employeeExportFilterDto.getEmploymentTypes().isEmpty()) {
+			predicates.add(root.get(Employee_.EMPLOYEE_TYPE).in(employeeExportFilterDto.getEmploymentTypes()));
+		}
+
+		if (employeeExportFilterDto.getAccountStatus() != null
+				&& !employeeExportFilterDto.getAccountStatus().isEmpty()) {
+			predicates.add(root.get(Employee_.ACCOUNT_STATUS).in(employeeExportFilterDto.getAccountStatus()));
+		}
+
+		if (employeeExportFilterDto.getEmploymentAllocations() != null
+				&& !employeeExportFilterDto.getEmploymentAllocations().isEmpty()) {
+			predicates
+				.add(root.get(Employee_.EMPLOYMENT_ALLOCATION).in(employeeExportFilterDto.getEmploymentAllocations()));
+		}
+
+		if (employeeExportFilterDto.getSearchKeyword() != null
+				&& !employeeExportFilterDto.getSearchKeyword().isEmpty()) {
+			predicates
+				.add(findByEmailName(employeeExportFilterDto.getSearchKeyword(), criteriaBuilder, root, userJoin));
+		}
+
+		if (employeeExportFilterDto.getPermissions() != null && !employeeExportFilterDto.getPermissions().isEmpty()) {
+			Predicate attendanceRolePredicate = roleJoin.get(EmployeeRole_.ATTENDANCE_ROLE)
+				.in(employeeExportFilterDto.getPermissions());
+			Predicate peopleRolePredicate = roleJoin.get(EmployeeRole_.PEOPLE_ROLE)
+				.in(employeeExportFilterDto.getPermissions());
+			Predicate leaveRolePredicate = roleJoin.get(EmployeeRole_.LEAVE_ROLE)
+				.in(employeeExportFilterDto.getPermissions());
+
+			Predicate rolePredicate = criteriaBuilder.or(attendanceRolePredicate, peopleRolePredicate,
+					leaveRolePredicate);
+			predicates.add(rolePredicate);
+		}
+
+		criteriaQuery.where(predicates.toArray(new Predicate[0]));
+
+		if (employeeExportFilterDto.getSearchKeyword() != null
+				&& !employeeExportFilterDto.getSearchKeyword().isEmpty()) {
+			List<Order> orderList = new ArrayList<>();
+			Order sortingOrder = criteriaBuilder.asc(criteriaBuilder.selectCase()
+				.when(criteriaBuilder.like(root.get(Employee_.FIRST_NAME),
+						getSearchString(employeeExportFilterDto.getSearchKeyword())), 1)
+				.when(criteriaBuilder.like(root.get(Employee_.LAST_NAME),
+						getSearchString(employeeExportFilterDto.getSearchKeyword())), 2)
+				.when(criteriaBuilder.like(userJoin.get(User_.EMAIL),
+						getSearchString(employeeExportFilterDto.getSearchKeyword())), 3)
+				.otherwise(4));
+			orderList.add(sortingOrder);
+			criteriaQuery.orderBy(orderList);
+		}
+		else {
+			criteriaQuery.distinct(true);
+		}
+
+		TypedQuery<Employee> query = entityManager.createQuery(criteriaQuery);
+
+		return query.getResultList();
 	}
 
 	@Override
