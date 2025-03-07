@@ -16,6 +16,7 @@ public enum PeopleMessageConstant implements MessageConstant {
 	PEOPLE_SUCCESS_ROLE_RESTRICT("api.success.people.role-restrict"),
 	PEOPLE_SUCCESS_TEAM_DELETED("api.success.people.team-deleted"),
 	PEOPLE_SUCCESS_EMPLOYEE_ADDED("api.success.people.employee-added"),
+	PEOPLE_SUCCESS_USER_PERMANENTLY_DELETED("api.success.people.user-permanently-deleted"),
 
 	// Error messages
 	PEOPLE_ERROR_TEAM_SUPERVISOR_IDS_NOT_VALID("api.error.people.notnull.team.supervisors.invalid"),
@@ -106,7 +107,9 @@ public enum PeopleMessageConstant implements MessageConstant {
 	PEOPLE_ERROR_USER_NOT_BELONGS_TO_SELECTED_TEAMS("api.error.people.user-not-belong-to-selected-teams"),
 	PEOPLE_ERROR_DUPLICATE_EMPLOYEE_ID("api.error.people.duplicate-employee-id"),
 	PEOPLE_ERROR_EXCEEDING_USER_UPLOAD("api.error.people.exceeding-user-upload"),
-	PEOPLE_ERROR_EXCEEDING_MAX_CHARACTER_LIMIT("api.error.people.exceeding-max-character-limit"),;
+	PEOPLE_ERROR_EXCEEDING_MAX_CHARACTER_LIMIT("api.error.people.exceeding-max-character-limit"),
+	PEOPLE_ERROR_EMPLOYEE_IS_A_TEAM_SUPERVISOR("api.error.people.employee-is-a-team-supervisor"),
+	PEOPLE_ERROR_EMPLOYEE_IS_A_SUPERVISOR("api.error.people.employee-is-a-supervisor"),;
 
 	private final String messageKey;
 

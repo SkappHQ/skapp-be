@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -186,6 +187,13 @@ public class PeopleController {
 	@GetMapping(value = "/search/employee-team", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> searchEmployeesAndTeamsBySearchKeyword(@RequestParam String keyword) {
 		ResponseEntityDto response = peopleService.searchEmployeesAndTeamsByKeyword(keyword);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_EMPLOYEE')")
+	@DeleteMapping(value = "/employee/{id}")
+	public ResponseEntity<ResponseEntityDto> deleteEmployee(@PathVariable Long id) {
+		ResponseEntityDto response = peopleService.deleteEmployee(id);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

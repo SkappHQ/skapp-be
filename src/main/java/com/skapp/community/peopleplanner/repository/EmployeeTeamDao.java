@@ -20,4 +20,6 @@ public interface EmployeeTeamDao extends JpaRepository<EmployeeTeam, Long>, Empl
 
 	List<EmployeeTeam> findByTeamIn(Collection<Team> teams);
 
+	List<EmployeeTeam> findByEmployeeAndIsSupervisor(Employee employee, Boolean isSupervisor);
+
 }

@@ -80,4 +80,6 @@ public interface EmployeeRepository {
 
 	Long findAllActiveAndPendingEmployeesCount();
 
+	void deleteEmployeeAndUserFromAllTables(Employee employee);
+
 }

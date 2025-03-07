@@ -10,6 +10,7 @@ import com.skapp.community.peopleplanner.payload.request.EmployeeUpdateDto;
 import com.skapp.community.peopleplanner.payload.request.NotificationSettingsPatchRequestDto;
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeManagerResponseDto;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -53,5 +54,8 @@ public interface PeopleService {
 	ResponseEntityDto searchEmployeesAndTeamsByKeyword(String keyword);
 
 	ResponseEntityDto isPrimarySecondaryOrTeamSupervisor(Long employeeId);
+
+	@Transactional
+	ResponseEntityDto deleteEmployee(Long id);
 
 }

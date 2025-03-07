@@ -107,6 +107,7 @@ import com.skapp.community.peopleplanner.type.BulkItemStatus;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.util.Validations;
 import jakarta.validation.constraints.NotNull;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -999,6 +1000,31 @@ public class PeopleServiceImpl implements PeopleService {
 		return new ResponseEntityDto(false, primarySecondaryOrTeamSupervisor);
 	}
 
+	@Transactional
+	@Override
+	public ResponseEntityDto deleteEmployee(Long id) {
+		Optional<User> userOptional = userDao.findById(id);
+
+		if (userOptional.isEmpty()) {
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND);
+		}
+
+		Employee employee = userOptional.get().getEmployee();
+
+		if (!employeeTeamDao.findByEmployeeAndIsSupervisor(employee, true).isEmpty()) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_IS_A_TEAM_SUPERVISOR);
+		}
+
+		if (!employeeManagerDao.findByManager(employee).isEmpty()) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_IS_A_SUPERVISOR);
+		}
+
+		employeeDao.deleteEmployeeAndUserFromAllTables(employee);
+
+		return new ResponseEntityDto(
+				messageUtil.getMessage(PeopleMessageConstant.PEOPLE_SUCCESS_USER_PERMANENTLY_DELETED), false);
+	}
+
 	protected List<EmployeeBulkDto> getValidEmployeeBulkDtoList(List<EmployeeBulkDto> employeeBulkDtoList) {
 		return employeeBulkDtoList;
 	}
@@ -1101,7 +1127,7 @@ public class PeopleServiceImpl implements PeopleService {
 	private void saveEmployeeInTransaction(EmployeeBulkDto employeeBulkDto, TransactionTemplate transactionTemplate) {
 		transactionTemplate.execute(new TransactionCallbackWithoutResult() {
 			@Override
-			protected void doInTransactionWithoutResult(TransactionStatus status) {
+			protected void doInTransactionWithoutResult(@NonNull TransactionStatus status) {
 				createNewEmployeeFromBulk(employeeBulkDto);
 			}
 		});

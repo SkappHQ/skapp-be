@@ -1,9 +1,19 @@
 package com.skapp.community.peopleplanner.repository.impl;
 
 import com.skapp.community.common.model.Auditable_;
+import com.skapp.community.common.model.Notification;
+import com.skapp.community.common.model.Notification_;
 import com.skapp.community.common.model.User;
+import com.skapp.community.common.model.UserSettings;
+import com.skapp.community.common.model.UserSettings_;
+import com.skapp.community.common.model.UserVersion;
+import com.skapp.community.common.model.UserVersion_;
 import com.skapp.community.common.model.User_;
 import com.skapp.community.common.type.Role;
+import com.skapp.community.leaveplanner.model.CarryForwardInfo;
+import com.skapp.community.leaveplanner.model.CarryForwardInfo_;
+import com.skapp.community.leaveplanner.model.LeaveEntitlement;
+import com.skapp.community.leaveplanner.model.LeaveEntitlement_;
 import com.skapp.community.leaveplanner.model.LeaveRequest;
 import com.skapp.community.leaveplanner.model.LeaveRequest_;
 import com.skapp.community.leaveplanner.payload.AdminOnLeaveDto;
@@ -12,14 +22,26 @@ import com.skapp.community.leaveplanner.payload.EmployeesOnLeaveFilterDto;
 import com.skapp.community.leaveplanner.type.LeaveRequestStatus;
 import com.skapp.community.leaveplanner.type.ManagerType;
 import com.skapp.community.peopleplanner.model.Employee;
+import com.skapp.community.peopleplanner.model.EmployeeEducation;
+import com.skapp.community.peopleplanner.model.EmployeeEducation_;
+import com.skapp.community.peopleplanner.model.EmployeeEmergency;
+import com.skapp.community.peopleplanner.model.EmployeeEmergency_;
+import com.skapp.community.peopleplanner.model.EmployeeFamily;
+import com.skapp.community.peopleplanner.model.EmployeeFamily_;
 import com.skapp.community.peopleplanner.model.EmployeeManager;
 import com.skapp.community.peopleplanner.model.EmployeeManager_;
+import com.skapp.community.peopleplanner.model.EmployeePeriod;
+import com.skapp.community.peopleplanner.model.EmployeePeriod_;
 import com.skapp.community.peopleplanner.model.EmployeePersonalInfo;
 import com.skapp.community.peopleplanner.model.EmployeePersonalInfo_;
+import com.skapp.community.peopleplanner.model.EmployeeProgression;
+import com.skapp.community.peopleplanner.model.EmployeeProgression_;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
 import com.skapp.community.peopleplanner.model.EmployeeRole_;
 import com.skapp.community.peopleplanner.model.EmployeeTeam;
 import com.skapp.community.peopleplanner.model.EmployeeTeam_;
+import com.skapp.community.peopleplanner.model.EmployeeVisa;
+import com.skapp.community.peopleplanner.model.EmployeeVisa_;
 import com.skapp.community.peopleplanner.model.Employee_;
 import com.skapp.community.peopleplanner.model.JobFamily_;
 import com.skapp.community.peopleplanner.model.Team;
@@ -35,9 +57,14 @@ import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
 import com.skapp.community.peopleplanner.type.Gender;
+import com.skapp.community.timeplanner.model.TimeRecord;
+import com.skapp.community.timeplanner.model.TimeRecord_;
+import com.skapp.community.timeplanner.model.TimeRequest;
+import com.skapp.community.timeplanner.model.TimeRequest_;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
@@ -1050,6 +1077,134 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		query.setMaxResults(page.getPageSize());
 
 		return new PageImpl<>(query.getResultList(), page, totalRows);
+	}
+
+	@Override
+	public void deleteEmployeeAndUserFromAllTables(Employee employee) {
+		Long employeeId = employee.getEmployeeId();
+
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+
+		CriteriaDelete<EmployeeTeam> deleteEmployeeTeam = criteriaBuilder.createCriteriaDelete(EmployeeTeam.class);
+		Root<EmployeeTeam> deleteEmployeeTeamRoot = deleteEmployeeTeam.from(EmployeeTeam.class);
+
+		deleteEmployeeTeam.where(criteriaBuilder.equal(deleteEmployeeTeamRoot.get(EmployeeTeam_.EMPLOYEE), employee));
+		entityManager.createQuery(deleteEmployeeTeam).executeUpdate();
+
+		CriteriaDelete<EmployeeManager> deleteEmployeeManager = criteriaBuilder
+			.createCriteriaDelete(EmployeeManager.class);
+		Root<EmployeeManager> deleteEmployeeManagerRoot = deleteEmployeeManager.from(EmployeeManager.class);
+		deleteEmployeeManager
+			.where(criteriaBuilder.equal(deleteEmployeeManagerRoot.get(EmployeeManager_.MANAGER), employee));
+		deleteEmployeeManager
+			.where(criteriaBuilder.equal(deleteEmployeeManagerRoot.get(EmployeeManager_.EMPLOYEE), employee));
+		entityManager.createQuery(deleteEmployeeManager).executeUpdate();
+
+		CriteriaDelete<EmployeeEducation> deleteEmployeeEducation = criteriaBuilder
+			.createCriteriaDelete(EmployeeEducation.class);
+		Root<EmployeeEducation> employeeEducationRoot = deleteEmployeeEducation.from(EmployeeEducation.class);
+		deleteEmployeeEducation
+			.where(criteriaBuilder.equal(employeeEducationRoot.get(EmployeeEducation_.EMPLOYEE), employee));
+		entityManager.createQuery(deleteEmployeeEducation).executeUpdate();
+
+		CriteriaDelete<EmployeeEmergency> deleteEmployeeEmergency = criteriaBuilder
+			.createCriteriaDelete(EmployeeEmergency.class);
+		Root<EmployeeEmergency> employeeEmergencyRoot = deleteEmployeeEmergency.from(EmployeeEmergency.class);
+		deleteEmployeeEmergency
+			.where(criteriaBuilder.equal(employeeEmergencyRoot.get(EmployeeEmergency_.EMPLOYEE), employee));
+		entityManager.createQuery(deleteEmployeeEmergency).executeUpdate();
+
+		CriteriaDelete<EmployeeFamily> deleteEmployeeFamily = criteriaBuilder
+			.createCriteriaDelete(EmployeeFamily.class);
+		Root<EmployeeFamily> employeeFamilyRoot = deleteEmployeeFamily.from(EmployeeFamily.class);
+		deleteEmployeeFamily.where(criteriaBuilder.equal(employeeFamilyRoot.get(EmployeeFamily_.EMPLOYEE), employee));
+		entityManager.createQuery(deleteEmployeeFamily).executeUpdate();
+
+		CriteriaDelete<EmployeePeriod> deletePeriodEmployee = criteriaBuilder
+			.createCriteriaDelete(EmployeePeriod.class);
+		Root<EmployeePeriod> employeePeriodRoot = deletePeriodEmployee.from(EmployeePeriod.class);
+		deletePeriodEmployee.where(criteriaBuilder.equal(employeePeriodRoot.get(EmployeePeriod_.EMPLOYEE), employee));
+		entityManager.createQuery(deletePeriodEmployee).executeUpdate();
+
+		CriteriaDelete<EmployeePersonalInfo> deleteEmployeePersonalInfo = criteriaBuilder
+			.createCriteriaDelete(EmployeePersonalInfo.class);
+		Root<EmployeePersonalInfo> employeePersonalInfoRoot = deleteEmployeePersonalInfo
+			.from(EmployeePersonalInfo.class);
+		deleteEmployeePersonalInfo
+			.where(criteriaBuilder.equal(employeePersonalInfoRoot.get(EmployeePersonalInfo_.EMPLOYEE), employee));
+		entityManager.createQuery(deleteEmployeePersonalInfo).executeUpdate();
+
+		CriteriaDelete<EmployeeRole> deleteEmployeeRole = criteriaBuilder.createCriteriaDelete(EmployeeRole.class);
+		Root<EmployeeRole> employeeRoleRoot = deleteEmployeeRole.from(EmployeeRole.class);
+		deleteEmployeeRole.where(criteriaBuilder.equal(employeeRoleRoot.get(EmployeeRole_.EMPLOYEE), employee));
+		entityManager.createQuery(deleteEmployeeRole).executeUpdate();
+
+		CriteriaDelete<CarryForwardInfo> deleteCarryForwardInfo = criteriaBuilder
+			.createCriteriaDelete(CarryForwardInfo.class);
+		Root<CarryForwardInfo> carryForwardInfoRoot = deleteCarryForwardInfo.from(CarryForwardInfo.class);
+		deleteCarryForwardInfo
+			.where(criteriaBuilder.equal(carryForwardInfoRoot.get(CarryForwardInfo_.EMPLOYEE), employee));
+		entityManager.createQuery(deleteCarryForwardInfo).executeUpdate();
+
+		CriteriaDelete<EmployeeProgression> deleteEmployeeProgression = criteriaBuilder
+			.createCriteriaDelete(EmployeeProgression.class);
+		Root<EmployeeProgression> employeeProgressionRoot = deleteEmployeeProgression.from(EmployeeProgression.class);
+		deleteEmployeeProgression
+			.where(criteriaBuilder.equal(employeeProgressionRoot.get(EmployeeProgression_.EMPLOYEE), employee));
+		entityManager.createQuery(deleteEmployeeProgression).executeUpdate();
+
+		CriteriaDelete<EmployeeVisa> deleteEmployeeVisa = criteriaBuilder.createCriteriaDelete(EmployeeVisa.class);
+		Root<EmployeeVisa> employeeVisaRoot = deleteEmployeeVisa.from(EmployeeVisa.class);
+		deleteEmployeeVisa.where(criteriaBuilder.equal(employeeVisaRoot.get(EmployeeVisa_.EMPLOYEE), employee));
+		entityManager.createQuery(deleteEmployeeVisa).executeUpdate();
+
+		CriteriaDelete<LeaveEntitlement> deleteLeaveEntitlement = criteriaBuilder
+			.createCriteriaDelete(LeaveEntitlement.class);
+		Root<LeaveEntitlement> leaveEntitlementRoot = deleteLeaveEntitlement.from(LeaveEntitlement.class);
+		deleteLeaveEntitlement
+			.where(criteriaBuilder.equal(leaveEntitlementRoot.get(LeaveEntitlement_.EMPLOYEE), employee));
+		entityManager.createQuery(deleteLeaveEntitlement).executeUpdate();
+
+		CriteriaDelete<LeaveRequest> deleteLeaveRequest = criteriaBuilder.createCriteriaDelete(LeaveRequest.class);
+		Root<LeaveRequest> leaveRequestRoot = deleteLeaveRequest.from(LeaveRequest.class);
+		deleteLeaveRequest.where(criteriaBuilder.equal(leaveRequestRoot.get(LeaveRequest_.EMPLOYEE), employee));
+		entityManager.createQuery(deleteLeaveRequest).executeUpdate();
+
+		CriteriaDelete<Notification> deleteNotification = criteriaBuilder.createCriteriaDelete(Notification.class);
+		Root<Notification> notificationRoot = deleteNotification.from(Notification.class);
+		deleteNotification.where(criteriaBuilder.equal(notificationRoot.get(Notification_.EMPLOYEE), employee));
+		entityManager.createQuery(deleteNotification).executeUpdate();
+
+		CriteriaDelete<TimeRecord> deleteTimeRecord = criteriaBuilder.createCriteriaDelete(TimeRecord.class);
+		Root<TimeRecord> timeRecordRoot = deleteTimeRecord.from(TimeRecord.class);
+		deleteTimeRecord.where(criteriaBuilder.equal(timeRecordRoot.get(TimeRecord_.EMPLOYEE), employee));
+		entityManager.createQuery(deleteTimeRecord).executeUpdate();
+
+		CriteriaDelete<TimeRequest> deleteTimeRequest = criteriaBuilder.createCriteriaDelete(TimeRequest.class);
+		Root<TimeRequest> timeRequestRoot = deleteTimeRequest.from(TimeRequest.class);
+		deleteTimeRequest.where(criteriaBuilder.equal(timeRequestRoot.get(TimeRequest_.EMPLOYEE), employee));
+		entityManager.createQuery(deleteTimeRequest).executeUpdate();
+
+		CriteriaDelete<UserSettings> deleteUserSettings = criteriaBuilder.createCriteriaDelete(UserSettings.class);
+		Root<UserSettings> userSettingsRoot = deleteUserSettings.from(UserSettings.class);
+		deleteUserSettings.where(criteriaBuilder.equal(userSettingsRoot.get(UserSettings_.USER), employee.getUser()));
+		entityManager.createQuery(deleteUserSettings).executeUpdate();
+
+		CriteriaDelete<UserVersion> deleteUserVersion = criteriaBuilder.createCriteriaDelete(UserVersion.class);
+		Root<UserVersion> userVersionRoot = deleteUserVersion.from(UserVersion.class);
+		deleteUserVersion
+			.where(criteriaBuilder.equal(userVersionRoot.get(UserVersion_.USER_ID), employee.getUser().getUserId()));
+		entityManager.createQuery(deleteUserVersion).executeUpdate();
+
+		CriteriaDelete<Employee> deleteEmployee = criteriaBuilder.createCriteriaDelete(Employee.class);
+		Root<Employee> employeeRoot = deleteEmployee.from(Employee.class);
+		deleteEmployee.where(criteriaBuilder.equal(employeeRoot.get(Employee_.EMPLOYEE_ID), employee.getEmployeeId()));
+		entityManager.createQuery(deleteEmployee).executeUpdate();
+
+		CriteriaDelete<User> deleteUser = criteriaBuilder.createCriteriaDelete(User.class);
+		Root<User> userRoot = deleteUser.from(User.class);
+		deleteUser.where(criteriaBuilder.equal(userRoot.get(User_.USER_ID), employeeId));
+		entityManager.createQuery(deleteUser).executeUpdate();
 	}
 
 }
