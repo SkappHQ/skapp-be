@@ -10,8 +10,6 @@ import com.skapp.community.leaveplanner.payload.CustomLeaveEntitlementsFilterDto
 import com.skapp.community.leaveplanner.payload.LeaveEntitlementPatchRequestDto;
 import com.skapp.community.leaveplanner.payload.LeaveEntitlementsDto;
 import com.skapp.community.leaveplanner.payload.LeaveEntitlementsFilterDto;
-import com.skapp.community.peopleplanner.model.Employee;
-import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
 
 import java.util.List;
 
@@ -25,9 +23,6 @@ public interface LeaveEntitlementService {
 			CustomLeaveEntitlementPatchRequestDto customLeaveEntitlementPatchRequestDto);
 
 	ResponseEntityDto deleteCustomLeaveEntitlements(Long id);
-
-	void addNewEmployeeLeaveEntitlementTimelineRecord(Employee employee, EmployeeTimelineType timelineType,
-			String title, String previousValue, String newValue);
 
 	ResponseEntityDto deleteDefaultEntitlements(Long id);
 

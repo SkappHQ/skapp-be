@@ -10,7 +10,6 @@ import java.util.Optional;
 public interface OrganizationConfigDao
 		extends JpaRepository<OrganizationConfig, Long>, JpaSpecificationExecutor<OrganizationConfig> {
 
-	Optional<OrganizationConfig> findOrganizationConfigByOrganizationConfigType(
-			OrganizationConfigType organizationConfigType);
+	Optional<OrganizationConfig> findOrganizationConfigByOrganizationConfigType(String organizationConfigType);
 
 }

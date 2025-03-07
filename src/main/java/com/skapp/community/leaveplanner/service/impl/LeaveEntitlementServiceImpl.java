@@ -54,15 +54,11 @@ import com.skapp.community.leaveplanner.service.LeaveNotificationService;
 import com.skapp.community.leaveplanner.type.CustomLeaveEntitlementSort;
 import com.skapp.community.leaveplanner.type.LeaveDuration;
 import com.skapp.community.leaveplanner.util.LeaveModuleUtil;
-import com.skapp.community.peopleplanner.constant.PeopleConstants;
 import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
 import com.skapp.community.peopleplanner.mapper.PeopleMapper;
 import com.skapp.community.peopleplanner.model.Employee;
-import com.skapp.community.peopleplanner.model.EmployeeTimeline;
 import com.skapp.community.peopleplanner.payload.request.EmployeeBasicDetailsResponseDto;
 import com.skapp.community.peopleplanner.repository.EmployeeDao;
-import com.skapp.community.peopleplanner.repository.EmployeeTimelineDao;
-import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -96,52 +92,34 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
-	@NonNull
 	private final MessageUtil messageUtil;
 
-	@NonNull
 	private final EmployeeDao employeeDao;
 
-	@NonNull
 	private final LeaveCycleService leaveCycleService;
 
-	@NonNull
 	private final LeaveTypeDao leaveTypeDao;
 
-	@NonNull
 	private final LeaveEntitlementDao leaveEntitlementDao;
 
-	@NonNull
-	private final EmployeeTimelineDao employeeTimelineDao;
-
-	@NonNull
 	private final LeaveMapper leaveMapper;
 
-	@NonNull
 	private final PeopleMapper peopleMapper;
 
-	@NonNull
 	private final CarryForwardInfoDao carryForwardInfoDao;
 
-	@NonNull
 	private final PageTransformer pageTransformer;
 
-	@NonNull
 	private final PlatformTransactionManager transactionManager;
 
-	@NonNull
 	private final UserDao userDao;
 
-	@NonNull
 	private final UserService userService;
 
-	@NonNull
 	private final LeaveEmailService leaveEmailService;
 
-	@NonNull
 	private final LeaveNotificationService leaveNotificationService;
 
-	@NonNull
 	private final BulkContextService bulkContextService;
 
 	@Override
@@ -181,7 +159,6 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 			.toList();
 
 		List<LeaveEntitlement> leaveEntitlements = new ArrayList<>();
-		List<EmployeeTimeline> employeeTimelines = new ArrayList<>();
 
 		for (EntitlementDto entitlementDto : existingEntitlements) {
 			LeaveType leaveType = leaveTypes.stream()
@@ -199,9 +176,6 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 			leaveEntitlement.setValidFrom(leaveCycleStartingDate);
 			leaveEntitlement.setValidTo(leaveCycleEndingDate);
 			leaveEntitlements.add(leaveEntitlement);
-			employeeTimelines.add(getEmployeeTimeline(optionalEmployee.get(), EmployeeTimelineType.ENTITLEMENT_ADDED,
-					PeopleConstants.TITLE_ENTITLEMENT_ADDED, null,
-					leaveEntitlement.getLeaveType().getName() + " " + leaveEntitlement.getTotalDaysAllocated()));
 		}
 
 		String message;
@@ -243,7 +217,8 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 		}
 
 		leaveEntitlementDao.saveAll(leaveEntitlements);
-		employeeTimelineDao.saveAll(employeeTimelines);
+
+		addBulkLeaveEntitlementsTimeLineRecords(optionalEmployee.get(), leaveEntitlements, false);
 
 		log.info("processLeaveEntitlements: execution ended");
 		return message;
@@ -262,6 +237,9 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 		LeaveEntitlement leaveEntitlement = optionalLeaveEntitlement.get();
 
+		String oldHistoryRecord = leaveEntitlement.getLeaveType().getName() + " "
+				+ leaveEntitlement.getTotalDaysAllocated();
+
 		if (!leaveEntitlement.isActive()) {
 			log.warn("Entitlement {} is inactive, no updates performed", entitlementId);
 			return;
@@ -273,16 +251,13 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 		else {
 			editLeaveEntitlement(leaveEntitlementPatchRequestDto, leaveEntitlement);
 		}
-		leaveEntitlement = leaveEntitlementDao.save(leaveEntitlement);
+		leaveEntitlementDao.save(leaveEntitlement);
 
-		String oldHistoryRecord = leaveEntitlement.getLeaveType().getName() + " "
-				+ leaveEntitlement.getTotalDaysAllocated();
-		String historyTitle = optionalLeaveEntitlement.get().isManual()
-				? PeopleConstants.TITLE_CUSTOM_ALLOCATION_UPDATED : PeopleConstants.TITLE_ENTITLEMENT_UPDATED;
 		String newHistoryRecord = leaveEntitlement.getLeaveType().getName() + " "
 				+ (leaveEntitlement.getTotalDaysAllocated() == null ? 0.0 : leaveEntitlement.getTotalDaysAllocated());
 
-		saveChangesEmployeeHistory(oldHistoryRecord, newHistoryRecord, leaveEntitlement, historyTitle);
+		addUpdatedLeaveEntitlementsTimeLineRecords(leaveEntitlement.getEmployee(), oldHistoryRecord, newHistoryRecord,
+				false);
 
 		log.info("updateLeaveEntitlements: execution ended");
 	}
@@ -316,8 +291,8 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 				+ (customLeaveEntitlement.getTotalDaysAllocated() == null ? 0.0
 						: customLeaveEntitlement.getTotalDaysAllocated());
 
-		addNewEmployeeLeaveEntitlementTimelineRecord(null, EmployeeTimelineType.CUSTOM_ALLOCATION,
-				PeopleConstants.TITLE_CUSTOM_ALLOCATION_UPDATED, oldHistoryRecord, newHistoryRecord);
+		addUpdatedLeaveEntitlementsTimeLineRecords(customLeaveEntitlement.getEmployee(), oldHistoryRecord,
+				newHistoryRecord, true);
 
 		log.info("updateCustomLeaveEntitlements: execution ended");
 	}
@@ -336,7 +311,11 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 			if (leaveEntitlement.getTotalDaysUsed() > 0) {
 				throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_ENTITLEMENT_IN_USE_CANT_DELETED);
 			}
+			String oldHistoryRecord = leaveEntitlement.getLeaveType().getName() + " "
+					+ leaveEntitlement.getTotalDaysAllocated();
+			Employee employee = leaveEntitlement.getEmployee();
 			leaveEntitlementDao.delete(leaveEntitlement);
+			addDeletedLeaveEntitlementsTimeLineRecords(employee, oldHistoryRecord);
 		}
 
 		log.info("deleteCustomLeaveEntitlements: execution ended");
@@ -418,25 +397,6 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 		}
 	}
 
-	private void saveChangesEmployeeHistory(String oldHistoryLog, String newHistoryLog,
-			LeaveEntitlement leaveEntitlement, String title) {
-		if (!oldHistoryLog.equals(newHistoryLog)) {
-			addNewEmployeeLeaveEntitlementTimelineRecord(leaveEntitlement.getEmployee(),
-					EmployeeTimelineType.ENTITLEMENT_CHANGED, title, oldHistoryLog, newHistoryLog);
-		}
-	}
-
-	@Override
-	public void addNewEmployeeLeaveEntitlementTimelineRecord(Employee employee, EmployeeTimelineType timelineType,
-			String title, String previousValue, String newValue) {
-		log.info("addNewEmployeeLeaveEntitlementTimelineRecord: execution started");
-
-		EmployeeTimeline timeline = getEmployeeTimeline(employee, timelineType, title, previousValue, newValue);
-
-		employeeTimelineDao.save(timeline);
-		log.info("addNewEmployeeLeaveEntitlementTimelineRecord: execution ended");
-	}
-
 	@Override
 	@Transactional
 	public ResponseEntityDto deleteDefaultEntitlements(Long employeeId) {
@@ -456,11 +416,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 			throw new EntityNotFoundException(LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_NOT_FOUND);
 		}
 
-		leaveEntitlements.forEach(e -> {
-			e.setActive(false);
-			addNewEmployeeLeaveEntitlementTimelineRecord(employeeOpt.get(), EmployeeTimelineType.ENTITLEMENT_CHANGED,
-					PeopleConstants.TITLE_DEFAULT_ENTITLEMENT_DELETED, null, e.getLeaveType().getName());
-		});
+		leaveEntitlements.forEach(e -> e.setActive(false));
 		leaveEntitlementDao.saveAll(leaveEntitlements);
 
 		log.info("deleteDefaultEntitlements: execution ended successfully for deleting Default Leave Entitlements");
@@ -523,12 +479,11 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 		leaveEmailService.sendCustomAllocationEmployeeEmail(leaveEntitlement);
 		leaveNotificationService.sendCustomAllocationEmployeeNotification(leaveEntitlement);
 
-		addNewEmployeeLeaveEntitlementTimelineRecord(employeeOpt.get(), EmployeeTimelineType.CUSTOM_ALLOCATION,
-				PeopleConstants.TITLE_CUSTOM_ALLOCATION, null,
-				leaveEntitlement.getLeaveType().getName() + " " + leaveEntitlement.getTotalDaysAllocated());
-
 		LeaveEntitlementResponseDto leaveEntitlementResponseDto = leaveMapper
 			.leaveEntitlementToEntitlementResponseDto(leaveEntitlement);
+
+		addCustomLeaveEntitlementsTimeLineRecords(employeeOpt.get(), leaveEntitlement);
+
 		log.info("createCustomEntitlementForEmployee: execution ended");
 		return new ResponseEntityDto(false, leaveEntitlementResponseDto);
 	}
@@ -1016,7 +971,6 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 		try {
 			Employee employee = userByEmailOpt.get().getEmployee();
-			ArrayList<EmployeeTimeline> employeeTimelines = new ArrayList<>();
 
 			for (CustomEntitlementDto customEntitlementDto : entitlementDetailsDto.getEntitlements()) {
 				if (customEntitlementDto.getTotalDaysAllocated() == null
@@ -1055,9 +1009,6 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 						if (!isUpdated && entitlement.getTotalDaysAllocated() != 0) {
 							entitlements.add(entitlement);
-							employeeTimelines.add(getEmployeeTimeline(employee, EmployeeTimelineType.ENTITLEMENT_ADDED,
-									PeopleConstants.TITLE_ENTITLEMENT_ADDED, null,
-									entitlement.getLeaveType().getName() + " " + entitlement.getTotalDaysAllocated()));
 						}
 					}
 					else {
@@ -1072,9 +1023,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 			leaveEntitlementDao.saveAll(entitlements);
 
-			if (!employeeTimelines.isEmpty()) {
-				employeeTimelineDao.saveAll(employeeTimelines);
-			}
+			addBulkLeaveEntitlementsTimeLineRecords(employee, entitlements, false);
 
 			bulkStatusSummary.incrementSuccessCount();
 
@@ -1206,16 +1155,9 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 	private boolean[] checkAndUpdateExistingEntitlements(LeaveEntitlement entitlement, LocalDate validFrom,
 			LocalDate validTo) {
-		float usedDays = 0F;
-		float allocatedDays = 0F;
 		float currentBalance;
 		boolean isUpdated = false;
 		boolean logicFailed = false;
-		EmployeeTimeline employeeTimeline;
-		EmployeeTimelineType timelineType = EmployeeTimelineType.ENTITLEMENT_CHANGED;
-		String timelineTitle = PeopleConstants.TITLE_ENTITLEMENT_UPDATED;
-		String newTotalDaysAllocated = entitlement.getLeaveType().getName() + " "
-				+ (usedDays + entitlement.getTotalDaysAllocated());
 
 		List<LeaveEntitlement> existingEntitlements = leaveEntitlementDao
 			.findByEmployeeAndValidFromAndValidToAndLeaveType(entitlement.getEmployee(), validFrom, validTo,
@@ -1224,7 +1166,6 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 			isUpdated = true;
 			if (entitlement.getTotalDaysAllocated() > 0) {
 				for (LeaveEntitlement existingEntitlement : existingEntitlements) {
-					allocatedDays += existingEntitlement.getTotalDaysAllocated();
 					currentBalance = existingEntitlement.getTotalDaysAllocated()
 							- existingEntitlement.getTotalDaysUsed();
 					if (existingEntitlement.getTotalDaysUsed() <= entitlement.getTotalDaysAllocated()) {
@@ -1241,12 +1182,9 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 					}
 				}
 				leaveEntitlementDao.saveAll(existingEntitlements);
-				newTotalDaysAllocated = entitlement.getLeaveType().getName() + " "
-						+ (usedDays + entitlement.getTotalDaysAllocated());
 			}
 			else if (entitlement.getTotalDaysAllocated() == 0) {
 				for (LeaveEntitlement existingEntitlement : existingEntitlements) {
-					allocatedDays += existingEntitlement.getTotalDaysAllocated();
 					if (existingEntitlement.getTotalDaysUsed() > 0) {
 						throw new ModuleException(
 								LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_UTILIZE_MORE_THAN_NEW_COUNT);
@@ -1255,20 +1193,12 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 						leaveEntitlementDao.delete(existingEntitlement);
 					}
 				}
-				timelineTitle = PeopleConstants.TITLE_ENTITLEMENT_DELETED;
-				timelineType = EmployeeTimelineType.ENTITLEMENT_DELETED;
-				newTotalDaysAllocated = null;
 			}
 			else {
 				logicFailed = true;
 			}
 		}
 
-		if (isUpdated) {
-			employeeTimeline = getEmployeeTimeline(entitlement.getEmployee(), timelineType, timelineTitle,
-					entitlement.getLeaveType().getName() + " " + allocatedDays, newTotalDaysAllocated);
-			employeeTimelineDao.save(employeeTimeline);
-		}
 		return new boolean[] { isUpdated, logicFailed };
 	}
 
@@ -1395,21 +1325,54 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 			.reduce(0F, Float::sum);
 	}
 
-	private EmployeeTimeline getEmployeeTimeline(Employee employee, EmployeeTimelineType timelineType, String title,
-			String previousValue, String newValue) {
-		EmployeeTimeline timeline = new EmployeeTimeline();
-		timeline.setEmployee(employee);
-		timeline.setTimelineType(timelineType);
-		timeline.setTitle(title);
-		timeline.setPreviousValue(previousValue);
-		timeline.setNewValue(newValue);
-		timeline.setDisplayDate(DateTimeUtils.getCurrentUtcDate());
-		return timeline;
-	}
-
 	private boolean validateEmployeeEmail(String email) {
 		Optional<User> userOpt = userDao.findByEmail(email);
 		return userOpt.isPresent();
+	}
+
+	/**
+	 * Adds a timeline record when custom leave entitlements are assigned to an employee.
+	 * This feature is available only for Pro tenants.
+	 * @param employee The employee for whom the leave entitlements are assigned.
+	 * @param leaveEntitlement The leave entitlement details being assigned.
+	 */
+	protected void addCustomLeaveEntitlementsTimeLineRecords(Employee employee, LeaveEntitlement leaveEntitlement) {
+		// This feature is available only for Pro tenants.
+	}
+
+	/**
+	 * Adds a timeline record when leave entitlements are updated. This feature is
+	 * available only for Pro tenants.
+	 * @param employee The employee whose leave entitlements are updated.
+	 * @param oldHistoryRecord The previous state of the leave entitlement.
+	 * @param newHistoryRecord The new state of the leave entitlement.
+	 * @param isCustom Indicates whether the entitlement is a custom leave policy.
+	 */
+	protected void addUpdatedLeaveEntitlementsTimeLineRecords(Employee employee, String oldHistoryRecord,
+			String newHistoryRecord, boolean isCustom) {
+		// This feature is available only for Pro tenants.
+	}
+
+	/**
+	 * Adds timeline records when leave entitlements are assigned in bulk. This feature is
+	 * available only for Pro tenants.
+	 * @param employee The employee for whom bulk leave entitlements are assigned.
+	 * @param entitlements The list of leave entitlements assigned.
+	 * @param isCustom Indicates whether the entitlements are custom leave policies.
+	 */
+	protected void addBulkLeaveEntitlementsTimeLineRecords(Employee employee, List<LeaveEntitlement> entitlements,
+			boolean isCustom) {
+		// This feature is available only for Pro tenants.
+	}
+
+	/**
+	 * Adds timeline records when leave entitlements are deleted. This feature is
+	 * available only for Pro tenants.
+	 * @param employee The employee for whom bulk leave entitlements are assigned.
+	 * @param oldHistoryRecord The previous state of the leave entitlement.
+	 */
+	protected void addDeletedLeaveEntitlementsTimeLineRecords(Employee employee, String oldHistoryRecord) {
+		// This feature is available only for Pro tenants.
 	}
 
 }

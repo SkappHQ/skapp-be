@@ -52,4 +52,15 @@ public class EmployeeProgression {
 	@Column(name = "job_title_id")
 	private Long jobTitleId;
 
+	public EmployeeProgression(EmployeeProgression employeeProgression) {
+		this.progressionId = employeeProgression.progressionId;
+		this.employeeType = employeeProgression.employeeType;
+		this.startDate = employeeProgression.startDate;
+		this.endDate = employeeProgression.endDate;
+		this.isCurrent = employeeProgression.isCurrent;
+		this.jobFamilyId = employeeProgression.jobFamilyId;
+		this.jobTitleId = employeeProgression.jobTitleId;
+		this.employee = employeeProgression.employee;
+	}
+
 }
