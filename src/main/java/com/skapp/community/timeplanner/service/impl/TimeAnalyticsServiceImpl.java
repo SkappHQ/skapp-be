@@ -24,6 +24,7 @@ import com.skapp.community.peopleplanner.repository.EmployeeDao;
 import com.skapp.community.peopleplanner.repository.EmployeeTeamDao;
 import com.skapp.community.peopleplanner.repository.HolidayDao;
 import com.skapp.community.peopleplanner.repository.TeamDao;
+import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.timeplanner.constant.TimeMessageConstant;
 import com.skapp.community.timeplanner.model.TimeConfig;
 import com.skapp.community.timeplanner.model.TimeRecord;
@@ -39,6 +40,7 @@ import com.skapp.community.timeplanner.payload.response.ClockInSummaryResponseDt
 import com.skapp.community.timeplanner.payload.response.UtilizationPercentageDto;
 import com.skapp.community.timeplanner.repository.TimeConfigDao;
 import com.skapp.community.timeplanner.repository.TimeRecordDao;
+import com.skapp.community.timeplanner.service.AttendanceConfigService;
 import com.skapp.community.timeplanner.service.TimeAnalyticsService;
 import com.skapp.community.timeplanner.service.TimeService;
 import com.skapp.community.timeplanner.type.ClockInType;
@@ -64,6 +66,7 @@ import java.util.stream.Collectors;
 
 import static com.skapp.community.common.constant.CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND;
 import static com.skapp.community.timeplanner.constant.TimeMessageConstant.TIME_ERROR_MANAGER_OR_ABOVE_PERMISSIONS_REQUIRED;
+import static com.skapp.community.timeplanner.type.AttendanceConfigType.CLOCK_IN_ON_LEAVE_DAYS;
 
 @Service
 @Slf4j
@@ -105,6 +108,8 @@ public class TimeAnalyticsServiceImpl implements TimeAnalyticsService {
 
 	@NonNull
 	private final TimeService timeService;
+
+	private final AttendanceConfigService attendanceConfigService;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -273,6 +278,20 @@ public class TimeAnalyticsServiceImpl implements TimeAnalyticsService {
 
 	private Optional<ClockInSummaryResponseDto> buildClockInSummaryResponse(ClockInSummaryFilterDto filterDto,
 			Employee employee) {
+
+		if (employee.getAccountStatus().equals(AccountStatus.PENDING)) {
+			return Optional.empty();
+		}
+
+		List<LeaveRequest> leaveRequestsList = leaveRequestDao
+			.findLeaveRequestsForTodayByUser(DateTimeUtils.getCurrentUtcDate(), employee.getEmployeeId());
+
+		Boolean clockInOnLeaveDaysStatus = attendanceConfigService.getAttendanceConfigByType(CLOCK_IN_ON_LEAVE_DAYS);
+
+		if (!clockInOnLeaveDaysStatus && !leaveRequestsList.isEmpty()) {
+			return Optional.empty();
+		}
+
 		if (filterDto.getClockInType().contains(ClockInType.ALL_CLOCK_INS) || filterDto.getClockInType().isEmpty()) {
 			return createClockInSummaryResponse(filterDto, employee);
 		}
