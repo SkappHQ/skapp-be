@@ -200,23 +200,14 @@ en:
       subject: "View via Skapp: "
 
   payment:
-    - id: "payment-stripe-payment-was-unsuccessful-trial-end-date"
-      subject: "Your payment was unsuccessful"
-
-    - id: "payment-stripe-payment-was-unsuccessful-after-3days-and-5days"
-      subject: "Your payment was unsuccessful"
-
-    - id: "payment-stripe-payment-was-unsuccessful-after-7days"
-      subject: "Your payment was unsuccessful"
-
     - id: "payment-stripe-welcome-to-skapp-pro-free-trial"
       subject: "Welcome to Skapp Pro free trial!"
 
-    - id: "payment-stripe-free-trial-expires-in-3days"
-      subject: "Your Skapp free trial expires in 3 Days"
-
     - id: "payment-stripe-congratulations-on-upgrading-to-skapp-pro"
       subject: "Congratulations on upgrading to Skapp Pro!"
+
+    - id: "payment-stripe-cancel-subscription"
+      subject: "You have successfully canceled your Skapp pro subscription"
 
 sv:
   people:
