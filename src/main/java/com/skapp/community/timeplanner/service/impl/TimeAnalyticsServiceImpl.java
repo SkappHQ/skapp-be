@@ -73,15 +73,12 @@ import static com.skapp.community.timeplanner.type.AttendanceConfigType.CLOCK_IN
 @RequiredArgsConstructor
 public class TimeAnalyticsServiceImpl implements TimeAnalyticsService {
 
-	@NonNull
 	private final TimeRecordDao timeRecordDao;
 
-	@NonNull
 	private final TimeConfigDao timeConfigDao;
 
-	@NonNull
 	private final TeamDao teamDao;
-	
+
 	private final UserService userService;
 
 	private final LeaveRequestDao leaveRequestDao;
