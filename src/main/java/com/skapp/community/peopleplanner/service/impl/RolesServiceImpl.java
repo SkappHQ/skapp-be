@@ -11,12 +11,10 @@ import com.skapp.community.common.type.RoleLevel;
 import com.skapp.community.common.type.VersionType;
 import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.common.util.MessageUtil;
-import com.skapp.community.peopleplanner.constant.EmployeeTimelineConstant;
 import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
 import com.skapp.community.peopleplanner.mapper.PeopleMapper;
 import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
-import com.skapp.community.peopleplanner.model.EmployeeTimeline;
 import com.skapp.community.peopleplanner.model.ModuleRoleRestriction;
 import com.skapp.community.peopleplanner.model.Team;
 import com.skapp.community.peopleplanner.payload.request.ModuleRoleRestrictionRequestDto;
@@ -27,11 +25,9 @@ import com.skapp.community.peopleplanner.payload.response.ModuleRoleRestrictionR
 import com.skapp.community.peopleplanner.payload.response.RoleResponseDto;
 import com.skapp.community.peopleplanner.repository.EmployeeDao;
 import com.skapp.community.peopleplanner.repository.EmployeeRoleDao;
-import com.skapp.community.peopleplanner.repository.EmployeeTimelineDao;
 import com.skapp.community.peopleplanner.repository.ModuleRoleRestrictionDao;
 import com.skapp.community.peopleplanner.repository.TeamDao;
 import com.skapp.community.peopleplanner.service.RolesService;
-import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -58,8 +54,6 @@ public class RolesServiceImpl implements RolesService {
 	private final EmployeeDao employeeDao;
 
 	private final TeamDao teamDao;
-
-	private final EmployeeTimelineDao employeeTimelineDao;
 
 	private final PeopleMapper peopleMapper;
 
@@ -89,8 +83,6 @@ public class RolesServiceImpl implements RolesService {
 	public void assignRolesToEmployee(RoleRequestDto roleRequestDto, Employee employee) {
 		log.info("assignRolesToEmployee: execution started");
 
-		List<EmployeeTimeline> employeeTimelines = new ArrayList<>();
-
 		Optional<Employee> optionalEmployee = employeeDao.findById(employee.getEmployeeId());
 		if (optionalEmployee.isEmpty()) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
@@ -98,9 +90,6 @@ public class RolesServiceImpl implements RolesService {
 
 		EmployeeRole employeeRole = createEmployeeRole(roleRequestDto, employee);
 		employeeRoleDao.save(employeeRole);
-		addSystemPermissionGrantedTimeline(employee, employeeTimelines, roleRequestDto,
-				DateTimeUtils.getCurrentUtcDate());
-		employeeTimelineDao.saveAll(employeeTimelines);
 
 		log.info("assignRolesToEmployee: execution ended");
 		new ResponseEntityDto(false, peopleMapper.employeeRoleToEmployeeRoleResponseDto(employeeRole));
@@ -176,26 +165,12 @@ public class RolesServiceImpl implements RolesService {
 		oldEmployeeRole.setAttendanceRole(employeeRole.getAttendanceRole());
 		oldEmployeeRole.setIsSuperAdmin(employeeRole.getIsSuperAdmin());
 
-		List<EmployeeTimeline> employeeTimelines = new ArrayList<>();
 		LocalDate currentDate = DateTimeUtils.getCurrentUtcDate();
-
-		boolean isFirstTimeAssignment = isFirstTimeRoleAssignment(employeeRole);
-
-		if (isFirstTimeAssignment) {
-			addSystemPermissionGrantedTimeline(employee, employeeTimelines, roleRequestDto, currentDate);
-		}
-		else {
-			checkAndAddRoleChangeTimeline(employee, employeeTimelines, oldEmployeeRole, roleRequestDto, currentDate);
-		}
 
 		User currentUser = userService.getCurrentUser();
 		employeeRole = updateEmployeeRolesSafely(employeeRole, roleRequestDto, currentDate, currentUser);
 
 		employeeRoleDao.save(employeeRole);
-
-		if (!employeeTimelines.isEmpty()) {
-			employeeTimelineDao.saveAll(employeeTimelines);
-		}
 
 		userVersionService.upgradeUserVersion(employee.getUser().getUserId(), VersionType.MINOR);
 
@@ -230,87 +205,6 @@ public class RolesServiceImpl implements RolesService {
 			}
 		}
 		return employeeRole;
-	}
-
-	private boolean isFirstTimeRoleAssignment(EmployeeRole employeeRole) {
-		return employeeRole.getPeopleRole() == null && employeeRole.getLeaveRole() == null
-				&& employeeRole.getAttendanceRole() == null;
-	}
-
-	private void addSystemPermissionGrantedTimeline(Employee employee, List<EmployeeTimeline> employeeTimelines,
-			RoleRequestDto roleRequestDto, LocalDate grantedDate) {
-
-		if (roleRequestDto.getPeopleRole() != null) {
-			employeeTimelines
-				.add(getEmployeeTimeline(employee, null, roleRequestDto.getPeopleRole().name(), grantedDate));
-		}
-
-		if (roleRequestDto.getLeaveRole() != null) {
-			employeeTimelines
-				.add(getEmployeeTimeline(employee, null, roleRequestDto.getLeaveRole().name(), grantedDate));
-		}
-
-		if (roleRequestDto.getAttendanceRole() != null) {
-			employeeTimelines
-				.add(getEmployeeTimeline(employee, null, roleRequestDto.getAttendanceRole().name(), grantedDate));
-		}
-	}
-
-	private void checkAndAddRoleChangeTimeline(Employee employee, List<EmployeeTimeline> employeeTimelines,
-			EmployeeRole oldRole, RoleRequestDto newRole, LocalDate changedDate) {
-
-		if (hasRoleChanged(oldRole.getPeopleRole(), newRole.getPeopleRole())) {
-			employeeTimelines.add(getEmployeeTimeline(employee,
-					oldRole.getPeopleRole() != null ? oldRole.getPeopleRole().name() : null,
-					newRole.getPeopleRole().name(), changedDate));
-		}
-
-		if (hasRoleChanged(oldRole.getLeaveRole(), newRole.getLeaveRole())) {
-			employeeTimelines.add(
-					getEmployeeTimeline(employee, oldRole.getLeaveRole() != null ? oldRole.getLeaveRole().name() : null,
-							newRole.getLeaveRole().name(), changedDate));
-		}
-
-		if (hasRoleChanged(oldRole.getAttendanceRole(), newRole.getAttendanceRole())) {
-			employeeTimelines.add(getEmployeeTimeline(employee,
-					oldRole.getAttendanceRole() != null ? oldRole.getAttendanceRole().name() : null,
-					newRole.getAttendanceRole().name(), changedDate));
-		}
-	}
-
-	private boolean hasRoleChanged(Role oldRole, Role newRole) {
-		return (oldRole == null && newRole != null) || (oldRole != null && !oldRole.equals(newRole));
-	}
-
-	private EmployeeTimeline getEmployeeTimeline(Employee employee, String previousValue, String newValue,
-			LocalDate displayDate) {
-		EmployeeTimeline timeline = new EmployeeTimeline();
-		timeline.setEmployee(employee);
-
-		if (previousValue == null) {
-			timeline.setTimelineType(EmployeeTimelineType.SYSTEM_PERMISSION_GRANTED);
-			timeline.setTitle(EmployeeTimelineConstant.SYSTEM_PERMISSION_GRANTED);
-		}
-		else {
-			timeline.setTimelineType(EmployeeTimelineType.SYSTEM_PERMISSION_CHANGED);
-			timeline.setTitle(EmployeeTimelineConstant.SYSTEM_PERMISSION_CHANGED);
-		}
-
-		timeline.setPreviousValue(previousValue);
-		timeline.setNewValue(newValue);
-		timeline.setDisplayDate(displayDate);
-
-		User currentUser = userService.getCurrentUser();
-		if (currentUser != null) {
-			timeline.setCreatedBy(currentUser.getEmail());
-			timeline.setLastModifiedBy(currentUser.getEmail());
-		}
-
-		LocalDate now = DateTimeUtils.getCurrentUtcDate();
-		timeline.setCreatedDate(now.atStartOfDay());
-		timeline.setLastModifiedDate(now.atStartOfDay());
-
-		return timeline;
 	}
 
 	@Override

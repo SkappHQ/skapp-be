@@ -80,7 +80,11 @@ public class EmailServiceImpl implements EmailService {
 					&& emailTemplate != EmailBodyTemplates.COMMON_MODULE_SSO_CREATION_TENANT_URL
 					&& emailTemplate != EmailBodyTemplates.COMMON_MODULE_CREDENTIAL_BASED_CREATION_TENANT_URL) {
 				Optional<Organization> organization = organizationDao.findTopByOrderByOrganizationIdDesc();
-				organization.ifPresent(value -> placeholders.put("appUrl", value.getAppUrl()));
+				organization.ifPresent(value -> {
+					placeholders.put("appUrl", value.getAppUrl());
+					placeholders.put("organizationName", value.getOrganizationName());
+				});
+
 			}
 
 			String emailBody = buildEmailBody(templateDetails, module, placeholders);

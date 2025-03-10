@@ -65,7 +65,7 @@ public abstract class AsyncEmailSenderImpl implements AsyncEmailSender {
 
 	private JavaMailSender createJavaMailSender() {
 		Optional<OrganizationConfig> optionalOrganizationConfig = organizationConfigDao
-			.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.EMAIL_CONFIGS);
+			.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.EMAIL_CONFIGS.name());
 
 		if (optionalOrganizationConfig.isEmpty()) {
 			log.error("Email configuration not found");
