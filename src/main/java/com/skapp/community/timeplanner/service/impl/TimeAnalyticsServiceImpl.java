@@ -81,32 +81,23 @@ public class TimeAnalyticsServiceImpl implements TimeAnalyticsService {
 
 	@NonNull
 	private final TeamDao teamDao;
-
-	@NonNull
+	
 	private final UserService userService;
 
-	@NonNull
 	private final LeaveRequestDao leaveRequestDao;
 
-	@NonNull
 	private final EmployeeTeamDao employeeTeamDao;
 
-	@NonNull
 	private final EmployeeDao employeeDao;
 
-	@NonNull
 	private final HolidayDao holidayDao;
 
-	@NonNull
 	private final LeaveMapper leaveMapper;
 
-	@NonNull
 	private final CommonMapper commonMapper;
 
-	@NonNull
 	private final PeopleMapper peopleMapper;
 
-	@NonNull
 	private final TimeService timeService;
 
 	private final AttendanceConfigService attendanceConfigService;
