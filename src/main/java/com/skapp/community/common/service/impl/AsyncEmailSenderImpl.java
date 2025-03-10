@@ -18,13 +18,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
-@Component
+@Service
 @RequiredArgsConstructor
 @Slf4j
 public class AsyncEmailSenderImpl implements AsyncEmailSender {

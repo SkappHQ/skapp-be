@@ -37,7 +37,7 @@ public class EmailServiceImpl implements EmailService {
 
 	protected Map<String, Map<String, List<EmailTemplateMetadata>>> templateDetailsMap;
 
-	private Map<String, Map<String, Map<String, String>>> enumTranslationsMap;
+	protected Map<String, Map<String, Map<String, String>>> enumTranslationsMap;
 
 	@Override
 	public void testEmailServer(TestEmailServerRequestDto testEmailServerRequestDto) {
@@ -95,22 +95,16 @@ public class EmailServiceImpl implements EmailService {
 		placeholders.put("subject", templateDetails.getSubject());
 	}
 
-	private void loadEnumTranslations() {
+	protected void getEnumTranslationsStream() {
 		if (enumTranslationsMap == null) {
-			try (InputStream inputStream = new ClassPathResource("community/templates/common/enum-translations.yml")
-				.getInputStream()) {
-				enumTranslationsMap = yamlMapper.readValue(inputStream, new TypeReference<>() {
-				});
-			}
-			catch (IOException e) {
-				log.error("Failed to load enum-translations.yml: {}", e.getMessage());
-				enumTranslationsMap = new HashMap<>();
-			}
+			enumTranslationsMap = new HashMap<>();
+
+			loadEnumTranslationsFromPath("community/templates/common/enum-translations.yml");
 		}
 	}
 
 	private String getLocalizedEnumValue(String enumKey, String enumValue) {
-		loadEnumTranslations();
+		getEnumTranslationsStream();
 		return Optional.ofNullable(enumTranslationsMap.get(EmailServiceImpl.EMAIL_LANGUAGE))
 			.map(langMap -> langMap.get(enumKey))
 			.map(enumMap -> enumMap.get(enumValue))
@@ -149,6 +143,41 @@ public class EmailServiceImpl implements EmailService {
 		}
 		catch (IOException e) {
 			log.warn("Failed to load templates from {}: {}", path, e.getMessage());
+		}
+	}
+
+	protected void loadEnumTranslationsFromPath(String path) {
+		try (InputStream inputStream = new ClassPathResource(path).getInputStream()) {
+			Map<String, Map<String, Map<String, String>>> translations = yamlMapper.readValue(inputStream,
+					new TypeReference<>() {
+					});
+
+			if (translations != null) {
+				for (Map.Entry<String, Map<String, Map<String, String>>> outerEntry : translations.entrySet()) {
+					String language = outerEntry.getKey();
+					Map<String, Map<String, String>> enumTypesMap = outerEntry.getValue();
+
+					enumTranslationsMap.computeIfAbsent(language, k -> new HashMap<>());
+
+					for (Map.Entry<String, Map<String, String>> innerEntry : enumTypesMap.entrySet()) {
+						String enumType = innerEntry.getKey();
+						Map<String, String> newTranslations = innerEntry.getValue();
+
+						enumTranslationsMap.get(language).compute(enumType, (key, existingTranslations) -> {
+							if (existingTranslations == null) {
+								return new HashMap<>(newTranslations);
+							}
+							else {
+								existingTranslations.putAll(newTranslations);
+								return existingTranslations;
+							}
+						});
+					}
+				}
+			}
+		}
+		catch (IOException e) {
+			log.warn("Failed to load enum translations from {}: {}", path, e.getMessage());
 		}
 	}
 
