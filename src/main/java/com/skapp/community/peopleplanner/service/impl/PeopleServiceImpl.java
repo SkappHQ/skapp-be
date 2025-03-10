@@ -303,6 +303,7 @@ public class PeopleServiceImpl implements PeopleService {
 		peopleEmailService.sendUserInvitationEmail(user);
 
 		addNewEmployeeTimeLineRecords(finalEmployee, employeeDetailsDto);
+		updateSubscriptionQuantity(1L, true);
 
 		return new ResponseEntityDto(false, employeeResponseDto);
 	}
@@ -368,6 +369,7 @@ public class PeopleServiceImpl implements PeopleService {
 		employeeResponseDto.setEmployeeCredentials(employeeCredentials);
 
 		addNewQuickUploadedEmployeeTimeLineRecords(finalEmployee, employeeQuickAddDto);
+		updateSubscriptionQuantity(1L, true);
 
 		log.info("quickAddEmployee: execution ended by user: {}", currentUser.getUserId());
 		return new ResponseEntityDto(false, employeeResponseDto);
@@ -651,6 +653,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 		List<EmployeeBulkResponseDto> totalResults = getTotalResultList(results, overflowedEmployeeBulkDtoList);
 
+		updateSubscriptionQuantity(10L, true);
 		generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), totalResults);
 		return outValues.get();
 	}
@@ -796,6 +799,8 @@ public class PeopleServiceImpl implements PeopleService {
 		userDao.save(user);
 		employeeDao.save(employee);
 		applicationEventPublisher.publishEvent(new UserDeactivatedEvent(this, user));
+
+		updateSubscriptionQuantity(1L, false);
 
 		userVersionService.upgradeUserVersion(employee.getUser().getUserId(), VersionType.MAJOR);
 
@@ -1060,6 +1065,10 @@ public class PeopleServiceImpl implements PeopleService {
 		if (employeeUpdateDto.getTimeZone() != null && !employeeUpdateDto.getTimeZone().isBlank()) {
 			employee.setTimeZone(employeeUpdateDto.getTimeZone());
 		}
+	}
+
+	protected void updateSubscriptionQuantity(long quantity, boolean isIncrement) {
+		log.info("updateSubscriptionQuantity: PRO feature");
 	}
 
 	private List<CompletableFuture<Void>> createEmployeeTasks(List<EmployeeBulkDto> employeeBulkDtoList,
