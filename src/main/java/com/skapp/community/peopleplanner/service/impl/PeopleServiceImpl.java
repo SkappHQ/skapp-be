@@ -654,8 +654,9 @@ public class PeopleServiceImpl implements PeopleService {
 
 		List<EmployeeBulkResponseDto> totalResults = getTotalResultList(results, overflowedEmployeeBulkDtoList);
 
-		updateSubscriptionQuantity(10L, true);
-		generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), totalResults);
+		int successCount = generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), totalResults);
+		updateSubscriptionQuantity(successCount, true);
+
 		return outValues.get();
 	}
 
@@ -1187,7 +1188,7 @@ public class PeopleServiceImpl implements PeopleService {
 				executorService.isTerminated());
 	}
 
-	private void generateBulkErrorResponse(AtomicReference<ResponseEntityDto> outValues, int totalSize,
+	private int generateBulkErrorResponse(AtomicReference<ResponseEntityDto> outValues, int totalSize,
 			List<EmployeeBulkResponseDto> results) {
 		EmployeeBulkErrorResponseDto errorResponseDto = new EmployeeBulkErrorResponseDto();
 		List<EmployeeBulkResponseDto> errorResults = results.stream()
@@ -1197,6 +1198,8 @@ public class PeopleServiceImpl implements PeopleService {
 			.setBulkStatusSummary(new BulkStatusSummary(totalSize - errorResults.size(), errorResults.size()));
 		errorResponseDto.setBulkRecordErrorLogs(errorResults);
 		outValues.set(new ResponseEntityDto(false, errorResponseDto));
+
+		return totalSize - errorResults.size();
 	}
 
 	private void createNewEmployeeFromBulk(EmployeeBulkDto employeeBulkDto) {
