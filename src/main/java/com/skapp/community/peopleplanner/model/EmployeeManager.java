@@ -43,4 +43,12 @@ public class EmployeeManager {
 	@Enumerated(EnumType.STRING)
 	private ManagerType managerType;
 
+	public EmployeeManager(EmployeeManager employeeManager) {
+		this.id = employeeManager.id;
+		this.employee = employeeManager.employee;
+		this.manager = employeeManager.manager;
+		this.isPrimaryManager = employeeManager.isPrimaryManager;
+		this.managerType = employeeManager.managerType;
+	}
+
 }

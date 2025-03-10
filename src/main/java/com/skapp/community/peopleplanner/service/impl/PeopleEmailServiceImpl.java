@@ -16,7 +16,6 @@ import com.skapp.community.peopleplanner.payload.email.PeopleEmailDynamicFields;
 import com.skapp.community.peopleplanner.repository.EmployeeManagerDao;
 import com.skapp.community.peopleplanner.repository.EmployeeRoleDao;
 import com.skapp.community.peopleplanner.service.PeopleEmailService;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,22 +32,16 @@ import static com.skapp.community.common.type.Role.PEOPLE_ADMIN;
 @RequiredArgsConstructor
 public class PeopleEmailServiceImpl implements PeopleEmailService {
 
-	@NonNull
 	private final EmailService emailService;
 
-	@NonNull
 	private final OrganizationDao organizationDao;
 
-	@NonNull
 	private final UserDao userDao;
 
-	@NonNull
 	private final EmployeeManagerDao employeeManagerDao;
 
-	@NonNull
 	private final EmployeeRoleDao employeeRoleDao;
 
-	@NonNull
 	private final EncryptionDecryptionService encryptionDecryptionService;
 
 	@Value("${encryptDecryptAlgorithm.secret}")

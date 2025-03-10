@@ -103,7 +103,6 @@ import com.skapp.community.peopleplanner.repository.TeamDao;
 import com.skapp.community.peopleplanner.util.PeopleUtil;
 import com.skapp.community.timeplanner.model.TimeConfig;
 import com.skapp.community.timeplanner.repository.TimeConfigDao;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -535,7 +534,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		leaveUtilizationFilterDto.setEndDate(cycleEndDate);
 
 		Long employeeId = leaveUtilizationFilterDto.getEmployeeId();
-		Optional<Employee> employeeOptional = employeeDao.findEmployeeByEmployeeIdAndUserActiveNot(employeeId, false);
+		Optional<Employee> employeeOptional = employeeDao.findByEmployeeId(employeeId);
 		List<Long> leaveTypeIds = leaveUtilizationFilterDto.getLeaveTypeIds();
 		List<LeaveType> leaveTypes = getLeaveTypes(leaveUtilizationFilterDto.getLeaveTypeIds());
 		if (leaveTypeIds.getFirst() == -1) {
@@ -1337,7 +1336,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 
 	@Override
 	@Transactional
-	public ResponseEntityDto getEmployeeLeaveHistory(@NonNull Long id,
+	public ResponseEntityDto getEmployeeLeaveHistory(Long id,
 			EmployeeLeaveHistoryFilterDto employeeLeaveHistoryFilterDto) {
 		User currentUser = userService.getCurrentUser();
 		log.info("getEmployeeLeaveHistory: execution started by user: {}", currentUser.getUserId());
@@ -1456,14 +1455,14 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 	}
 
 	@Override
-	public ResponseEntityDto getEmployeeLeaveEntitlements(@NonNull Long id,
+	public ResponseEntityDto getEmployeeLeaveEntitlements(Long id,
 			LeaveEntitlementsFilterDto leaveEntitlementsFilterDto) {
 		log.info("getEmployeeLeaveEntitlements: execution started");
 
 		User currentUser = userService.getCurrentUser();
 		Optional<Employee> employee = employeeDao.findById(id);
 
-		if (employee.isEmpty() || Boolean.TRUE.equals(!employee.get().getUser().getIsActive())) {
+		if (employee.isEmpty()) {
 			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
 		}
 
