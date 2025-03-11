@@ -2224,10 +2224,9 @@ public class TimeServiceImpl implements TimeService {
 		}
 	}
 
-
 	/**
-	 * Delete corresponding 'out of office' event related to the leave request.
-	 * This feature is available only for Pro tenants.
+	 * Delete corresponding 'out of office' event related to the leave request. This
+	 * feature is available only for Pro tenants.
 	 * @param leaveRequest The leave request to be updated.
 	 */
 	protected void handleCalendarEventsDeletion(LeaveRequest leaveRequest) {
