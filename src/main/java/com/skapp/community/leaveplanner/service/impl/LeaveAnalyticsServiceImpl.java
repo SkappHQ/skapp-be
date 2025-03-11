@@ -103,6 +103,7 @@ import com.skapp.community.peopleplanner.repository.TeamDao;
 import com.skapp.community.peopleplanner.util.PeopleUtil;
 import com.skapp.community.timeplanner.model.TimeConfig;
 import com.skapp.community.timeplanner.repository.TimeConfigDao;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -1336,7 +1337,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 
 	@Override
 	@Transactional
-	public ResponseEntityDto getEmployeeLeaveHistory(Long id,
+	public ResponseEntityDto getEmployeeLeaveHistory(@NonNull Long id,
 			EmployeeLeaveHistoryFilterDto employeeLeaveHistoryFilterDto) {
 		User currentUser = userService.getCurrentUser();
 		log.info("getEmployeeLeaveHistory: execution started by user: {}", currentUser.getUserId());
@@ -1455,7 +1456,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 	}
 
 	@Override
-	public ResponseEntityDto getEmployeeLeaveEntitlements(Long id,
+	public ResponseEntityDto getEmployeeLeaveEntitlements(@NonNull Long id,
 			LeaveEntitlementsFilterDto leaveEntitlementsFilterDto) {
 		log.info("getEmployeeLeaveEntitlements: execution started");
 
