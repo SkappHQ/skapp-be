@@ -18,11 +18,15 @@ import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.common.util.MessageUtil;
 import com.skapp.community.common.util.transformer.PageTransformer;
 import com.skapp.community.leaveplanner.mapper.LeaveMapper;
+import com.skapp.community.leaveplanner.model.LeaveEntitlement;
 import com.skapp.community.leaveplanner.model.LeaveRequest;
+import com.skapp.community.leaveplanner.model.LeaveRequestEntitlement;
 import com.skapp.community.leaveplanner.payload.LeaveRequestFilterDto;
 import com.skapp.community.leaveplanner.payload.request.EmployeesOnLeavePeriodFilterDto;
 import com.skapp.community.leaveplanner.payload.response.LeaveRequestResponseDto;
+import com.skapp.community.leaveplanner.repository.LeaveEntitlementDao;
 import com.skapp.community.leaveplanner.repository.LeaveRequestDao;
+import com.skapp.community.leaveplanner.repository.LeaveRequestEntitlementDao;
 import com.skapp.community.leaveplanner.type.LeaveRequestStatus;
 import com.skapp.community.leaveplanner.type.LeaveState;
 import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
@@ -195,6 +199,10 @@ public class TimeServiceImpl implements TimeService {
 	public static final Integer DEFAULT_TIME_CONFIG_VALUE_START_HOUR = 8;
 
 	public static final Integer DEFAULT_TIME_CONFIG_VALUE_START_MINUTE = 30;
+
+	private final LeaveRequestEntitlementDao leaveRequestEntitlementDao;
+
+	private final LeaveEntitlementDao leaveEntitlementDao;
 
 	@Override
 	public ResponseEntityDto updateTimeConfigs(TimeConfigDto timeConfigDto) {
@@ -2114,7 +2122,6 @@ public class TimeServiceImpl implements TimeService {
 			.filter(timeConfig -> dayCapacities.stream()
 				.noneMatch(dayCapacity -> timeConfig.getDay().name().equals(dayCapacity.day().name())))
 			.toList();
-
 		removingConfigs.forEach(timeConfig -> futureLeaves
 			.addAll(leaveRequestDao.findAllFutureLeaveRequestsForTheDay(timeConfig.getDay())));
 		if (!futureLeaves.isEmpty()) {
@@ -2122,7 +2129,8 @@ public class TimeServiceImpl implements TimeService {
 				leaveRequest.setStatus(leaveRequest.getStatus().equals(LeaveRequestStatus.PENDING)
 						? LeaveRequestStatus.CANCELLED : LeaveRequestStatus.PENDING);
 				leaveRequestDao.save(leaveRequest);
-
+				updateLeaveEntitlement(leaveRequest);
+				handleCalendarEventsDeletion(leaveRequest);
 				if (leaveRequest.getEndDate().equals(leaveRequest.getStartDate())) {
 					if (leaveRequest.getStatus() == LeaveRequestStatus.PENDING) {
 						timeEmailService.sendNonWorkingDaySingleDayPendingLeaveRequestCancelEmployeeEmail(leaveRequest);
@@ -2172,10 +2180,24 @@ public class TimeServiceImpl implements TimeService {
 
 			});
 		}
-
 		timeConfigDao.deleteAll(removingConfigs);
 		currentTimeConfigs.removeAll(removingConfigs);
 
+	}
+
+	private void updateLeaveEntitlement(LeaveRequest leaveRequest) {
+		List<LeaveRequestEntitlement> leaveRequestEntitlement = leaveRequestEntitlementDao
+			.findAllByLeaveRequest(leaveRequest);
+		if (leaveRequestEntitlement != null) {
+			Optional<LeaveEntitlement> optionalLeaveEntitlement = leaveEntitlementDao
+				.findById(leaveRequestEntitlement.getFirst().getLeaveEntitlement().getEntitlementId());
+			if (optionalLeaveEntitlement.isPresent()) {
+				LeaveEntitlement leaveEntitlement = optionalLeaveEntitlement.get();
+				leaveEntitlement
+					.setTotalDaysAllocated(leaveEntitlement.getTotalDaysAllocated() + leaveRequest.getDurationDays());
+				leaveEntitlement.setTotalDaysUsed(leaveEntitlement.getTotalDaysUsed() - leaveRequest.getDurationDays());
+			}
+		}
 	}
 
 	private void handleTimeSheetSummary(TeamTimeRecordSummaryResponseDto teamTimeRecordSummaryResponseDto,
@@ -2200,6 +2222,10 @@ public class TimeServiceImpl implements TimeService {
 
 			teamTimeRecordSummaryResponseDto.setTimeRecordsSummary(timeRecordsSummary);
 		}
+	}
+
+	protected void handleCalendarEventsDeletion(LeaveRequest leaveRequest) {
+
 	}
 
 }
