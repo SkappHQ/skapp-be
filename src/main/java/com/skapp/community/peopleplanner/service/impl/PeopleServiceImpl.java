@@ -1191,15 +1191,17 @@ public class PeopleServiceImpl implements PeopleService {
 	private int generateBulkErrorResponse(AtomicReference<ResponseEntityDto> outValues, int totalSize,
 			List<EmployeeBulkResponseDto> results) {
 		EmployeeBulkErrorResponseDto errorResponseDto = new EmployeeBulkErrorResponseDto();
+
 		List<EmployeeBulkResponseDto> errorResults = results.stream()
 			.filter(responseDto -> responseDto.getStatus() == BulkItemStatus.ERROR)
 			.toList();
-		errorResponseDto
-			.setBulkStatusSummary(new BulkStatusSummary(totalSize - errorResults.size(), errorResults.size()));
+
+		int successCount = totalSize - errorResults.size();
+		errorResponseDto.setBulkStatusSummary(new BulkStatusSummary(successCount, errorResults.size()));
 		errorResponseDto.setBulkRecordErrorLogs(errorResults);
 		outValues.set(new ResponseEntityDto(false, errorResponseDto));
 
-		return totalSize - errorResults.size();
+		return successCount;
 	}
 
 	private void createNewEmployeeFromBulk(EmployeeBulkDto employeeBulkDto) {
