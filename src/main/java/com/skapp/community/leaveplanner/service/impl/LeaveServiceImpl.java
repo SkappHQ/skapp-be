@@ -357,7 +357,7 @@ public class LeaveServiceImpl implements LeaveService {
 
 		boolean isExport = leaveRequestFilterDto.getIsExport();
 		if (isExport) {
-			pageSize = (int) employeeDao.count();
+			pageSize = (int) leaveRequestDao.count();
 		}
 
 		Pageable pageable = PageRequest.of(leaveRequestFilterDto.getPage(), pageSize,
