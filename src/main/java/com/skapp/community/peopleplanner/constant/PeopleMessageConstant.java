@@ -16,6 +16,8 @@ public enum PeopleMessageConstant implements MessageConstant {
 	PEOPLE_SUCCESS_ROLE_RESTRICT("api.success.people.role-restrict"),
 	PEOPLE_SUCCESS_TEAM_DELETED("api.success.people.team-deleted"),
 	PEOPLE_SUCCESS_EMPLOYEE_ADDED("api.success.people.employee-added"),
+	PEOPLE_SUCCESS_EMPLOYEE_TERMINATED("api.success.people.employee-terminated"),
+	PEOPLE_SUCCESS_EMPLOYEE_DELETED("api.success.people.employee-deleted"),
 
 	// Error messages
 	PEOPLE_ERROR_TEAM_SUPERVISOR_IDS_NOT_VALID("api.error.people.notnull.team.supervisors.invalid"),

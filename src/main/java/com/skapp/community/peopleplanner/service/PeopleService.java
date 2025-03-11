@@ -44,6 +44,8 @@ public interface PeopleService {
 
 	ResponseEntityDto terminateUser(Long userId);
 
+	ResponseEntityDto deleteUser(Long userId);
+
 	List<EmployeeManagerResponseDto> getCurrentEmployeeManagers();
 
 	ResponseEntityDto updateNotificationSettings(

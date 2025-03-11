@@ -814,25 +814,38 @@ public class PeopleServiceImpl implements PeopleService {
 	@Override
 	@Transactional
 	public ResponseEntityDto terminateUser(Long userId) {
+		log.info("terminateUser: execution started");
+		updateUserStatus(userId, AccountStatus.TERMINATED, false);
+		log.info("terminateUser: execution ended");
+		return new ResponseEntityDto(messageUtil.getMessage(PeopleMessageConstant.PEOPLE_SUCCESS_EMPLOYEE_TERMINATED),
+				false);
+	}
+
+	@Override
+	@Transactional
+	public ResponseEntityDto deleteUser(Long userId) {
+		log.info("deleteUser: execution started");
+		updateUserStatus(userId, AccountStatus.DELETED, true);
+		log.info("deleteUser: execution ended");
+		return new ResponseEntityDto(messageUtil.getMessage(PeopleMessageConstant.PEOPLE_SUCCESS_EMPLOYEE_DELETED),
+				false);
+	}
+
+	private void updateUserStatus(Long userId, AccountStatus status, boolean isDelete) {
 		log.info("updateUserStatus: execution started");
 
-		Optional<User> optionalUser = userDao.findById(userId);
-		if (optionalUser.isEmpty()) {
-			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND);
-		}
-		User user = optionalUser.get();
+		User user = userDao.findById(userId)
+			.orElseThrow(() -> new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND));
 
 		if (!Boolean.TRUE.equals(user.getIsActive())) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_ACCOUNT_DEACTIVATED);
 		}
 
-		List<Team> teamsManagedByUser = teamDao.findTeamsManagedByUser(user.getUserId(), true);
-		if (!teamsManagedByUser.isEmpty()) {
+		if (!teamDao.findTeamsManagedByUser(user.getUserId(), true).isEmpty()) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_TEAM_EMPLOYEE_SUPERVISING_TEAMS);
 		}
 
-		Long supervisingEmployees = employeeDao.countEmployeesByManagerId(user.getUserId());
-		if (supervisingEmployees > 0) {
+		if (employeeDao.countEmployeesByManagerId(user.getUserId()) > 0) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EMPLOYEE_SUPERVISING_EMPLOYEES);
 		}
 
@@ -845,19 +858,21 @@ public class PeopleServiceImpl implements PeopleService {
 		employee.setTeams(null);
 
 		user.setIsActive(false);
-		user.getEmployee().setAccountStatus(AccountStatus.TERMINATED);
-		user.getEmployee().setTerminationDate(DateTimeUtils.getCurrentUtcDate());
+		employee.setAccountStatus(status);
+		employee.setTerminationDate(DateTimeUtils.getCurrentUtcDate());
 
-		peopleEmailService.sendUserTerminationEmail(user);
+		if (isDelete) {
+			user.setEmail(PeopleConstants.DELETED_PREFIX + user.getEmail());
+		}
+		else {
+			peopleEmailService.sendUserTerminationEmail(user);
+		}
 
 		userDao.save(user);
 		employeeDao.save(employee);
 		applicationEventPublisher.publishEvent(new UserDeactivatedEvent(this, user));
 
-		userVersionService.upgradeUserVersion(employee.getUser().getUserId(), VersionType.MAJOR);
-
-		log.info("updateUserStatus: execution ended");
-		return new ResponseEntityDto(false, "User status updated successfully");
+		userVersionService.upgradeUserVersion(user.getUserId(), VersionType.MAJOR);
 	}
 
 	@Override
@@ -1817,7 +1832,8 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 		if (employeeUpdateDto.getAccountStatus() != null) {
 			employee.setAccountStatus(employeeUpdateDto.getAccountStatus());
-			if (employeeUpdateDto.getAccountStatus() == AccountStatus.TERMINATED) {
+			if (employeeUpdateDto.getAccountStatus() == AccountStatus.TERMINATED
+					|| employeeUpdateDto.getAccountStatus() == AccountStatus.DELETED) {
 				employee.getUser().setIsActive(false);
 			}
 			else if (employeeUpdateDto.getAccountStatus() == AccountStatus.ACTIVE) {

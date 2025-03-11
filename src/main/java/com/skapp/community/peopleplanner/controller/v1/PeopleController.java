@@ -177,6 +177,14 @@ public class PeopleController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@Operation(summary = "Delete an user", description = "Delete an user account")
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_ADMIN')")
+	@PatchMapping("/user/delete/{userId}")
+	public ResponseEntity<ResponseEntityDto> deleteUser(@PathVariable Long userId) {
+		ResponseEntityDto response = peopleService.deleteUser(userId);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 	@PreAuthorize("hasAnyRole('ROLE_PEOPLE_MANAGER','ROLE_ATTENDANCE_MANAGER','ROLE_LEAVE_MANAGER')")
 	@PatchMapping("/user/notification/settings")
 	public ResponseEntity<ResponseEntityDto> updateNotificationSettings(
