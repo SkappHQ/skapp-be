@@ -35,7 +35,9 @@ import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.EmployeeManager;
 import com.skapp.community.peopleplanner.model.Holiday;
 import com.skapp.community.peopleplanner.model.Team;
+import com.skapp.community.peopleplanner.payload.CurrentEmployeeDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeTimeRequestFilterDto;
+import com.skapp.community.peopleplanner.payload.request.EmployeeUpdateDto;
 import com.skapp.community.peopleplanner.payload.request.ManagerEmployeeLogFilterDto;
 import com.skapp.community.peopleplanner.payload.response.HolidayResponseDto;
 import com.skapp.community.peopleplanner.repository.EmployeeDao;
@@ -2224,8 +2226,14 @@ public class TimeServiceImpl implements TimeService {
 		}
 	}
 
-	protected void handleCalendarEventsDeletion(LeaveRequest leaveRequest) {
 
+	/**
+	 * Delete corresponding 'out of office' event related to the leave request.
+	 * This feature is available only for Pro tenants.
+	 * @param leaveRequest The leave request to be updated.
+	 */
+	protected void handleCalendarEventsDeletion(LeaveRequest leaveRequest) {
+		// This feature is available only for Pro tenants.
 	}
 
 }
