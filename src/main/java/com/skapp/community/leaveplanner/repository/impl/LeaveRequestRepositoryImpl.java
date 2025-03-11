@@ -985,7 +985,7 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 		CriteriaQuery<OrganizationConfig> criteriaQuery = criteriaBuilder.createQuery(OrganizationConfig.class);
 		Root<OrganizationConfig> root = criteriaQuery.from(OrganizationConfig.class);
 		criteriaQuery.where(criteriaBuilder.equal(root.get(OrganizationConfig_.ORGANIZATION_CONFIG_TYPE),
-				OrganizationConfigType.LEAVE_CYCLE));
+				OrganizationConfigType.LEAVE_CYCLE.name()));
 
 		TypedQuery<OrganizationConfig> query = entityManager.createQuery(criteriaQuery);
 		List<OrganizationConfig> resultList = query.getResultList();

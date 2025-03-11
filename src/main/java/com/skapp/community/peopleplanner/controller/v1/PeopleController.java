@@ -4,6 +4,7 @@ import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeBulkDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDataValidationDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeIsAvailableDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
@@ -84,6 +85,14 @@ public class PeopleController {
 	@GetMapping(value = "/employees", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> getEmployees(EmployeeFilterDto employeeFilterDto) {
 		ResponseEntityDto response = peopleService.getEmployees(employeeFilterDto);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@Operation(summary = "Get a list of employees",
+			description = "This endpoint fetches a list of employees based on provided filters to export.")
+	@GetMapping(value = "/employees/export", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ResponseEntityDto> exportEmployeesData(EmployeeExportFilterDto employeeExportFilterDto) {
+		ResponseEntityDto response = peopleService.exportEmployees(employeeExportFilterDto);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

@@ -1,5 +1,6 @@
 package com.skapp.community.common.payload.email;
 
+import com.skapp.community.common.type.EmailButtonText;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,5 +27,7 @@ public class CommonEmailDynamicFields {
 	private String leaveDuration;
 
 	private String appUrl;
+
+	private String buttonText = EmailButtonText.COMMON_EMAIL_BUTTON_TEXT.name();
 
 }
