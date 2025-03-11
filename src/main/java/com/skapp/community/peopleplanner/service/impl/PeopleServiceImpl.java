@@ -876,7 +876,7 @@ public class PeopleServiceImpl implements PeopleService {
 		employeeDao.save(employee);
 		applicationEventPublisher.publishEvent(new UserDeactivatedEvent(this, user));
 
-        updateSubscriptionQuantity(1L, false);
+		updateSubscriptionQuantity(1L, false);
 		userVersionService.upgradeUserVersion(user.getUserId(), VersionType.MAJOR);
 	}
 
