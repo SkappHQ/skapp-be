@@ -35,9 +35,7 @@ import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.EmployeeManager;
 import com.skapp.community.peopleplanner.model.Holiday;
 import com.skapp.community.peopleplanner.model.Team;
-import com.skapp.community.peopleplanner.payload.CurrentEmployeeDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeTimeRequestFilterDto;
-import com.skapp.community.peopleplanner.payload.request.EmployeeUpdateDto;
 import com.skapp.community.peopleplanner.payload.request.ManagerEmployeeLogFilterDto;
 import com.skapp.community.peopleplanner.payload.response.HolidayResponseDto;
 import com.skapp.community.peopleplanner.repository.EmployeeDao;
@@ -2129,7 +2127,7 @@ public class TimeServiceImpl implements TimeService {
 		if (!futureLeaves.isEmpty()) {
 			futureLeaves.forEach(leaveRequest -> {
 				leaveRequest.setStatus(leaveRequest.getStatus().equals(LeaveRequestStatus.PENDING)
-						? LeaveRequestStatus.CANCELLED : LeaveRequestStatus.PENDING);
+						? LeaveRequestStatus.CANCELLED : LeaveRequestStatus.REVOKED);
 				leaveRequestDao.save(leaveRequest);
 				updateLeaveEntitlement(leaveRequest);
 				handleCalendarEventsDeletion(leaveRequest);
