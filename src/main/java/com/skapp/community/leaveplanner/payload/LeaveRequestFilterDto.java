@@ -40,4 +40,6 @@ public class LeaveRequestFilterDto {
 
 	private String searchKeyword;
 
+	private Boolean isExport = false;
+
 }
