@@ -306,6 +306,7 @@ public class PeopleServiceImpl implements PeopleService {
 		peopleEmailService.sendUserInvitationEmail(user);
 
 		addNewEmployeeTimeLineRecords(finalEmployee, employeeDetailsDto);
+		updateSubscriptionQuantity(1L, true);
 
 		return new ResponseEntityDto(false, employeeResponseDto);
 	}
@@ -371,6 +372,7 @@ public class PeopleServiceImpl implements PeopleService {
 		employeeResponseDto.setEmployeeCredentials(employeeCredentials);
 
 		addNewQuickUploadedEmployeeTimeLineRecords(finalEmployee, employeeQuickAddDto);
+		updateSubscriptionQuantity(1L, true);
 
 		log.info("quickAddEmployee: execution ended by user: {}", currentUser.getUserId());
 		return new ResponseEntityDto(false, employeeResponseDto);
@@ -708,7 +710,9 @@ public class PeopleServiceImpl implements PeopleService {
 
 		List<EmployeeBulkResponseDto> totalResults = getTotalResultList(results, overflowedEmployeeBulkDtoList);
 
-		generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), totalResults);
+		int successCount = generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), totalResults);
+		updateSubscriptionQuantity(successCount, true);
+
 		return outValues.get();
 	}
 
@@ -872,6 +876,7 @@ public class PeopleServiceImpl implements PeopleService {
 		employeeDao.save(employee);
 		applicationEventPublisher.publishEvent(new UserDeactivatedEvent(this, user));
 
+		updateSubscriptionQuantity(1L, false);
 		userVersionService.upgradeUserVersion(user.getUserId(), VersionType.MAJOR);
 	}
 
@@ -1134,6 +1139,10 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 	}
 
+	protected void updateSubscriptionQuantity(long quantity, boolean isIncrement) {
+		log.info("updateSubscriptionQuantity: PRO feature");
+	}
+
 	private List<CompletableFuture<Void>> createEmployeeTasks(List<EmployeeBulkDto> employeeBulkDtoList,
 			ExecutorService executorService, List<EmployeeBulkResponseDto> results) {
 		List<CompletableFuture<Void>> tasks = new ArrayList<>();
@@ -1249,16 +1258,20 @@ public class PeopleServiceImpl implements PeopleService {
 				executorService.isTerminated());
 	}
 
-	private void generateBulkErrorResponse(AtomicReference<ResponseEntityDto> outValues, int totalSize,
+	private int generateBulkErrorResponse(AtomicReference<ResponseEntityDto> outValues, int totalSize,
 			List<EmployeeBulkResponseDto> results) {
 		EmployeeBulkErrorResponseDto errorResponseDto = new EmployeeBulkErrorResponseDto();
+
 		List<EmployeeBulkResponseDto> errorResults = results.stream()
 			.filter(responseDto -> responseDto.getStatus() == BulkItemStatus.ERROR)
 			.toList();
-		errorResponseDto
-			.setBulkStatusSummary(new BulkStatusSummary(totalSize - errorResults.size(), errorResults.size()));
+
+		int successCount = totalSize - errorResults.size();
+		errorResponseDto.setBulkStatusSummary(new BulkStatusSummary(successCount, errorResults.size()));
 		errorResponseDto.setBulkRecordErrorLogs(errorResults);
 		outValues.set(new ResponseEntityDto(false, errorResponseDto));
+
+		return successCount;
 	}
 
 	private void createNewEmployeeFromBulk(EmployeeBulkDto employeeBulkDto) {
