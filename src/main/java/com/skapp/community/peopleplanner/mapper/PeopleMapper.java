@@ -37,6 +37,7 @@ import com.skapp.community.peopleplanner.payload.request.JobFamilyDto;
 import com.skapp.community.peopleplanner.payload.request.JobTitleDto;
 import com.skapp.community.peopleplanner.payload.request.ModuleRoleRestrictionRequestDto;
 import com.skapp.community.peopleplanner.payload.request.TeamRequestDto;
+import com.skapp.community.peopleplanner.payload.response.EmployeeAllDataExportResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeDataExportResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeDetailedResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeJobFamilyDto;
@@ -109,6 +110,17 @@ public interface PeopleMapper {
 			List<EmployeeEmergencyDto> employeeEmergencyDto);
 
 	EmployeePersonalInfo employeePersonalInfoDtoToEmployeePersonalInfo(EmployeePersonalInfoDto employeePersonalInfoDto);
+
+	EmployeePersonalInfoDto employeePersonalInfoToEmployeePersonalInfoDto(EmployeePersonalInfo employeePersonalInfo);
+
+	List<EmployeeEmergencyDto> employeeEmergencyToemployeeEmergencyDTo(List<EmployeeEmergency> employeeEmergency);
+
+	@Mapping(target = "email", source = "user.email")
+	@Mapping(target = "isActive", source = "user.isActive")
+	@Mapping(target = "teamResponseDto", ignore = true)
+	@Mapping(target = "jobFamily", ignore = true)
+	@Mapping(target = "managers", ignore = true)
+	EmployeeAllDataExportResponseDto employeeToEmployeeAllDataExportResponseDto(Employee employee);
 
 	List<EmployeeVisa> employeeVisaDtoListToEmployeeVisaList(List<EmploymentVisaDto> employmentVisa);
 
