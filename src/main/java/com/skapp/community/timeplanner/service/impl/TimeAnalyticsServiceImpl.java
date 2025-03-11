@@ -46,7 +46,6 @@ import com.skapp.community.timeplanner.service.TimeService;
 import com.skapp.community.timeplanner.type.ClockInType;
 import com.skapp.community.timeplanner.type.RecordType;
 import com.skapp.community.timeplanner.type.TrendPeriod;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
