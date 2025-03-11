@@ -295,17 +295,8 @@ public class AuthServiceImpl implements AuthService {
 		}
 		User user = optionalUser.get();
 
-		SharePasswordResponseDto sharePasswordResponseDto = new SharePasswordResponseDto();
-		sharePasswordResponseDto.setUserId(user.getUserId());
-
-		EmployeeCredentialsResponseDto employeeCredentialsResponseDto = new EmployeeCredentialsResponseDto();
-		employeeCredentialsResponseDto.setEmail(user.getEmail());
-		employeeCredentialsResponseDto
-			.setTempPassword(encryptionDecryptionService.decrypt(user.getTempPassword(), encryptSecret));
-
-		sharePasswordResponseDto.setEmployeeCredentials(employeeCredentialsResponseDto);
-		sharePasswordResponseDto.setFirstName(user.getEmployee().getFirstName());
-		sharePasswordResponseDto.setLastName(user.getEmployee().getLastName());
+		SharePasswordResponseDto sharePasswordResponseDto = getSharePasswordResponseDto(user, user,
+				encryptionDecryptionService.decrypt(user.getTempPassword(), encryptSecret));
 
 		log.info("sharePassword: execution ended");
 		return new ResponseEntityDto(false, sharePasswordResponseDto);
@@ -327,16 +318,7 @@ public class AuthServiceImpl implements AuthService {
 		user.setIsPasswordChangedForTheFirstTime(true);
 		User savedUser = userDao.save(user);
 
-		SharePasswordResponseDto sharePasswordResponseDto = new SharePasswordResponseDto();
-		sharePasswordResponseDto.setUserId(savedUser.getUserId());
-
-		EmployeeCredentialsResponseDto employeeCredentialsResponseDto = new EmployeeCredentialsResponseDto();
-		employeeCredentialsResponseDto.setEmail(user.getEmail());
-		employeeCredentialsResponseDto.setTempPassword(tempPassword);
-
-		sharePasswordResponseDto.setEmployeeCredentials(employeeCredentialsResponseDto);
-		sharePasswordResponseDto.setFirstName(user.getEmployee().getFirstName());
-		sharePasswordResponseDto.setLastName(user.getEmployee().getLastName());
+		SharePasswordResponseDto sharePasswordResponseDto = getSharePasswordResponseDto(savedUser, user, tempPassword);
 
 		log.info("resetAndSharePassword: execution ended");
 		return new ResponseEntityDto(false, sharePasswordResponseDto);
@@ -461,6 +443,20 @@ public class AuthServiceImpl implements AuthService {
 
 		log.info("changePassword: execution ended");
 		return new ResponseEntityDto(false, "User password changed successfully");
+	}
+
+	private SharePasswordResponseDto getSharePasswordResponseDto(User savedUser, User user, String tempPassword) {
+		SharePasswordResponseDto sharePasswordResponseDto = new SharePasswordResponseDto();
+		sharePasswordResponseDto.setUserId(savedUser.getUserId());
+
+		EmployeeCredentialsResponseDto employeeCredentialsResponseDto = new EmployeeCredentialsResponseDto();
+		employeeCredentialsResponseDto.setEmail(user.getEmail());
+		employeeCredentialsResponseDto.setTempPassword(tempPassword);
+
+		sharePasswordResponseDto.setEmployeeCredentials(employeeCredentialsResponseDto);
+		sharePasswordResponseDto.setFirstName(user.getEmployee().getFirstName());
+		sharePasswordResponseDto.setLastName(user.getEmployee().getLastName());
+		return sharePasswordResponseDto;
 	}
 
 	private UserSettings createNotificationSettings(User user) {
