@@ -4,6 +4,7 @@ import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeBulkDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDataValidationDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeIsAvailableDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
@@ -87,6 +88,14 @@ public class PeopleController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@Operation(summary = "Get a list of employees",
+			description = "This endpoint fetches a list of employees based on provided filters to export.")
+	@GetMapping(value = "/employees/export", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ResponseEntityDto> exportEmployeesData(EmployeeExportFilterDto employeeExportFilterDto) {
+		ResponseEntityDto response = peopleService.exportEmployees(employeeExportFilterDto);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 	@Operation(summary = "Get employee by ID", description = "This endpoint fetches an employee by their ID.")
 	@GetMapping(value = "/employee/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> getEmployeeById(@PathVariable Long id) {
@@ -165,6 +174,14 @@ public class PeopleController {
 	@PatchMapping("/user/terminate/{userId}")
 	public ResponseEntity<ResponseEntityDto> terminateUser(@PathVariable Long userId) {
 		ResponseEntityDto response = peopleService.terminateUser(userId);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@Operation(summary = "Delete an user", description = "Delete an user account")
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_ADMIN')")
+	@PatchMapping("/user/delete/{userId}")
+	public ResponseEntity<ResponseEntityDto> deleteUser(@PathVariable Long userId) {
+		ResponseEntityDto response = peopleService.deleteUser(userId);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

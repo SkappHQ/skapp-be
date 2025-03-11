@@ -54,6 +54,7 @@ import com.skapp.community.peopleplanner.payload.request.EmployeeDataValidationD
 import com.skapp.community.peopleplanner.payload.request.EmployeeDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeEducationDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeEmergencyDto;
+import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFamilyDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeePersonalInfoDto;
@@ -67,6 +68,7 @@ import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.request.ProbationPeriodDto;
 import com.skapp.community.peopleplanner.payload.request.RoleRequestDto;
 import com.skapp.community.peopleplanner.payload.response.AnalyticsSearchResponseDto;
+import com.skapp.community.peopleplanner.payload.response.EmployeeAllDataExportResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeBulkErrorResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeBulkResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeCountDto;
@@ -478,6 +480,60 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	@Override
+	public ResponseEntityDto exportEmployees(EmployeeExportFilterDto employeeExportFilterDto) {
+		User currentUser = userService.getCurrentUser();
+		log.info("exportEmployees: execution started by user: {}", currentUser.getUserId());
+
+		List<Employee> employees = employeeDao.findEmployeesForExport(employeeExportFilterDto);
+
+		List<Long> employeeIds = employees.stream().map(Employee::getEmployeeId).toList();
+		List<EmployeeTeamDto> teamList = employeeDao.findTeamsByEmployees(employeeIds);
+
+		List<EmployeeAllDataExportResponseDto> responseDtos = exportAllEmployeeData(employees, teamList, employeeIds);
+		log.info("exportEmployees: Successfully finished returning {} employees on exportEmployeeData",
+				responseDtos.size());
+
+		return new ResponseEntityDto(false, responseDtos);
+	}
+
+	public List<EmployeeAllDataExportResponseDto> exportAllEmployeeData(List<Employee> employees,
+			List<EmployeeTeamDto> teamList, List<Long> employeeIds) {
+		List<EmployeeManagerDto> employeeManagerDtos = employeeDao.findManagersByEmployeeIds(employeeIds);
+		List<EmployeeAllDataExportResponseDto> responseDtos = new ArrayList<>();
+
+		for (Employee employee : employees) {
+			EmployeeAllDataExportResponseDto responseDto = peopleMapper
+				.employeeToEmployeeAllDataExportResponseDto(employee);
+			responseDto.setJobFamily(peopleMapper.jobFamilyToJobFamilyDto(employee.getJobFamily()));
+			responseDto.setJobTitle(peopleMapper.jobTitleToJobTitleDto(employee.getJobTitle()));
+			responseDto.setEmployeePersonalInfoDto(
+					peopleMapper.employeePersonalInfoToEmployeePersonalInfoDto(employee.getPersonalInfo()));
+			responseDto.setEmployeeEmergencyDto(
+					peopleMapper.employeeEmergencyToemployeeEmergencyDTo(employee.getEmployeeEmergencies()));
+
+			List<Team> teams = teamList.stream()
+				.filter(e -> Objects.equals(e.getEmployeeId(), employee.getEmployeeId()))
+				.map(EmployeeTeamDto::getTeam)
+				.toList();
+			responseDto.setTeamResponseDto(peopleMapper.teamListToTeamResponseDtoList(teams));
+
+			List<Employee> managers = employeeManagerDtos.stream()
+				.filter(e -> Objects.equals(e.getEmployeeId(), employee.getEmployeeId()))
+				.map(EmployeeManagerDto::getManagers)
+				.toList();
+			responseDto.setManagers(peopleMapper.employeeListToEmployeeResponseDtoList(managers));
+
+			Optional<EmployeePeriod> period = employeePeriodDao
+				.findEmployeePeriodByEmployee_EmployeeIdAndIsActiveTrue(employee.getEmployeeId());
+			period.ifPresent(employeePeriod -> responseDto
+				.setEmployeePeriod(peopleMapper.employeePeriodToEmployeePeriodResponseDto(employeePeriod)));
+
+			responseDtos.add(responseDto);
+		}
+		return responseDtos;
+	}
+
+	@Override
 	@Transactional
 	public ResponseEntityDto getEmployeeById(Long employeeId) {
 		User currentUser = userService.getCurrentUser();
@@ -762,25 +818,38 @@ public class PeopleServiceImpl implements PeopleService {
 	@Override
 	@Transactional
 	public ResponseEntityDto terminateUser(Long userId) {
+		log.info("terminateUser: execution started");
+		updateUserStatus(userId, AccountStatus.TERMINATED, false);
+		log.info("terminateUser: execution ended");
+		return new ResponseEntityDto(messageUtil.getMessage(PeopleMessageConstant.PEOPLE_SUCCESS_EMPLOYEE_TERMINATED),
+				false);
+	}
+
+	@Override
+	@Transactional
+	public ResponseEntityDto deleteUser(Long userId) {
+		log.info("deleteUser: execution started");
+		updateUserStatus(userId, AccountStatus.DELETED, true);
+		log.info("deleteUser: execution ended");
+		return new ResponseEntityDto(messageUtil.getMessage(PeopleMessageConstant.PEOPLE_SUCCESS_EMPLOYEE_DELETED),
+				false);
+	}
+
+	private void updateUserStatus(Long userId, AccountStatus status, boolean isDelete) {
 		log.info("updateUserStatus: execution started");
 
-		Optional<User> optionalUser = userDao.findById(userId);
-		if (optionalUser.isEmpty()) {
-			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND);
-		}
-		User user = optionalUser.get();
+		User user = userDao.findById(userId)
+			.orElseThrow(() -> new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND));
 
 		if (!Boolean.TRUE.equals(user.getIsActive())) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_ACCOUNT_DEACTIVATED);
 		}
 
-		List<Team> teamsManagedByUser = teamDao.findTeamsManagedByUser(user.getUserId(), true);
-		if (!teamsManagedByUser.isEmpty()) {
+		if (!teamDao.findTeamsManagedByUser(user.getUserId(), true).isEmpty()) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_TEAM_EMPLOYEE_SUPERVISING_TEAMS);
 		}
 
-		Long supervisingEmployees = employeeDao.countEmployeesByManagerId(user.getUserId());
-		if (supervisingEmployees > 0) {
+		if (employeeDao.countEmployeesByManagerId(user.getUserId()) > 0) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EMPLOYEE_SUPERVISING_EMPLOYEES);
 		}
 
@@ -793,21 +862,22 @@ public class PeopleServiceImpl implements PeopleService {
 		employee.setTeams(null);
 
 		user.setIsActive(false);
-		user.getEmployee().setAccountStatus(AccountStatus.TERMINATED);
-		user.getEmployee().setTerminationDate(DateTimeUtils.getCurrentUtcDate());
+		employee.setAccountStatus(status);
+		employee.setTerminationDate(DateTimeUtils.getCurrentUtcDate());
 
-		peopleEmailService.sendUserTerminationEmail(user);
+		if (isDelete) {
+			user.setEmail(PeopleConstants.DELETED_PREFIX + user.getEmail());
+		}
+		else {
+			peopleEmailService.sendUserTerminationEmail(user);
+		}
 
 		userDao.save(user);
 		employeeDao.save(employee);
 		applicationEventPublisher.publishEvent(new UserDeactivatedEvent(this, user));
 
-		updateSubscriptionQuantity(1L, false);
-
-		userVersionService.upgradeUserVersion(employee.getUser().getUserId(), VersionType.MAJOR);
-
-		log.info("updateUserStatus: execution ended");
-		return new ResponseEntityDto(false, "User status updated successfully");
+        updateSubscriptionQuantity(1L, false);
+		userVersionService.upgradeUserVersion(user.getUserId(), VersionType.MAJOR);
 	}
 
 	@Override
@@ -1775,7 +1845,8 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 		if (employeeUpdateDto.getAccountStatus() != null) {
 			employee.setAccountStatus(employeeUpdateDto.getAccountStatus());
-			if (employeeUpdateDto.getAccountStatus() == AccountStatus.TERMINATED) {
+			if (employeeUpdateDto.getAccountStatus() == AccountStatus.TERMINATED
+					|| employeeUpdateDto.getAccountStatus() == AccountStatus.DELETED) {
 				employee.getUser().setIsActive(false);
 			}
 			else if (employeeUpdateDto.getAccountStatus() == AccountStatus.ACTIVE) {
