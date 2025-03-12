@@ -1,7 +1,7 @@
 package com.skapp.community.common.service;
 
 import com.skapp.community.common.payload.request.TestEmailServerRequestDto;
-import com.skapp.enterprise.common.type.EmailTemplates;
+import com.skapp.community.common.type.EmailTemplates;
 
 public interface EmailService {
 

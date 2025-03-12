@@ -4,6 +4,7 @@ import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeBulkDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDataValidationDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeUpdateDto;
@@ -23,6 +24,8 @@ public interface PeopleService {
 
 	ResponseEntityDto getEmployees(EmployeeFilterDto employeeFilterDto);
 
+	ResponseEntityDto exportEmployees(EmployeeExportFilterDto employeeExportFilterDto);
+
 	ResponseEntityDto getEmployeeById(Long employeeId);
 
 	ResponseEntityDto getCurrentEmployee();
@@ -40,6 +43,8 @@ public interface PeopleService {
 	ResponseEntityDto updateLoggedInUser(Long employeeId, EmployeeUpdateDto employeeUpdateDto);
 
 	ResponseEntityDto terminateUser(Long userId);
+
+	ResponseEntityDto deleteUser(Long userId);
 
 	List<EmployeeManagerResponseDto> getCurrentEmployeeManagers();
 

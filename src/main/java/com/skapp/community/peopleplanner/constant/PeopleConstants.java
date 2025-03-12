@@ -10,6 +10,8 @@ public class PeopleConstants {
 
 	public static final String HOLIDAY_NAME_REGEX_PATTERN = "^[a-zA-Z ]*$";
 
+	public static final String DELETED_PREFIX = "DELETED_";
+
 	public static final int MAXIMUM_HOLIDAYS_PER_DAY = 3;
 
 	public static final int MAX_NAME_LENGTH = 50;
