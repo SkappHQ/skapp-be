@@ -65,6 +65,7 @@ import com.skapp.community.peopleplanner.repository.HolidayDao;
 import com.skapp.community.peopleplanner.repository.TeamDao;
 import com.skapp.community.peopleplanner.service.PeopleService;
 import com.skapp.community.peopleplanner.type.HolidayDuration;
+import com.skapp.community.peopleplanner.util.PeopleUtil;
 import com.skapp.community.timeplanner.model.TimeConfig;
 import com.skapp.community.timeplanner.repository.TimeConfigDao;
 import jakarta.validation.constraints.NotNull;
@@ -104,61 +105,42 @@ import static com.skapp.community.leaveplanner.constant.LeaveMessageConstant.LEA
 @RequiredArgsConstructor
 public class LeaveServiceImpl implements LeaveService {
 
-	@NonNull
 	private final UserService userService;
 
-	@NonNull
 	private final LeaveMapper leaveMapper;
 
-	@NonNull
 	private final LeaveRequestDao leaveRequestDao;
 
-	@NonNull
 	private final LeaveTypeDao leaveTypeDao;
 
-	@NonNull
 	private final MessageUtil messageUtil;
 
-	@NonNull
 	private final LeaveEntitlementDao leaveEntitlementDao;
 
-	@NonNull
 	private final LeaveRequestEntitlementDao leaveRequestEntitlementDao;
 
-	@NonNull
 	private final TimeConfigDao timeConfigDao;
 
-	@NonNull
 	private final HolidayDao holidayDao;
 
-	@NonNull
 	private final EmployeeDao employeeDao;
 
-	@NonNull
 	private final EmployeeManagerDao employeeManagerDao;
 
-	@NonNull
 	private final PageTransformer pageTransformer;
 
-	@NonNull
 	private final PeopleService peopleService;
 
-	@NonNull
 	private final TeamDao teamDao;
 
-	@NonNull
 	private final PeopleMapper peopleMapper;
 
-	@NonNull
 	private final EmployeeTeamDao employeeTeamDao;
 
-	@NonNull
 	private final LeaveEmailService leaveEmailService;
 
-	@NonNull
 	private final LeaveNotificationService leaveNotificationService;
 
-	@NonNull
 	private final NotificationDao notificationDao;
 
 	@Override
@@ -698,7 +680,7 @@ public class LeaveServiceImpl implements LeaveService {
 		List<Team> teams = teamDao.findByTeamIdIn(teamIds);
 		boolean isSuperAdminOrAttendanceAdmin = isUserSuperAdminOrLeaveAdmin(currentUser);
 
-		LeaveModuleUtil.validateTeamsExist(teamIds, teams);
+		PeopleUtil.validateTeamsExist(teamIds, teams);
 		if (!isSuperAdminOrAttendanceAdmin) {
 			validateUserBelongsToTeams(teams, currentUser);
 		}
