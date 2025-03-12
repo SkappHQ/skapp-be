@@ -12,8 +12,4 @@ public interface EmailService {
 	void sendEmail(EmailTemplates emailMainTemplate, EmailTemplates emailTemplate, Object dynamicFeildsObject,
 			String recipient);
 
-	String obtainSendGridBatchId();
-
-	void cancelScheduledEmail(String batchId, String status);
-
 }
