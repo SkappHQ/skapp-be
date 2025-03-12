@@ -8,7 +8,7 @@ import com.skapp.community.common.payload.request.TestEmailServerRequestDto;
 import com.skapp.community.common.service.AsyncEmailSender;
 import com.skapp.community.common.service.EmailService;
 import com.skapp.community.common.type.EmailMainTemplates;
-import com.skapp.enterprise.common.type.EmailTemplates;
+import com.skapp.community.common.type.EmailTemplates;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cglib.beans.BeanMap;
