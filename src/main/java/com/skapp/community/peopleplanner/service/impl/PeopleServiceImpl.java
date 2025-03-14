@@ -1142,7 +1142,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	protected void updateSubscriptionQuantity(long quantity, boolean isIncrement) {
-		log.info("updateSubscriptionQuantity: PRO feature");
+		log.info("updateSubscriptionQuantity: PRO feature {}, {}", quantity, isIncrement);
 	}
 
 	private List<CompletableFuture<Void>> createEmployeeTasks(List<EmployeeBulkDto> employeeBulkDtoList,
