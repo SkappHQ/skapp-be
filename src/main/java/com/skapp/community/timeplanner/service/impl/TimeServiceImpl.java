@@ -2193,8 +2193,6 @@ public class TimeServiceImpl implements TimeService {
 				.findById(leaveRequestEntitlement.getFirst().getLeaveEntitlement().getEntitlementId());
 			if (optionalLeaveEntitlement.isPresent()) {
 				LeaveEntitlement leaveEntitlement = optionalLeaveEntitlement.get();
-				leaveEntitlement
-					.setTotalDaysAllocated(leaveEntitlement.getTotalDaysAllocated() + leaveRequest.getDurationDays());
 				leaveEntitlement.setTotalDaysUsed(leaveEntitlement.getTotalDaysUsed() - leaveRequest.getDurationDays());
 			}
 		}
