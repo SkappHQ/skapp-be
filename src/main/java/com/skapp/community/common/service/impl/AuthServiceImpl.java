@@ -132,7 +132,7 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	public ResponseEntityDto signIn(SignInRequestDto signInRequestDto) {
-		log.info("signIn: execution started");
+		log.debug("signIn: execution started");
 
 		authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(signInRequestDto.getEmail(), signInRequestDto.getPassword()));
@@ -436,6 +436,10 @@ public class AuthServiceImpl implements AuthService {
 
 		if (!passwordEncoder.matches(changePasswordRequestDto.getOldPassword(), user.getPassword())) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_OLD_PASSWORD_INCORRECT);
+		}
+
+		if (passwordEncoder.matches(changePasswordRequestDto.getNewPassword(), user.getPassword())) {
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_SAME_PASSWORD);
 		}
 
 		String newPassword = changePasswordRequestDto.getNewPassword();
