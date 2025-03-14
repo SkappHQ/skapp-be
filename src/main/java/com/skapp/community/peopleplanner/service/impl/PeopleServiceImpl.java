@@ -713,6 +713,8 @@ public class PeopleServiceImpl implements PeopleService {
 		int successCount = generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), totalResults);
 		updateSubscriptionQuantity(successCount, true);
 
+		addNewBulkUploadedEmployeeTimeLineRecords(totalResults);
+
 		return outValues.get();
 	}
 
@@ -1352,8 +1354,6 @@ public class PeopleServiceImpl implements PeopleService {
 		if (employeeBulkDto.getEmployeePeriod() != null) {
 			saveEmployeePeriod(employee, employeeBulkDto.getEmployeePeriod());
 		}
-
-		addNewEmployeeTimeLineRecords(employee, employeeDetailsDto);
 	}
 
 	private void saveEmployeeTeams(Employee employee, EmployeeBulkDto employeeBulkDto) {
@@ -2836,6 +2836,15 @@ public class PeopleServiceImpl implements PeopleService {
 	 */
 	protected void addNewQuickUploadedEmployeeTimeLineRecords(Employee savedEmployee,
 			EmployeeQuickAddDto employeeQuickAddDto) {
+		// This feature is available only for Pro tenants.
+	}
+
+	/**
+	 * Adds new timeline records for employees who are added via bulk upload. This feature
+	 * is available only for Pro tenants.
+	 * @param results The employees added through bulk upload.
+	 */
+	protected void addNewBulkUploadedEmployeeTimeLineRecords(List<EmployeeBulkResponseDto> results) {
 		// This feature is available only for Pro tenants.
 	}
 
