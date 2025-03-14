@@ -438,6 +438,10 @@ public class AuthServiceImpl implements AuthService {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_OLD_PASSWORD_INCORRECT);
 		}
 
+		if (passwordEncoder.matches(changePasswordRequestDto.getNewPassword(), user.getPassword())) {
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_SAME_PASSWORD);
+		}
+
 		String newPassword = changePasswordRequestDto.getNewPassword();
 		createNewPassword(newPassword, user);
 

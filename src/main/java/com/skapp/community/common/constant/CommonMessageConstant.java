@@ -119,7 +119,8 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_JWT_SIGNIN_KEY_GENERATION_ISSUE("api.error.common.jwt-signin-key-generation-issue"),
 	COMMON_ERROR_SYSTEM_VERSION_MISMATCH("api.error.ep.common.system-version-mismatch"),
 	COMMON_ERROR_USER_VERSION_MISMATCH("api.error.ep.common.user-version-mismatch"),
-	COMMON_ERROR_INVALID_AUTHORIZATION_HEADER("api.error.common.invalid-authorization-header"),;
+	COMMON_ERROR_INVALID_AUTHORIZATION_HEADER("api.error.common.invalid-authorization-header"),
+	COMMON_ERROR_SAME_PASSWORD("api.error.common.same-password"),;
 
 	private final String messageKey;
 
