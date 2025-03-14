@@ -27,7 +27,7 @@ import java.util.Properties;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public abstract class AsyncEmailSenderImpl implements AsyncEmailSender {
+public class AsyncEmailSenderImpl implements AsyncEmailSender {
 
 	private final OrganizationConfigDao organizationConfigDao;
 
