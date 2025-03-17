@@ -219,6 +219,10 @@ public class PeopleServiceImpl implements PeopleService {
 	public ResponseEntityDto addNewEmployee(EmployeeDetailsDto employeeDetailsDto) {
 		log.info("addNewEmployee: execution started");
 
+		if (checkUserCountExceeded()) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_LIMIT_EXCEEDED);
+		}
+
 		Optional<User> existingUser = userDao.findByEmail(employeeDetailsDto.getWorkEmail());
 		if (existingUser.isPresent()) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_USER_EMAIL_ALREADY_EXIST);
@@ -316,6 +320,10 @@ public class PeopleServiceImpl implements PeopleService {
 	public ResponseEntityDto quickAddEmployee(EmployeeQuickAddDto employeeQuickAddDto) {
 		User currentUser = userService.getCurrentUser();
 		log.info("quickAddEmployee: execution started by user: {}", currentUser.getUserId());
+
+		if (checkUserCountExceeded()) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_LIMIT_EXCEEDED);
+		}
 
 		Optional<User> existingUser = userDao.findByEmail(employeeQuickAddDto.getWorkEmail());
 		if (existingUser.isPresent()) {
@@ -2806,6 +2814,15 @@ public class PeopleServiceImpl implements PeopleService {
 
 		userDao.save(user);
 		peopleEmailService.sendUserInvitationEmail(user);
+	}
+
+	/**
+	 * Validate the current user count with user limit. This method is only available for
+	 * Pro tenants.
+	 * @return eligibility for a new user upload.
+	 */
+	protected boolean checkUserCountExceeded() {
+		return false;
 	}
 
 	/**

@@ -33,6 +33,7 @@ public enum PeopleMessageConstant implements MessageConstant {
 	PEOPLE_ERROR_EMPLOYEE_NOT_FOUND("api.error.people.employee.not.found"),
 	PEOPLE_ERROR_EMPLOYEE_TERMINATED("api.error.people.employee.terminated"),
 	PEOPLE_ERROR_EMPLOYEE_BULK_LIMIT_EXCEEDED("api.error.people.employee.bulk-limit-exceeded"),
+	PEOPLE_ERROR_EMPLOYEE_LIMIT_EXCEEDED("api.error.people.employee.limit-exceeded"),
 	PEOPLE_ERROR_ONLY_ONE_SUPER_ADMIN("api.error.people.super-admin.only-one-super-admin"),
 	PEOPLE_ERROR_HOLIDAYS_BULK_CANNOT_ADDED_IN_PAST_OR_CURRENT_DAY(
 			"api.error.people.holiday-bulk.cannot.add.current.or.past.days"),
