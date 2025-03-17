@@ -6,6 +6,7 @@ import com.skapp.community.common.model.User;
 import com.skapp.community.common.payload.response.PageDto;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.repository.UserDao;
+import com.skapp.community.common.service.OrganizationService;
 import com.skapp.community.common.service.UserService;
 import com.skapp.community.common.type.Role;
 import com.skapp.community.common.util.CommonModuleUtils;
@@ -174,6 +175,8 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 
 	private final EmployeeTeamDao employeeTeamDao;
 
+	private final OrganizationService organizationService;
+
 	@Override
 	public ResponseEntityDto getLeaveTrends(LeaveTrendFilterDto leaveTrendFilterDto) {
 		LocalDate startDate = getStartDate(leaveTrendFilterDto);
@@ -280,7 +283,8 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		LocalDate endDate = startDate.withDayOfMonth(startDate.getMonth().length(startDate.isLeapYear()));
 		List<TimeConfig> timeConfigs = timeConfigDao.findAll();
 		List<LocalDate> holidays = holidayDao.findAllByIsActiveTrue().stream().map(Holiday::getDate).toList();
-		return CommonModuleUtils.getWorkingDaysBetweenTwoDates(startDate, endDate, timeConfigs, holidays);
+		return CommonModuleUtils.getWorkingDaysBetweenTwoDates(startDate, endDate, timeConfigs, holidays,
+				organizationService.getOrganizationTimeZone());
 	}
 
 	private HashMap<Integer, Integer> getMonthlyLeaveTrends(LocalDate startDate, LocalDate endDate,
@@ -882,10 +886,12 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		 * the year to 2 months back from current month) * 100 y => average absence rate
 		 * as percentage
 		 */
+
+		String organizationTimeZone = organizationService.getOrganizationTimeZone();
 		int numOfWorkingDaysForTwoMonthsBack = CommonModuleUtils.getWorkingDaysBetweenTwoDates(firstDateOfYear,
-				twoMonthsBackLastDay, timeConfigs, holidayDates);
+				twoMonthsBackLastDay, timeConfigs, holidayDates, organizationTimeZone);
 		int numOfWorkingDaysForCurrentDate = CommonModuleUtils.getWorkingDaysBetweenTwoDates(firstDateOfYear,
-				currentDate, timeConfigs, holidayDates);
+				currentDate, timeConfigs, holidayDates, organizationTimeZone);
 
 		float absenceRateForCurrentDate = getAbsenceRateForCurrentDate(firstDateOfYear, currentDate,
 				numOfWorkingDaysForCurrentDate, timeConfigs, holidayDates, employeeCounts);
@@ -967,10 +973,13 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		List<Employee> allEmployees = teamIds.contains(-1L) ? employeeDao.findAll()
 				: employeeTeamDao.getEmployeesByTeamIds(teamIds, currentUser.getUserId(), isLeaveAdmin);
 
+		String organizationTimeZone = organizationService.getOrganizationTimeZone();
+
 		int numOfWorkingDaysSinceTwoMonthsBackToCurrent = CommonModuleUtils.addUpWorkingDaysForAllEmployee(allEmployees,
-				oneMonthBackCurrentDay, currentDate, timeConfigs, holidayDates);
+				oneMonthBackCurrentDay, currentDate, timeConfigs, holidayDates, organizationTimeZone);
 		int numOfWorkingDaysSinceTwoMonthsBackToOneMonth = CommonModuleUtils.addUpWorkingDaysForAllEmployee(
-				allEmployees, twoMonthsBackCurrentDay, oneMonthBackCurrentDay, timeConfigs, holidayDates);
+				allEmployees, twoMonthsBackCurrentDay, oneMonthBackCurrentDay, timeConfigs, holidayDates,
+				organizationTimeZone);
 
 		float absenceRateForCurrentDate = getAbsenceRateForPastThirtyWorkingDays(oneMonthBackCurrentDay, currentDate,
 				timeConfigs, holidayDates, teamIds);
@@ -985,6 +994,39 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 				(absenceRateForTwoMonthsBack / numOfWorkingDaysSinceTwoMonthsBackToOneMonth) * 100);
 
 		return new ResponseEntityDto(false, absenceRateAnalyticsDtos);
+	}
+
+	public static int addUpWorkingDaysForAllEmployee(List<Employee> employees, LocalDate startDate, LocalDate endDate,
+			List<TimeConfig> timeConfigs, List<LocalDate> holidays, String organizationTimeZone) {
+		int totalWorkingDays = 0;
+		for (Employee employee : employees) {
+			if (employee.getJoinDate() != null && startDate.isBefore(employee.getJoinDate())
+					&& employee.getTerminationDate() != null && endDate.isAfter(employee.getTerminationDate())) {
+				totalWorkingDays = totalWorkingDays
+						+ CommonModuleUtils.getWorkingDaysBetweenTwoDates(employee.getJoinDate(),
+								employee.getTerminationDate(), timeConfigs, holidays, organizationTimeZone);
+			}
+			else if (employee.getJoinDate() != null && startDate.isBefore(employee.getJoinDate())
+					&& employee.getTerminationDate() == null) {
+				totalWorkingDays = totalWorkingDays + CommonModuleUtils.getWorkingDaysBetweenTwoDates(
+						employee.getJoinDate(), endDate, timeConfigs, holidays, organizationTimeZone);
+			}
+			else if (employee.getJoinDate() != null && startDate.isAfter(employee.getJoinDate())
+					&& employee.getTerminationDate() == null) {
+				totalWorkingDays = totalWorkingDays + CommonModuleUtils.getWorkingDaysBetweenTwoDates(startDate,
+						endDate, timeConfigs, holidays, organizationTimeZone);
+			}
+			else if (employee.getJoinDate() != null && startDate.isAfter(employee.getJoinDate())
+					&& employee.getTerminationDate() != null && endDate.isAfter(employee.getTerminationDate())) {
+				totalWorkingDays = totalWorkingDays + CommonModuleUtils.getWorkingDaysBetweenTwoDates(startDate,
+						employee.getTerminationDate(), timeConfigs, holidays, organizationTimeZone);
+			}
+			else {
+				totalWorkingDays = totalWorkingDays + CommonModuleUtils.getWorkingDaysBetweenTwoDates(startDate,
+						endDate, timeConfigs, holidays, organizationTimeZone);
+			}
+		}
+		return totalWorkingDays;
 	}
 
 	private float getAbsenceRateForCurrentDate(LocalDate firstDateOfYear, LocalDate comparisonEndDate,
@@ -1033,7 +1075,8 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 	private float getAbsenceRateForPastThirtyWorkingDays(LocalDate firstDateOfYear, LocalDate twoMonthsBackLastDay,
 			List<TimeConfig> timeConfigs, List<LocalDate> holidayDates, List<Long> teamIds) {
 		return leaveRequestDao.findAllEmployeeRequestsByWithinThirtyDays(firstDateOfYear, twoMonthsBackLastDay,
-				timeConfigs, holidayDates, teamIds.contains(-1L) ? null : teamIds);
+				timeConfigs, holidayDates, teamIds.contains(-1L) ? null : teamIds,
+				organizationService.getOrganizationTimeZone());
 	}
 
 	private float getMonthOnMonthAbsenceRate(LocalDate lastMonthFirstDay, LocalDate lastMonthLastDay,
@@ -1046,7 +1089,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		Float lastMonthLeaveCount = leaveRequestDao.findAllEmployeeRequestsByDateRangeQuery(lastMonthFirstDay,
 				lastMonthLastDay, CommonModuleUtils.getWorkingDaysIndex(timeConfigs), holidayDates);
 		int numOfWorkingDaysLastMonth = CommonModuleUtils.getWorkingDaysBetweenTwoDates(lastMonthFirstDay,
-				lastMonthLastDay, timeConfigs, holidayDates);
+				lastMonthLastDay, timeConfigs, holidayDates, organizationService.getOrganizationTimeZone());
 
 		float absenceRateOfLastMonth = (lastMonthLeaveCount / (numOfWorkingDaysLastMonth * employeeCounts)) * 100;
 		int currentMonth = DateTimeUtils.getMonthValue(DateTimeUtils.getCurrentUtcDate());
@@ -1079,7 +1122,8 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		LocalDate currentDate = managerTeamResourceAvailabilityDto.getStartDate();
 		while (currentDate.isBefore(managerTeamResourceAvailabilityDto.getEndDate())
 				|| currentDate.equals(managerTeamResourceAvailabilityDto.getEndDate())) {
-			if (CommonModuleUtils.checkIfDayIsWorkingDay(currentDate, timeConfigDao.findAll())) {
+			if (CommonModuleUtils.checkIfDayIsWorkingDay(currentDate, timeConfigDao.findAll(),
+					organizationService.getOrganizationTimeZone())) {
 				TeamResourceAvailabilityResponseDto dto = new TeamResourceAvailabilityResponseDto();
 				dto.setDate(currentDate);
 				teamAvailabilityResponseDto.add(dto);
@@ -1291,7 +1335,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		List<TeamLeaveCountByType> teamLeaveCountByTypeForPeriod = leaveRequestDao.findTeamLeaveCountByType(id,
 				workingDays, holidayDates, startDate, endDate);
 		int workingDaysCountInPeriod = CommonModuleUtils.getWorkingDaysBetweenTwoDates(startDate, endDate, timeConfigs,
-				holidayDates);
+				holidayDates, organizationService.getOrganizationTimeZone());
 		double totalTeamLeaveCountForPeriod = teamLeaveCountByTypeForPeriod.stream()
 			.mapToDouble(TeamLeaveCountByType::getLeaveDaysCount)
 			.sum();
