@@ -837,6 +837,11 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 	public static void processLeaveEntitlements(LeaveMapper mapStructMapper, PeopleMapper peopleMapper,
 			Map<Long, LeaveEntitlementResponseDto> responseDtoList, LeaveEntitlement entitlement) {
+
+		if (entitlement.getTotalDaysAllocated() <= 0) {
+			return;
+		}
+
 		long typeID = entitlement.getLeaveType().getTypeId();
 		LeaveEntitlementResponseDto filterResponseListDto = responseDtoList.get(typeID);
 
