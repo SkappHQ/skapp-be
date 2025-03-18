@@ -70,6 +70,7 @@ public interface LeaveRequestRepository {
 
 	Float findAllEmployeeRequestsByWithinThirtyDays(LocalDate startDate, LocalDate endDate,
 
-			List<TimeConfig> timeConfigs, List<LocalDate> holidayDates, List<Long> teamIds);
+			List<TimeConfig> timeConfigs, List<LocalDate> holidayDates, List<Long> teamIds,
+			String organizationTimeZone);
 
 }

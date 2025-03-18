@@ -9,6 +9,9 @@ import org.apache.commons.text.RandomStringGenerator;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,8 +31,16 @@ public class CommonModuleUtils {
 	 * @param timeConfigs List of time configurations for working days.
 	 * @return True if the date is a working day, false otherwise.
 	 */
-	public static boolean checkIfDayIsWorkingDay(LocalDate date, List<TimeConfig> timeConfigs) {
+	public static boolean checkIfDayIsWorkingDay(LocalDate date, List<TimeConfig> timeConfigs,
+			String organizationTimeZone) {
+
 		DayOfWeek checkingDay = date.getDayOfWeek();
+
+		if (organizationTimeZone != null) {
+			ZoneId orgTimeZone = ZoneId.of(organizationTimeZone);
+			ZonedDateTime orgDateTime = date.atStartOfDay(ZoneOffset.UTC).withZoneSameInstant(orgTimeZone);
+			checkingDay = orgDateTime.getDayOfWeek();
+		}
 
 		if (timeConfigs.isEmpty()) {
 			return true;
@@ -82,45 +93,46 @@ public class CommonModuleUtils {
 	}
 
 	public static int addUpWorkingDaysForAllEmployee(List<Employee> employees, LocalDate startDate, LocalDate endDate,
-			List<TimeConfig> timeConfigs, List<LocalDate> holidays) {
+			List<TimeConfig> timeConfigs, List<LocalDate> holidays, String organizationTimeZone) {
 		int totalWorkingDays = 0;
 		for (Employee employee : employees) {
 			if (employee.getJoinDate() != null && startDate.isBefore(employee.getJoinDate())
 					&& employee.getTerminationDate() != null && endDate.isAfter(employee.getTerminationDate())) {
 				totalWorkingDays = totalWorkingDays + getWorkingDaysBetweenTwoDates(employee.getJoinDate(),
-						employee.getTerminationDate(), timeConfigs, holidays);
+						employee.getTerminationDate(), timeConfigs, holidays, organizationTimeZone);
 			}
 			else if (employee.getJoinDate() != null && startDate.isBefore(employee.getJoinDate())
 					&& employee.getTerminationDate() == null) {
-				totalWorkingDays = totalWorkingDays
-						+ getWorkingDaysBetweenTwoDates(employee.getJoinDate(), endDate, timeConfigs, holidays);
+				totalWorkingDays = totalWorkingDays + getWorkingDaysBetweenTwoDates(employee.getJoinDate(), endDate,
+						timeConfigs, holidays, organizationTimeZone);
 			}
 			else if (employee.getJoinDate() != null && startDate.isAfter(employee.getJoinDate())
 					&& employee.getTerminationDate() == null) {
-				totalWorkingDays = totalWorkingDays
-						+ getWorkingDaysBetweenTwoDates(startDate, endDate, timeConfigs, holidays);
+				totalWorkingDays = totalWorkingDays + getWorkingDaysBetweenTwoDates(startDate, endDate, timeConfigs,
+						holidays, organizationTimeZone);
 			}
 			else if (employee.getJoinDate() != null && startDate.isAfter(employee.getJoinDate())
 					&& employee.getTerminationDate() != null && endDate.isAfter(employee.getTerminationDate())) {
 				totalWorkingDays = totalWorkingDays + getWorkingDaysBetweenTwoDates(startDate,
-						employee.getTerminationDate(), timeConfigs, holidays);
+						employee.getTerminationDate(), timeConfigs, holidays, organizationTimeZone);
 			}
 			else {
-				totalWorkingDays = totalWorkingDays
-						+ getWorkingDaysBetweenTwoDates(startDate, endDate, timeConfigs, holidays);
+				totalWorkingDays = totalWorkingDays + getWorkingDaysBetweenTwoDates(startDate, endDate, timeConfigs,
+						holidays, organizationTimeZone);
 			}
 		}
 		return totalWorkingDays;
 	}
 
 	public static int getWorkingDaysBetweenTwoDates(LocalDate startDate, LocalDate endDate,
-			List<TimeConfig> timeConfigs, List<LocalDate> holidays) {
-		return getWorkingDaysBetweenTwoDates(startDate, endDate, timeConfigs, holidays, null, null);
+			List<TimeConfig> timeConfigs, List<LocalDate> holidays, String organizationTimeZone) {
+		return getWorkingDaysBetweenTwoDates(startDate, endDate, timeConfigs, holidays, null, null,
+				organizationTimeZone);
 	}
 
 	public static int getWorkingDaysBetweenTwoDates(LocalDate startDate, LocalDate endDate,
 			List<TimeConfig> timeConfigs, List<LocalDate> holidays, List<Holiday> holidayObjects,
-			LeaveRequest leaveRequest) {
+			LeaveRequest leaveRequest, String organizationTimeZone) {
 		// Ensure the start date is before the end date
 		if (startDate.isAfter(endDate)) {
 			LocalDate temp = startDate;
@@ -133,7 +145,7 @@ public class CommonModuleUtils {
 		LocalDate currentDate = startDate;
 
 		while (!currentDate.isAfter(endDate)) {
-			if (checkIfDayIsWorkingDay(currentDate, timeConfigs)
+			if (checkIfDayIsWorkingDay(currentDate, timeConfigs, organizationTimeZone)
 					&& checkIfDayIsNotAHoliday(leaveRequest, holidayObjects, holidays, currentDate)) {
 				workDays++;
 			}

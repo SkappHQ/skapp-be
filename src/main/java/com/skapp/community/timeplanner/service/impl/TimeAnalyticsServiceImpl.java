@@ -5,6 +5,7 @@ import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.mapper.CommonMapper;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
+import com.skapp.community.common.service.OrganizationService;
 import com.skapp.community.common.service.UserService;
 import com.skapp.community.common.type.Role;
 import com.skapp.community.common.util.DateTimeUtils;
@@ -54,6 +55,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
 import java.time.Year;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -96,6 +100,8 @@ public class TimeAnalyticsServiceImpl implements TimeAnalyticsService {
 	private final TimeService timeService;
 
 	private final AttendanceConfigService attendanceConfigService;
+
+	private final OrganizationService organizationService;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -382,7 +388,13 @@ public class TimeAnalyticsServiceImpl implements TimeAnalyticsService {
 		if (timeConfig == null)
 			return false;
 
-		LocalTime recordStartTime = DateTimeUtils.epochMillisToUtcLocalTime(timeRecord.getClockInTime());
+		ZoneId orgTimeZone = ZoneId.of(organizationService.getOrganizationTimeZone());
+		LocalTime utcTime = DateTimeUtils.epochMillisToUtcLocalTime(timeRecord.getClockInTime());
+
+		ZonedDateTime orgDateTime = ZonedDateTime.of(LocalDate.now(orgTimeZone), utcTime, ZoneOffset.UTC)
+			.withZoneSameInstant(orgTimeZone);
+
+		LocalTime recordStartTime = orgDateTime.toLocalTime();
 		LocalTime lateThreshold = LocalTime.of(timeConfig.getStartHour(), timeConfig.getStartMinute());
 
 		LeaveRequest leaveRequest = leaveRequestDao.findByEmployeeAndDate(timeRecord.getEmployee().getEmployeeId(),
