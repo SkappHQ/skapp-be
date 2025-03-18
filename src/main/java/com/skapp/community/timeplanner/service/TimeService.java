@@ -80,8 +80,6 @@ public interface TimeService {
 
 	ResponseEntityDto getIndividualWorkUtilizationByManager(Long id);
 
-	void getDefaultTimeConfigs();
-
 	ResponseEntityDto getIfTimeConfigRemovable(List<DayOfWeek> days);
 
 	UtilizationPercentageDto calculateWorkTimeUtilization(List<Long> employeeId, List<TimeConfig> timeConfigs,

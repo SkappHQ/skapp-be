@@ -5,12 +5,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.skapp.community.common.constant.CommonConstants;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.mapper.CommonMapper;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.payload.response.PageDto;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
+import com.skapp.community.common.service.OrganizationService;
 import com.skapp.community.common.service.UserService;
 import com.skapp.community.common.type.Role;
 import com.skapp.community.common.util.CommonModuleUtils;
@@ -184,25 +186,11 @@ public class TimeServiceImpl implements TimeService {
 
 	private final AttendanceNotificationService attendanceNotificationService;
 
-	public static final String DEFAULT_TIME_CONFIG_KEY_HOUR = "hours";
-
-	public static final String DEFAULT_TIME_CONFIG_KEY_TIME_BLOCK = "timeBlock";
-
-	public static final String DEFAULT_TIME_CONFIG_VALUE_HOUR = "4.0";
-
-	public static final String DEFAULT_TIME_CONFIG_VALUE_MORNING = "MORNING_HOURS";
-
-	public static final String DEFAULT_TIME_CONFIG_VALUE_EVENING = "EVENING_HOURS";
-
-	public static final Float DEFAULT_TIME_CONFIG_VALUE_TOTAL_HOUR = 8F;
-
-	public static final Integer DEFAULT_TIME_CONFIG_VALUE_START_HOUR = 8;
-
-	public static final Integer DEFAULT_TIME_CONFIG_VALUE_START_MINUTE = 30;
-
 	private final LeaveRequestEntitlementDao leaveRequestEntitlementDao;
 
 	private final LeaveEntitlementDao leaveEntitlementDao;
+
+	private final OrganizationService organizationService;
 
 	@Override
 	public ResponseEntityDto updateTimeConfigs(TimeConfigDto timeConfigDto) {
@@ -589,38 +577,6 @@ public class TimeServiceImpl implements TimeService {
 
 		log.info("editClockInClockOut: execution completed");
 		return new ResponseEntityDto(false, timeMapper.timeRequestToTimeRequestResponseDto(timeRequestToSave));
-	}
-
-	@Override
-	public void getDefaultTimeConfigs() {
-		List<TimeConfig> timeConfigs = new ArrayList<>();
-		List<DayOfWeek> daysOfWeek = List.of(DayOfWeek.values());
-		daysOfWeek.forEach(dayOfWeek -> {
-			TimeConfig newTimeConfig = new TimeConfig();
-			newTimeConfig.setDay(dayOfWeek);
-
-			ArrayNode arrayNode = mapper.createArrayNode();
-			ObjectNode objectNodeMorning = mapper.createObjectNode();
-			ObjectNode objectNodeEvening = mapper.createObjectNode();
-
-			objectNodeMorning.put(DEFAULT_TIME_CONFIG_KEY_HOUR, DEFAULT_TIME_CONFIG_VALUE_HOUR);
-			objectNodeMorning.put(DEFAULT_TIME_CONFIG_KEY_TIME_BLOCK, DEFAULT_TIME_CONFIG_VALUE_MORNING);
-			objectNodeEvening.put(DEFAULT_TIME_CONFIG_KEY_HOUR, DEFAULT_TIME_CONFIG_VALUE_HOUR);
-			objectNodeEvening.put(DEFAULT_TIME_CONFIG_KEY_TIME_BLOCK, DEFAULT_TIME_CONFIG_VALUE_EVENING);
-
-			// Add objects to the array node
-			arrayNode.add(objectNodeMorning);
-			arrayNode.add(objectNodeEvening);
-			newTimeConfig.setTimeBlocks(arrayNode);
-			newTimeConfig.setTotalHours(DEFAULT_TIME_CONFIG_VALUE_TOTAL_HOUR);
-			newTimeConfig.setStartHour(DEFAULT_TIME_CONFIG_VALUE_START_HOUR);
-			newTimeConfig.setStartMinute(DEFAULT_TIME_CONFIG_VALUE_START_MINUTE);
-			newTimeConfig.setIsWeekStartDay(dayOfWeek.name().equals(DayOfWeek.MONDAY.name()));
-			timeConfigs.add(newTimeConfig);
-		});
-
-		timeConfigDao.saveAll(timeConfigs);
-
 	}
 
 	@Override
@@ -1209,7 +1165,8 @@ public class TimeServiceImpl implements TimeService {
 		LocalDate currentDate = DateTimeUtils.getCurrentUtcDate();
 
 		List<TimeConfig> workingDays = timeConfigDao.findAll();
-		boolean isWorkingDay = CommonModuleUtils.checkIfDayIsWorkingDay(currentDate, workingDays);
+		boolean isWorkingDay = CommonModuleUtils.checkIfDayIsWorkingDay(currentDate, workingDays,
+				organizationService.getOrganizationTimeZone());
 
 		boolean attendanceConfigForNonWorkingDays = attendanceConfigService
 			.getAttendanceConfigByType(AttendanceConfigType.CLOCK_IN_ON_NON_WORKING_DAYS);
@@ -1228,8 +1185,8 @@ public class TimeServiceImpl implements TimeService {
 
 			assert currentDayConfig != null;
 			Map<String, Float> hoursMap = TimeUtil.extractHours(currentDayConfig);
-			float morningHours = hoursMap.get(DEFAULT_TIME_CONFIG_VALUE_MORNING);
-			float eveningHours = hoursMap.get(DEFAULT_TIME_CONFIG_VALUE_EVENING);
+			float morningHours = hoursMap.get(CommonConstants.DEFAULT_TIME_CONFIG_VALUE_MORNING);
+			float eveningHours = hoursMap.get(CommonConstants.DEFAULT_TIME_CONFIG_VALUE_EVENING);
 
 			List<LeaveRequest> leaveRequestsList = leaveRequestDao.findLeaveRequestsForTodayByUser(currentDate,
 					currentUser.getEmployee().getEmployeeId());
@@ -1703,8 +1660,10 @@ public class TimeServiceImpl implements TimeService {
 
 		LocalDate sixtyDaysBeforeYesterday = DateTimeUtils.getCurrentUtcDate().minusMonths(2).minusDays(1);
 
-		int noOfWorkingDaysForLast30daysFromYesterday = CommonModuleUtils
-			.getWorkingDaysBetweenTwoDates(oneDayBeforeOneMonthPriorDate, yesterday, timeConfigs, holidays);
+		String organizationTimeZone = organizationService.getOrganizationTimeZone();
+
+		int noOfWorkingDaysForLast30daysFromYesterday = CommonModuleUtils.getWorkingDaysBetweenTwoDates(
+				oneDayBeforeOneMonthPriorDate, yesterday, timeConfigs, holidays, organizationTimeZone);
 		double totalWorkedHoursForLast30DaysFromYesterday = getWorkedHoursForDateRange(oneDayBeforeOneMonthPriorDate,
 				yesterday, employeeId);
 		double totalStandardWorkedHoursForLast30DaysFromYesterday = standardWorkHoursPerDay
@@ -1713,7 +1672,7 @@ public class TimeServiceImpl implements TimeService {
 				/ totalStandardWorkedHoursForLast30DaysFromYesterday) * 100;
 
 		int numberOfWorkingDaysFromPreMonthStartToOneMonthBeforeDate = CommonModuleUtils.getWorkingDaysBetweenTwoDates(
-				sixtyDaysBeforeYesterday, oneDayBeforeOneMonthPriorDate, timeConfigs, holidays);
+				sixtyDaysBeforeYesterday, oneDayBeforeOneMonthPriorDate, timeConfigs, holidays, organizationTimeZone);
 		double totalWorkedHoursPriorToLastThirtyDays = getWorkedHoursForDateRange(sixtyDaysBeforeYesterday,
 				oneDayBeforeOneMonthPriorDate, employeeId);
 		double totalStandardWorkedHoursUptoLastThirtyDays = standardWorkHoursPerDay
