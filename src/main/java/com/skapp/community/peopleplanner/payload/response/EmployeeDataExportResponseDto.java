@@ -2,7 +2,7 @@ package com.skapp.community.peopleplanner.payload.response;
 
 import com.skapp.community.peopleplanner.payload.request.JobFamilyDto;
 import com.skapp.community.peopleplanner.payload.request.JobTitleDto;
-import com.skapp.community.peopleplanner.type.EmployeeType;
+import com.skapp.community.peopleplanner.type.EmploymentType;
 import com.skapp.community.peopleplanner.type.Gender;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,7 +40,7 @@ public class EmployeeDataExportResponseDto {
 
 	private Integer workHourCapacity;
 
-	private EmployeeType employeeType;
+	private EmploymentType employmentType;
 
 	private Gender gender;
 

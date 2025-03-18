@@ -10,6 +10,7 @@ import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeUpdateDto;
 import com.skapp.community.peopleplanner.payload.request.NotificationSettingsPatchRequestDto;
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
+import com.skapp.community.peopleplanner.payload.request.employee.CreateEmployeeRequestDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeManagerResponseDto;
 
 import java.util.List;
@@ -58,5 +59,7 @@ public interface PeopleService {
 	ResponseEntityDto searchEmployeesAndTeamsByKeyword(String keyword);
 
 	ResponseEntityDto isPrimarySecondaryOrTeamSupervisor(Long employeeId);
+
+	ResponseEntityDto createEmployee(CreateEmployeeRequestDto createEmployeeRequestDto);
 
 }

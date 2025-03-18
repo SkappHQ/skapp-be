@@ -33,8 +33,8 @@ import com.skapp.community.peopleplanner.payload.response.EmployeeTeamDto;
 import com.skapp.community.peopleplanner.payload.response.PrimarySecondaryOrTeamSupervisorResponseDto;
 import com.skapp.community.peopleplanner.repository.EmployeeRepository;
 import com.skapp.community.peopleplanner.type.AccountStatus;
-import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
+import com.skapp.community.peopleplanner.type.EmploymentType;
 import com.skapp.community.peopleplanner.type.Gender;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -120,7 +120,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		}
 
 		if (employeeFilterDto.getEmploymentTypes() != null && !employeeFilterDto.getEmploymentTypes().isEmpty()) {
-			predicates.add(root.get(Employee_.EMPLOYEE_TYPE).in(employeeFilterDto.getEmploymentTypes()));
+			predicates.add(root.get(Employee_.EMPLOYMENT_TYPE).in(employeeFilterDto.getEmploymentTypes()));
 		}
 
 		if (employeeFilterDto.getAccountStatus() != null && !employeeFilterDto.getAccountStatus().isEmpty()) {
@@ -217,7 +217,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		if (employeeExportFilterDto.getEmploymentTypes() != null
 				&& !employeeExportFilterDto.getEmploymentTypes().isEmpty()) {
-			predicates.add(root.get(Employee_.EMPLOYEE_TYPE).in(employeeExportFilterDto.getEmploymentTypes()));
+			predicates.add(root.get(Employee_.EMPLOYMENT_TYPE).in(employeeExportFilterDto.getEmploymentTypes()));
 		}
 
 		if (employeeExportFilterDto.getAccountStatus() != null
@@ -939,7 +939,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 	}
 
 	@Override
-	public Long countByEmploymentTypeAndEmploymentAllocationAndTeams(EmployeeType employmentType,
+	public Long countByEmploymentTypeAndEmploymentAllocationAndTeams(EmploymentType employmentType,
 			EmploymentAllocation employmentAllocation, List<Long> teamIds) {
 		if (teamIds != null && teamIds.isEmpty()) {
 			return 0L;
@@ -955,7 +955,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		predicates.add(criteriaBuilder.equal(userJoin.get(User_.isActive), true));
 
 		if (employmentType != null) {
-			predicates.add(criteriaBuilder.equal(root.get(Employee_.EMPLOYEE_TYPE), employmentType));
+			predicates.add(criteriaBuilder.equal(root.get(Employee_.EMPLOYMENT_TYPE), employmentType));
 		}
 
 		if (employmentAllocation != null) {

@@ -109,7 +109,26 @@ public enum PeopleMessageConstant implements MessageConstant {
 	PEOPLE_ERROR_USER_NOT_BELONGS_TO_SELECTED_TEAMS("api.error.people.user-not-belong-to-selected-teams"),
 	PEOPLE_ERROR_DUPLICATE_EMPLOYEE_ID("api.error.people.duplicate-employee-id"),
 	PEOPLE_ERROR_EXCEEDING_USER_UPLOAD("api.error.people.exceeding-user-upload"),
-	PEOPLE_ERROR_EXCEEDING_MAX_CHARACTER_LIMIT("api.error.people.exceeding-max-character-limit"),;
+	PEOPLE_ERROR_EXCEEDING_MAX_CHARACTER_LIMIT("api.error.people.exceeding-max-character-limit"),
+	PEOPLE_ERROR_FIRST_NAME_REQUIRED("api.error.people.first-name-required"),
+	PEOPLE_ERROR_LAST_NAME_REQUIRED("api.error.people.last-name-required"),
+	PEOPLE_ERROR_EMAIL_REQUIRED("api.error.people.email-required"),
+	PEOPLE_ERROR_SYSTEM_PERMISSION_REQUIRED("api.error.people.system-permission-required"),
+	PEOPLE_ERROR_SUPER_ADMIN_REQUIRED("api.error.people.super-admin-required"),
+	PEOPLE_ERROR_PEOPLE_ROLE_REQUIRED("api.error.people.people-role-required"),
+	PEOPLE_ERROR_ATTENDANCE_ROLE_REQUIRED("api.error.people.attendance-role-required"),
+	PEOPLE_ERROR_LEAVE_ROLE_REQUIRED("api.error.people.leave-role-required"),
+	PEOPLE_ERROR_ESIGN_ROLE_REQUIRED("api.error.people.esign-role-required"),
+	PEOPLE_ERROR_INVALID_PEOPLE_ROLE("api.error.people.invalid-people-role"),
+	PEOPLE_ERROR_INVALID_ATTENDANCE_ROLE("api.error.people.invalid-attendance-role"),
+	PEOPLE_ERROR_INVALID_LEAVE_ROLE("api.error.people.invalid-leave-role"),
+	PEOPLE_ERROR_INVALID_ESIGN_ROLE("api.error.people.invalid-esign-role"),
+	PEOPLE_ERROR_ATTENDANCE_RESTRICTED_ROLE_ACCESS("api.error.people.attendance-restricted-role-access"),
+	PEOPLE_ERROR_PEOPLE_RESTRICTED_ROLE_ACCESS("api.error.people.people-restricted-role-access"),
+	PEOPLE_ERROR_LEAVE_RESTRICTED_ROLE_ACCESS("api.error.people.leave-restricted-role-access"),
+	PEOPLE_ERROR_ESIGN_RESTRICTED_ROLE_ACCESS("api.error.people.esign-restricted-role-access"),
+	PEOPLE_ERROR_FAMILY_DOB_FUTURE_DATE("api.error.people.family-dob-future-date"),
+	PEOPLE_ERROR_DOB_FUTURE_DATE("api.error.people.dob-future-date"),;
 
 	private final String messageKey;
 

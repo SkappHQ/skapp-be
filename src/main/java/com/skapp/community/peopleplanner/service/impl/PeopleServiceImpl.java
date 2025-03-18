@@ -67,6 +67,8 @@ import com.skapp.community.peopleplanner.payload.request.NotificationSettingsPat
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.request.ProbationPeriodDto;
 import com.skapp.community.peopleplanner.payload.request.RoleRequestDto;
+import com.skapp.community.peopleplanner.payload.request.employee.CreateEmployeeRequestDto;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeePersonalDetailsDto;
 import com.skapp.community.peopleplanner.payload.response.AnalyticsSearchResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeAllDataExportResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeBulkErrorResponseDto;
@@ -106,7 +108,7 @@ import com.skapp.community.peopleplanner.service.PeopleService;
 import com.skapp.community.peopleplanner.service.RolesService;
 import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.BulkItemStatus;
-import com.skapp.community.peopleplanner.type.EmployeeType;
+import com.skapp.community.peopleplanner.type.EmploymentType;
 import com.skapp.community.peopleplanner.util.Validations;
 import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
@@ -228,8 +230,6 @@ public class PeopleServiceImpl implements PeopleService {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_USER_EMAIL_ALREADY_EXIST);
 		}
 
-		rolesService.validateRoles(employeeDetailsDto.getUserRoles());
-
 		Validations.validateEmployeeDetails(employeeDetailsDto);
 
 		Employee finalEmployee = peopleMapper.employeeDetailsDtoToEmployee(employeeDetailsDto);
@@ -316,6 +316,133 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	@Override
+	public ResponseEntityDto createEmployee(CreateEmployeeRequestDto createEmployeeRequestDto) {
+		validateCreateEmployeeRequestRequiredFields(createEmployeeRequestDto);
+		validateCreateEmployeeRequestPersonalDetails(createEmployeeRequestDto.getPersonal());
+
+		return null;
+	}
+
+	private void validateCreateEmployeeRequestRequiredFields(CreateEmployeeRequestDto createEmployeeRequestDto) {
+		if (checkUserCountExceeded()) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_LIMIT_EXCEEDED);
+		}
+
+		Optional<User> existingUser = userDao
+			.findByEmail(createEmployeeRequestDto.getEmployment().getEmploymentDetails().getEmail());
+		if (existingUser.isPresent()) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_USER_EMAIL_ALREADY_EXIST);
+		}
+
+		if (createEmployeeRequestDto.getPersonal().getGeneral().getFirstName() == null
+				|| createEmployeeRequestDto.getPersonal().getGeneral().getFirstName().isEmpty()) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_FIRST_NAME_REQUIRED);
+		}
+
+		Validations.validateName(createEmployeeRequestDto.getPersonal().getGeneral().getFirstName());
+
+		if (createEmployeeRequestDto.getPersonal().getGeneral().getLastName() == null
+				|| createEmployeeRequestDto.getPersonal().getGeneral().getLastName().isEmpty()) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_LAST_NAME_REQUIRED);
+		}
+
+		Validations.validateName(createEmployeeRequestDto.getPersonal().getGeneral().getLastName());
+
+		if (createEmployeeRequestDto.getEmployment().getEmploymentDetails().getEmail() == null
+				|| createEmployeeRequestDto.getEmployment().getEmploymentDetails().getEmail().isEmpty()) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_EMAIL_REQUIRED);
+		}
+
+		Validations.validateWorkEmail(createEmployeeRequestDto.getEmployment().getEmploymentDetails().getEmail());
+
+		rolesService.validateRoles(createEmployeeRequestDto.getSystemPermissions());
+	}
+
+	private void validateCreateEmployeeRequestPersonalDetails(EmployeePersonalDetailsDto employeePersonalDetailsDto) {
+		if (employeePersonalDetailsDto != null) {
+			if (employeePersonalDetailsDto.getGeneral() != null) {
+				if (employeePersonalDetailsDto.getGeneral().getMiddleName() != null
+						&& !employeePersonalDetailsDto.getGeneral().getMiddleName().isEmpty()) {
+					Validations.validateName(employeePersonalDetailsDto.getGeneral().getMiddleName());
+				}
+
+				if (employeePersonalDetailsDto.getGeneral().getNin() != null
+						&& !employeePersonalDetailsDto.getGeneral().getNin().isEmpty()) {
+					Validations.validateNIN(employeePersonalDetailsDto.getGeneral().getNin());
+				}
+
+				if (employeePersonalDetailsDto.getGeneral().getDateOfBirth() != null) {
+					if (employeePersonalDetailsDto.getGeneral().getDateOfBirth().isAfter(LocalDate.now())) {
+						throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_DOB_FUTURE_DATE);
+					}
+				}
+			}
+
+			if (employeePersonalDetailsDto.getContact() != null) {
+				if (employeePersonalDetailsDto.getContact().getPersonalEmail() != null
+						&& !employeePersonalDetailsDto.getContact().getPersonalEmail().isEmpty()) {
+					Validations.validatePersonalEmail(employeePersonalDetailsDto.getContact().getPersonalEmail());
+				}
+
+				if (employeePersonalDetailsDto.getContact().getContactNo() != null
+						&& !employeePersonalDetailsDto.getContact().getContactNo().isEmpty()) {
+					Validations.validateEmployeeContactNo(employeePersonalDetailsDto.getContact().getContactNo());
+				}
+
+				if (employeePersonalDetailsDto.getContact().getAddressLine1() != null
+						&& !employeePersonalDetailsDto.getContact().getAddressLine1().isEmpty()) {
+					Validations.validateAddress(employeePersonalDetailsDto.getContact().getAddressLine1());
+				}
+
+				if (employeePersonalDetailsDto.getContact().getAddressLine2() != null
+						&& !employeePersonalDetailsDto.getContact().getAddressLine2().isEmpty()) {
+					Validations.validateAddress(employeePersonalDetailsDto.getContact().getAddressLine2());
+				}
+
+				if (employeePersonalDetailsDto.getContact().getCountry() != null
+						&& !employeePersonalDetailsDto.getContact().getCountry().isEmpty()) {
+					Validations.validateCountry(employeePersonalDetailsDto.getContact().getCountry());
+				}
+
+				if (employeePersonalDetailsDto.getContact().getCity() != null
+						&& !employeePersonalDetailsDto.getContact().getCity().isEmpty()) {
+					Validations.validateCity(employeePersonalDetailsDto.getContact().getCity());
+				}
+
+				if (employeePersonalDetailsDto.getContact().getState() != null
+						&& !employeePersonalDetailsDto.getContact().getState().isEmpty()) {
+					Validations.validateState(employeePersonalDetailsDto.getContact().getState());
+				}
+
+				if (employeePersonalDetailsDto.getContact().getPostalCode() != null
+						&& !employeePersonalDetailsDto.getContact().getPostalCode().isEmpty()) {
+					Validations.validatePostalCode(employeePersonalDetailsDto.getContact().getPostalCode());
+				}
+			}
+
+			if (employeePersonalDetailsDto.getFamily() != null && !employeePersonalDetailsDto.getFamily().isEmpty()) {
+				employeePersonalDetailsDto.getFamily().forEach(familyDto -> {
+					if (familyDto.getFirstName() != null && !familyDto.getFirstName().isEmpty()) {
+						Validations.validateName(familyDto.getFirstName());
+					}
+					if (familyDto.getLastName() != null && !familyDto.getLastName().isEmpty()) {
+						Validations.validateName(familyDto.getLastName());
+					}
+					if (familyDto.getParentName() != null && !familyDto.getParentName().isEmpty()) {
+						Validations.validateName(familyDto.getParentName());
+					}
+					if (familyDto.getDateOfBirth() != null) {
+						if (familyDto.getDateOfBirth().isAfter(LocalDate.now())) {
+							throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_FAMILY_DOB_FUTURE_DATE);
+						}
+					}
+				});
+			}
+
+		}
+	}
+
+	@Override
 	@Transactional(propagation = Propagation.REQUIRED)
 	public ResponseEntityDto quickAddEmployee(EmployeeQuickAddDto employeeQuickAddDto) {
 		User currentUser = userService.getCurrentUser();
@@ -331,8 +458,6 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 
 		Validations.validateQuickAddEmployeeDetails(employeeQuickAddDto);
-
-		rolesService.validateRoles(employeeQuickAddDto.getUserRoles());
 
 		Employee finalEmployee = peopleMapper.employeeQuickAddDtoToEmployee(employeeQuickAddDto);
 		finalEmployee.setAccountStatus(AccountStatus.PENDING);
@@ -422,8 +547,6 @@ public class PeopleServiceImpl implements PeopleService {
 				|| !Objects.equals(currentUser.getEmail(), employeeUpdateDto.getEmail()))) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_UNAUTHORIZED_ACCESS);
 		}
-
-		rolesService.validateRoles(employeeUpdateDto.getUserRoles());
 
 		rolesService.updateEmployeeRoles(employeeUpdateDto.getUserRoles(), employee);
 
@@ -637,7 +760,7 @@ public class PeopleServiceImpl implements PeopleService {
 		EmployeeProgressionResponseDto responseDto = new EmployeeProgressionResponseDto();
 
 		responseDto.setProgressionId(progression.getProgressionId());
-		responseDto.setEmployeeType(progression.getEmployeeType());
+		responseDto.setEmploymentType(progression.getEmploymentType());
 		responseDto.setStartDate(progression.getStartDate());
 		responseDto.setEndDate(progression.getEndDate());
 
@@ -1396,7 +1519,7 @@ public class PeopleServiceImpl implements PeopleService {
 			}
 
 			if (employeeBulkDto.getEmployeeType() != null && !employeeBulkDto.getEmployeeType().isEmpty()) {
-				employeeProgression.setEmployeeType(EmployeeType.valueOf(employeeBulkDto.getEmployeeType()));
+				employeeProgression.setEmploymentType(EmploymentType.valueOf(employeeBulkDto.getEmployeeType()));
 			}
 
 			employeeProgression.setEmployee(employee);
@@ -1477,8 +1600,8 @@ public class PeopleServiceImpl implements PeopleService {
 		if (employeeBulkDto.getEmployeeProgression() != null) {
 			EmployeeProgression employeeProgression = peopleMapper
 				.employeeProgressionDtoToEmployeeProgression(employeeBulkDto.getEmployeeProgression());
-			if (employeeBulkDto.getEmployeeProgression().getEmployeeType() != null) {
-				employee.setEmployeeType(employeeBulkDto.getEmployeeProgression().getEmployeeType());
+			if (employeeBulkDto.getEmployeeProgression().getEmploymentType() != null) {
+				employee.setEmploymentType(employeeBulkDto.getEmployeeProgression().getEmploymentType());
 			}
 
 			if (employeeBulkDto.getEmployeeProgression().getJobFamilyId() != null) {
@@ -2121,8 +2244,8 @@ public class PeopleServiceImpl implements PeopleService {
 				employeeProgression = employeeProgressionOpt.get();
 				employeeProgression.setIsCurrent(employeeProgressionsDto.getIsCurrent() != null
 						? employeeProgressionsDto.getIsCurrent() : employeeProgression.getIsCurrent());
-				employeeProgression.setEmployeeType(employeeProgressionsDto.getEmployeeType() != null
-						? employeeProgressionsDto.getEmployeeType() : employeeProgression.getEmployeeType());
+				employeeProgression.setEmploymentType(employeeProgressionsDto.getEmploymentType() != null
+						? employeeProgressionsDto.getEmploymentType() : employeeProgression.getEmploymentType());
 				employeeProgression.setStartDate(employeeProgressionsDto.getStartDate() != null
 						? employeeProgressionsDto.getStartDate() : employeeProgression.getStartDate());
 				employeeProgression.setEndDate(employeeProgressionsDto.getEndDate() != null
@@ -2138,7 +2261,7 @@ public class PeopleServiceImpl implements PeopleService {
 				employeeProgression.setJobFamilyId(employeeProgressionsDto.getJobFamilyId());
 
 				if (Boolean.TRUE.equals(employeeProgressionsDto.getIsCurrent())) {
-					finalEmployee.setEmployeeType(employeeProgressionsDto.getEmployeeType());
+					finalEmployee.setEmploymentType(employeeProgressionsDto.getEmploymentType());
 				}
 			}
 
@@ -2146,7 +2269,7 @@ public class PeopleServiceImpl implements PeopleService {
 				employeeProgression.setJobTitleId(employeeProgressionsDto.getJobTitleId());
 
 				if (Boolean.TRUE.equals(employeeProgressionsDto.getIsCurrent())) {
-					finalEmployee.setEmployeeType(employeeProgressionsDto.getEmployeeType());
+					finalEmployee.setEmploymentType(employeeProgressionsDto.getEmploymentType());
 				}
 			}
 

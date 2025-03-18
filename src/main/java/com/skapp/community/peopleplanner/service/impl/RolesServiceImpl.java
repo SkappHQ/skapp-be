@@ -1,6 +1,7 @@
 package com.skapp.community.peopleplanner.service.impl;
 
 import com.skapp.community.common.exception.ModuleException;
+import com.skapp.community.common.exception.ValidationException;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.service.UserService;
@@ -19,6 +20,7 @@ import com.skapp.community.peopleplanner.model.ModuleRoleRestriction;
 import com.skapp.community.peopleplanner.model.Team;
 import com.skapp.community.peopleplanner.payload.request.ModuleRoleRestrictionRequestDto;
 import com.skapp.community.peopleplanner.payload.request.RoleRequestDto;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeeSystemPermissionsDto;
 import com.skapp.community.peopleplanner.payload.response.AllowedModuleRolesResponseDto;
 import com.skapp.community.peopleplanner.payload.response.AllowedRoleDto;
 import com.skapp.community.peopleplanner.payload.response.ModuleRoleRestrictionResponseDto;
@@ -37,6 +39,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -297,22 +300,72 @@ public class RolesServiceImpl implements RolesService {
 		return employeeRole;
 	}
 
-	public void validateRoles(RoleRequestDto userRoles) {
-		User currentUser = userService.getCurrentUser();
+	public void validateRoles(EmployeeSystemPermissionsDto userRoles) {
+		if (userRoles == null) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_SYSTEM_PERMISSION_REQUIRED);
+		}
 
-		if (hasOnlyAdminPermissions(currentUser) && ((userRoles.getAttendanceRole() != null
-				&& validateRestrictedRoleAssignment(userRoles.getAttendanceRole(), ModuleType.ATTENDANCE))
-				|| (userRoles.getPeopleRole() != null
-						&& validateRestrictedRoleAssignment(userRoles.getPeopleRole(), ModuleType.PEOPLE))
-				|| (userRoles.getLeaveRole() != null
-						&& validateRestrictedRoleAssignment(userRoles.getLeaveRole(), ModuleType.LEAVE)))) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SUPER_ADMIN_RESTRICTED_ASSIGNING_ROLE_ACCESS);
+		if (userRoles.getIsSuperAdmin() == null) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_SUPER_ADMIN_REQUIRED);
+		}
+
+		if (userRoles.getPeopleRole() == null) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_PEOPLE_ROLE_REQUIRED);
+		}
+
+		Role peopleRole = userRoles.getPeopleRole();
+		EnumSet<Role> validPeopleRoles = EnumSet.of(Role.PEOPLE_EMPLOYEE, Role.PEOPLE_MANAGER, Role.PEOPLE_ADMIN);
+		if (!validPeopleRoles.contains(peopleRole)) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_PEOPLE_ROLE,
+					new String[] { peopleRole.name() });
+		}
+
+		if (userRoles.getAttendanceRole() == null) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_ATTENDANCE_ROLE_REQUIRED);
+		}
+
+		Role attendanceRole = userRoles.getAttendanceRole();
+		EnumSet<Role> validAttendanceRoles = EnumSet.of(Role.ATTENDANCE_EMPLOYEE, Role.ATTENDANCE_MANAGER,
+				Role.ATTENDANCE_ADMIN);
+		if (!validAttendanceRoles.contains(attendanceRole)) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_ATTENDANCE_ROLE,
+					new String[] { attendanceRole.name() });
+		}
+
+		if (userRoles.getLeaveRole() == null) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_LEAVE_ROLE_REQUIRED);
+		}
+
+		Role leaveRole = userRoles.getLeaveRole();
+		EnumSet<Role> validLeaveRoles = EnumSet.of(Role.LEAVE_EMPLOYEE, Role.LEAVE_MANAGER, Role.LEAVE_ADMIN);
+		if (!validLeaveRoles.contains(leaveRole)) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_LEAVE_ROLE,
+					new String[] { leaveRole.name() });
 		}
 
 		if (Boolean.TRUE.equals(userRoles.getIsSuperAdmin())
 				&& (userRoles.getPeopleRole() != Role.PEOPLE_ADMIN || userRoles.getLeaveRole() != Role.LEAVE_ADMIN
 						|| userRoles.getAttendanceRole() != Role.ATTENDANCE_ADMIN)) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SHOULD_ASSIGN_PROPER_PERMISSIONS);
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_SHOULD_ASSIGN_PROPER_PERMISSIONS);
+		}
+
+		User currentUser = userService.getCurrentUser();
+		if (hasOnlyPeopleAdminPermissions(currentUser)
+				&& validateRestrictedRoleAssignment(userRoles.getAttendanceRole(), ModuleType.ATTENDANCE)) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_ATTENDANCE_RESTRICTED_ROLE_ACCESS,
+					new String[] { userRoles.getAttendanceRole().name() });
+		}
+
+		if (hasOnlyPeopleAdminPermissions(currentUser)
+				&& validateRestrictedRoleAssignment(userRoles.getPeopleRole(), ModuleType.PEOPLE)) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_PEOPLE_RESTRICTED_ROLE_ACCESS,
+					new String[] { userRoles.getPeopleRole().name() });
+		}
+
+		if (hasOnlyPeopleAdminPermissions(currentUser)
+				&& validateRestrictedRoleAssignment(userRoles.getLeaveRole(), ModuleType.LEAVE)) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_LEAVE_RESTRICTED_ROLE_ACCESS,
+					new String[] { userRoles.getLeaveRole().name() });
 		}
 	}
 
@@ -335,21 +388,23 @@ public class RolesServiceImpl implements RolesService {
 		log.info("saveSuperAdminRoles: execution ended");
 	}
 
-	protected boolean hasOnlyAdminPermissions(User currentUser) {
+	protected boolean hasOnlyPeopleAdminPermissions(User currentUser) {
 		return Boolean.FALSE.equals(currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin())
 				&& currentUser.getEmployee().getEmployeeRole().getPeopleRole() == Role.PEOPLE_ADMIN;
 	}
 
-	private Boolean validateRestrictedRoleAssignment(Role role, ModuleType moduleType) {
+	protected Boolean validateRestrictedRoleAssignment(Role role, ModuleType moduleType) {
 		ModuleRoleRestrictionResponseDto restrictedRole = getRestrictedRoleByModule(moduleType);
 
-		return switch (role) {
-			case PEOPLE_ADMIN, ATTENDANCE_ADMIN, LEAVE_ADMIN -> Boolean.TRUE.equals(restrictedRole.getIsAdmin());
-			case PEOPLE_MANAGER, ATTENDANCE_MANAGER, LEAVE_MANAGER ->
-				Boolean.TRUE.equals(restrictedRole.getIsManager());
-			default -> false;
-		};
+		if (role == Role.PEOPLE_ADMIN || role == Role.ATTENDANCE_ADMIN || role == Role.LEAVE_ADMIN) {
+			return Boolean.TRUE.equals(restrictedRole.getIsAdmin());
+		}
 
+		if (role == Role.PEOPLE_MANAGER || role == Role.ATTENDANCE_MANAGER || role == Role.LEAVE_MANAGER) {
+			return Boolean.TRUE.equals(restrictedRole.getIsManager());
+		}
+
+		return false;
 	}
 
 	private AllowedRoleDto createAllowedRole(String roleName, Role role) {

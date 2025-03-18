@@ -6,6 +6,7 @@ import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
 import com.skapp.community.peopleplanner.payload.request.ModuleRoleRestrictionRequestDto;
 import com.skapp.community.peopleplanner.payload.request.RoleRequestDto;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeeSystemPermissionsDto;
 import com.skapp.community.peopleplanner.payload.response.ModuleRoleRestrictionResponseDto;
 
 public interface RolesService {
@@ -26,7 +27,7 @@ public interface RolesService {
 
 	void saveEmployeeRoles(Employee employee);
 
-	void validateRoles(RoleRequestDto userRoles);
+	void validateRoles(EmployeeSystemPermissionsDto userRoles);
 
 	void saveSuperAdminRoles(Employee employee);
 

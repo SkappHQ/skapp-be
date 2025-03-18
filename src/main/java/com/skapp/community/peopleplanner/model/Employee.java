@@ -5,8 +5,8 @@ import com.skapp.community.common.model.Notification;
 import com.skapp.community.common.model.User;
 import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.EEO;
-import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
+import com.skapp.community.peopleplanner.type.EmploymentType;
 import com.skapp.community.peopleplanner.type.Gender;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -95,7 +95,7 @@ public class Employee extends Auditable<String> {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "employee_type", columnDefinition = "varchar(255)")
-	private EmployeeType employeeType;
+	private EmploymentType employmentType;
 
 	@Column(name = "account_status", nullable = false, columnDefinition = "varchar(20)")
 	@Enumerated(EnumType.STRING)

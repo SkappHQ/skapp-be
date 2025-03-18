@@ -13,6 +13,7 @@ import com.skapp.community.peopleplanner.payload.request.EmployeeFamilyDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
 import com.skapp.community.peopleplanner.payload.request.EmploymentVisaDto;
 import com.skapp.community.peopleplanner.payload.request.ProbationPeriodDto;
+import lombok.experimental.UtilityClass;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,16 +23,15 @@ import java.util.regex.Pattern;
 import static com.skapp.community.common.util.Validation.ADDRESS_REGEX;
 import static com.skapp.community.common.util.Validation.COUNTRY_CODE_PATTERN;
 import static com.skapp.community.common.util.Validation.EMAIL_REGEX;
+import static com.skapp.community.common.util.Validation.LETTERS_AND_SPACE_REGEX;
 import static com.skapp.community.common.util.Validation.NAME_REGEX;
+import static com.skapp.community.common.util.Validation.NUMERIC_REGEX;
 import static com.skapp.community.common.util.Validation.PHONE_NUMBER_PATTERN;
 import static com.skapp.community.common.util.Validation.VALID_IDENTIFICATION_NUMBER_REGEXP;
 import static com.skapp.community.common.util.Validation.VALID_NIN_NUMBER_REGEXP;
 
+@UtilityClass
 public class Validations {
-
-	private Validations() {
-		throw new IllegalStateException("Utility class");
-	}
 
 	public static boolean isEmployeeNameValid(String name) {
 		if (!name.matches(NAME_REGEX)) {
@@ -99,7 +99,7 @@ public class Validations {
 			validateEmail(employeeDetailsDto.getPersonalEmail());
 
 		if (employeeDetailsDto.getPhone() != null && !employeeDetailsDto.getPhone().isEmpty())
-			validatePhone(employeeDetailsDto.getPhone());
+			validateContactNo(employeeDetailsDto.getPhone());
 
 		if (employeeDetailsDto.getAddress() != null && !employeeDetailsDto.getAddress().isEmpty())
 			validateAddress(employeeDetailsDto.getAddress());
@@ -176,6 +176,24 @@ public class Validations {
 					List.of(String.valueOf(PeopleConstants.MAX_EMAIL_LENGTH)));
 	}
 
+	public static void validateWorkEmail(String email) {
+		if (email != null && !email.trim().matches(EMAIL_REGEX))
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION__WORK_EMAIL);
+
+		if (email != null && email.length() > PeopleConstants.MAX_EMAIL_LENGTH)
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION__WORK_EMAIL_LENGTH,
+					List.of(String.valueOf(PeopleConstants.MAX_EMAIL_LENGTH)));
+	}
+
+	public static void validatePersonalEmail(String email) {
+		if (email != null && !email.trim().matches(EMAIL_REGEX))
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION__PERSONAL_EMAIL);
+
+		if (email != null && email.length() > PeopleConstants.MAX_EMAIL_LENGTH)
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION__PERSONAL_EMAIL_LENGTH,
+					List.of(String.valueOf(PeopleConstants.MAX_EMAIL_LENGTH)));
+	}
+
 	public static void validateName(String name) {
 		if (name != null && !name.trim().matches(NAME_REGEX))
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_NAME);
@@ -183,7 +201,26 @@ public class Validations {
 		if (name != null && name.length() > PeopleConstants.MAX_NAME_LENGTH)
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_NAME_LENGTH,
 					List.of(String.valueOf(PeopleConstants.MAX_NAME_LENGTH)));
+	}
 
+	public static void validateCountry(String country) {
+		if (country != null && !country.trim().matches(LETTERS_AND_SPACE_REGEX))
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_COUNTRY);
+	}
+
+	public static void validateCity(String city) {
+		if (city != null && !city.trim().matches(LETTERS_AND_SPACE_REGEX))
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_CITY);
+	}
+
+	public static void validateState(String state) {
+		if (state != null && !state.trim().matches(LETTERS_AND_SPACE_REGEX))
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_STATE);
+	}
+
+	public static void validatePostalCode(String country) {
+		if (country != null && !country.trim().matches(NUMERIC_REGEX))
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_COUNTRY);
 	}
 
 	public static void validateAddress(String addressLine) {
@@ -196,14 +233,22 @@ public class Validations {
 
 	}
 
-	public static void validatePhone(String phone) {
+	public static void validateContactNo(String phone) {
 		if (!phone.trim().matches(PHONE_NUMBER_PATTERN))
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_PHONE_NUMBER);
 
 		if (phone.length() > PeopleConstants.MAX_PHONE_LENGTH)
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_PHONE_NUMBER_LENGTH,
 					List.of(String.valueOf(PeopleConstants.MAX_PHONE_LENGTH)));
+	}
 
+	public static void validateEmployeeContactNo(String phone) {
+		if (!phone.trim().matches(PHONE_NUMBER_PATTERN))
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_EMPLOYEE_PHONE_NUMBER);
+
+		if (phone.length() > PeopleConstants.MAX_PHONE_LENGTH)
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_EMPLOYEE_PHONE_NUMBER_LENGTH,
+					List.of(String.valueOf(PeopleConstants.MAX_PHONE_LENGTH)));
 	}
 
 	public static void validateEmployeeIdentificationNo(String identificationNo) {

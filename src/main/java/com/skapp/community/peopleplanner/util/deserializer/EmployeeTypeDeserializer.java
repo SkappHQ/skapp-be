@@ -6,18 +6,18 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
-import com.skapp.community.peopleplanner.type.EmployeeType;
+import com.skapp.community.peopleplanner.type.EmploymentType;
 
 import java.io.IOException;
 
-public class EmployeeTypeDeserializer extends StdDeserializer<EmployeeType> {
+public class EmployeeTypeDeserializer extends StdDeserializer<EmploymentType> {
 
 	public EmployeeTypeDeserializer() {
-		super(EmployeeType.class);
+		super(EmploymentType.class);
 	}
 
 	@Override
-	public EmployeeType deserialize(JsonParser p, DeserializationContext ctxt) throws ModuleException, IOException {
+	public EmploymentType deserialize(JsonParser p, DeserializationContext ctxt) throws ModuleException, IOException {
 		JsonNode jsonNode = p.readValueAsTree();
 		String value = jsonNode.asText().trim();
 
@@ -26,7 +26,7 @@ public class EmployeeTypeDeserializer extends StdDeserializer<EmployeeType> {
 		}
 
 		try {
-			return EmployeeType.valueOf(value.toUpperCase());
+			return EmploymentType.valueOf(value.toUpperCase());
 		}
 		catch (IllegalArgumentException e) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_VALUE_FOR_EMPLOYMENT_TYPE_ENUM,

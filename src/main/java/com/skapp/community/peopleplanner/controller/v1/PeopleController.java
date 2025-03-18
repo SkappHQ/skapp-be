@@ -3,7 +3,6 @@ package com.skapp.community.peopleplanner.controller.v1;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeBulkDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDataValidationDto;
-import com.skapp.community.peopleplanner.payload.request.EmployeeDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeIsAvailableDto;
@@ -11,6 +10,7 @@ import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeUpdateDto;
 import com.skapp.community.peopleplanner.payload.request.NotificationSettingsPatchRequestDto;
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
+import com.skapp.community.peopleplanner.payload.request.employee.CreateEmployeeRequestDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeManagerResponseDto;
 import com.skapp.community.peopleplanner.service.PeopleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,8 +45,9 @@ public class PeopleController {
 			description = "This endpoint creates a new employee with the provided details.")
 	@PostMapping(value = "/employee", produces = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_ADMIN')")
-	public ResponseEntity<ResponseEntityDto> addNewEmployee(@Valid @RequestBody EmployeeDetailsDto employeeDetailsDto) {
-		ResponseEntityDto response = peopleService.addNewEmployee(employeeDetailsDto);
+	public ResponseEntity<ResponseEntityDto> addNewEmployee(
+			@Valid @RequestBody CreateEmployeeRequestDto employeeDetailsDto) {
+		ResponseEntityDto response = peopleService.createEmployee(employeeDetailsDto);
 		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 

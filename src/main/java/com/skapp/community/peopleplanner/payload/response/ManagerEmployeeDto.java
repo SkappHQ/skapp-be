@@ -8,8 +8,8 @@ import com.skapp.community.peopleplanner.payload.request.EmploymentVisaDto;
 import com.skapp.community.peopleplanner.payload.request.JobTitleDto;
 import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.EEO;
-import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
+import com.skapp.community.peopleplanner.type.EmploymentType;
 import com.skapp.community.peopleplanner.type.Gender;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,7 +49,7 @@ public class ManagerEmployeeDto {
 
 	private EmploymentAllocation employmentAllocation;
 
-	private EmployeeType employeeType;
+	private EmploymentType employmentType;
 
 	private String phone;
 
