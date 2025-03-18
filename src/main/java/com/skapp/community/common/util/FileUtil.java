@@ -39,7 +39,7 @@ public class FileUtil {
 				+ FileConfigConstants.THUMBNAIL_SUFFIX + originalFileName.substring(originalFileName.indexOf("."));
 	}
 
-	public static String getFileExtension(String fileName) {
+	public static String getFileExtension(String fileName, String fileName2) {
 		int dotIndex = fileName.lastIndexOf('.');
 		return (dotIndex == -1) ? "" : fileName.substring(dotIndex + 1);
 	}
