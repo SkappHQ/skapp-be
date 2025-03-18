@@ -125,11 +125,11 @@
       },
       {
         "id": "leave-module-manager-nudge-single-day-leave",
-        "message": ""
+        "message": "You have a leave request reminder from {{employeesName}}."
       },
       {
         "id": "leave-module-manager-nudge-multi-day-leave",
-        "message": ""
+        "message": "You have a leave request reminder from {{employeesName}}."
       },
       {
         "id": "leave-module-employee-auto-approved-single-day-leave",
@@ -149,7 +149,7 @@
       },
       {
         "id": "leave-module-employee-leave-carry-forward",
-        "message": ""
+        "message": "Your eligible leave balances have been carried forward!"
       },
       {
         "id": "leave-module-employee-custom-allocation",
