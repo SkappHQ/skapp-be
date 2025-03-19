@@ -222,26 +222,29 @@ public class RolesServiceImpl implements RolesService {
 	}
 
 	private AllowedModuleRolesResponseDto processModuleRoles(Map.Entry<ModuleType, List<RoleLevel>> entry) {
+		Optional<EmployeeRole> employeeRoleOpt = employeeRoleDao.findById(userService.getCurrentUser().getUserId());
+		boolean isSuperAdmin = employeeRoleOpt.map(EmployeeRole::getIsSuperAdmin).orElse(false);
+
 		ModuleType module = entry.getKey();
 		List<RoleLevel> prebuiltRoles = entry.getValue();
 
 		ModuleRoleRestriction moduleRoleRestriction = moduleRoleRestrictionDao.findById(module).orElse(null);
-		boolean isAdminAllowed = moduleRoleRestriction == null
-				|| !Boolean.TRUE.equals(moduleRoleRestriction.getIsAdmin());
-		boolean isManagerAllowed = moduleRoleRestriction == null
-				|| !Boolean.TRUE.equals(moduleRoleRestriction.getIsManager());
+
+		boolean isAdminAllowed = isSuperAdmin || (moduleRoleRestriction == null || Boolean.FALSE.equals(moduleRoleRestriction.getIsAdmin()));
+		boolean isManagerAllowed = isSuperAdmin || (moduleRoleRestriction == null || Boolean.FALSE.equals(moduleRoleRestriction.getIsManager()));
 
 		List<AllowedRoleDto> rolesForModule = prebuiltRoles.stream()
-			.filter(roleLevel -> isRoleAllowed(roleLevel, isAdminAllowed, isManagerAllowed))
-			.map(roleLevel -> createAllowedRole(roleLevel.getDisplayName(),
-					getRoleForModuleAndLevel(module, roleLevel)))
-			.toList();
+				.filter(roleLevel -> isRoleAllowed(roleLevel, isAdminAllowed, isManagerAllowed))
+				.map(roleLevel -> createAllowedRole(roleLevel.getDisplayName(),
+						getRoleForModuleAndLevel(module, roleLevel)))
+				.toList();
 
 		AllowedModuleRolesResponseDto moduleResponse = new AllowedModuleRolesResponseDto();
 		moduleResponse.setModule(module);
 		moduleResponse.setRoles(rolesForModule);
 		return moduleResponse;
 	}
+
 
 	// Helper method to determine if a role is allowed based on restrictions
 	private boolean isRoleAllowed(RoleLevel roleLevel, boolean isAdminAllowed, boolean isManagerAllowed) {
