@@ -6,7 +6,6 @@ import com.skapp.community.common.model.OrganizationConfig;
 import com.skapp.community.common.model.OrganizationConfig_;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.model.User_;
-import com.skapp.community.common.payload.response.PageDto;
 import com.skapp.community.common.type.CriteriaBuilderSqlFunction;
 import com.skapp.community.common.type.CriteriaBuilderSqlLiteral;
 import com.skapp.community.common.type.OrganizationConfigType;
@@ -199,8 +198,8 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 	}
 
 	@Override
-	public PageDto findLeaveEntitlementsByLeaveTypesAndActiveState(List<Long> leaveTypeIds, boolean isActive,
-			LocalDate leaveCycleEndDate, Pageable page) {
+	public Page<LeaveEntitlement> findLeaveEntitlementsByLeaveTypesAndActiveState(List<Long> leaveTypeIds,
+			boolean isActive, LocalDate leaveCycleEndDate, Pageable page) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<LeaveEntitlement> criteriaQuery = criteriaBuilder.createQuery(LeaveEntitlement.class);
 		Root<LeaveEntitlement> root = criteriaQuery.from(LeaveEntitlement.class);
@@ -220,13 +219,11 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		predicates.toArray(predArray);
 		criteriaQuery.where(predArray);
 
-		TypedQuery<LeaveEntitlement> typedQuery = entityManager.createQuery(criteriaQuery);
-		PageDto pageDto = new PageDto();
-		pageDto.setTotalItems(employeeIdsForCarryFoward.getTotalElements());
-		pageDto.setCurrentPage(page.getPageNumber());
-		pageDto.setTotalPages(employeeIdsForCarryFoward.getTotalPages());
-		pageDto.setItems(typedQuery.getResultList());
-		return pageDto;
+		TypedQuery<LeaveEntitlement> query = entityManager.createQuery(criteriaQuery);
+		int totalRows = query.getResultList().size();
+		query.setFirstResult(page.getPageNumber() * page.getPageSize());
+		query.setMaxResults(page.getPageSize());
+		return new PageImpl<>(query.getResultList(), page, totalRows);
 	}
 
 	@Override
