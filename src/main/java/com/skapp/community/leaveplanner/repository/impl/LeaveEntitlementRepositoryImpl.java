@@ -6,7 +6,6 @@ import com.skapp.community.common.model.OrganizationConfig;
 import com.skapp.community.common.model.OrganizationConfig_;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.model.User_;
-import com.skapp.community.common.payload.response.PageDto;
 import com.skapp.community.common.type.CriteriaBuilderSqlFunction;
 import com.skapp.community.common.type.CriteriaBuilderSqlLiteral;
 import com.skapp.community.common.type.OrganizationConfigType;
@@ -199,8 +198,8 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 	}
 
 	@Override
-	public PageDto findLeaveEntitlementsByLeaveTypesAndActiveState(List<Long> leaveTypeIds, boolean isActive,
-			LocalDate leaveCycleEndDate, Pageable page) {
+	public Page<LeaveEntitlement> findLeaveEntitlementsByLeaveTypesAndActiveState(List<Long> leaveTypeIds,
+			boolean isActive, LocalDate leaveCycleEndDate, Pageable page) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<LeaveEntitlement> criteriaQuery = criteriaBuilder.createQuery(LeaveEntitlement.class);
 		Root<LeaveEntitlement> root = criteriaQuery.from(LeaveEntitlement.class);
@@ -220,13 +219,11 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		predicates.toArray(predArray);
 		criteriaQuery.where(predArray);
 
-		TypedQuery<LeaveEntitlement> typedQuery = entityManager.createQuery(criteriaQuery);
-		PageDto pageDto = new PageDto();
-		pageDto.setTotalItems(employeeIdsForCarryFoward.getTotalElements());
-		pageDto.setCurrentPage(page.getPageNumber());
-		pageDto.setTotalPages(employeeIdsForCarryFoward.getTotalPages());
-		pageDto.setItems(typedQuery.getResultList());
-		return pageDto;
+		TypedQuery<LeaveEntitlement> query = entityManager.createQuery(criteriaQuery);
+		int totalRows = query.getResultList().size();
+		query.setFirstResult(page.getPageNumber() * page.getPageSize());
+		query.setMaxResults(page.getPageSize());
+		return new PageImpl<>(query.getResultList(), page, totalRows);
 	}
 
 	@Override
@@ -382,7 +379,8 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		List<Predicate> predicates = new ArrayList<>();
 
 		predicates.add(criteriaBuilder.equal(user.get(User_.isActive), true));
-		predicates.add(criteriaBuilder.notEqual(employee.get(Employee_.ACCOUNT_STATUS), AccountStatus.TERMINATED));
+		predicates.add(criteriaBuilder
+			.not(employee.get(Employee_.ACCOUNT_STATUS).in(AccountStatus.TERMINATED, AccountStatus.DELETED)));
 		predicates.add(criteriaBuilder.equal(root.get(LeaveEntitlement_.isActive), true));
 		predicates.add(criteriaBuilder.equal(root.get(LeaveEntitlement_.LEAVE_TYPE).get(TYPE_ID), leaveTypeId));
 		predicates
@@ -868,7 +866,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		CriteriaQuery<OrganizationConfig> criteriaQuery = criteriaBuilder.createQuery(OrganizationConfig.class);
 		Root<OrganizationConfig> root = criteriaQuery.from(OrganizationConfig.class);
 		criteriaQuery.where(criteriaBuilder.equal(root.get(OrganizationConfig_.ORGANIZATION_CONFIG_TYPE),
-				OrganizationConfigType.LEAVE_CYCLE));
+				OrganizationConfigType.LEAVE_CYCLE.name()));
 		TypedQuery<OrganizationConfig> query = entityManager.createQuery(criteriaQuery);
 		List<OrganizationConfig> resultList = query.getResultList();
 		if (resultList.isEmpty()) {

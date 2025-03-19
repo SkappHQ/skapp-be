@@ -5,12 +5,14 @@ import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.Holiday;
 import com.skapp.community.peopleplanner.type.HolidayDuration;
 import com.skapp.community.timeplanner.model.TimeConfig;
-import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.text.RandomStringGenerator;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,8 +31,16 @@ public class CommonModuleUtils {
 	 * @param timeConfigs List of time configurations for working days.
 	 * @return True if the date is a working day, false otherwise.
 	 */
-	public static boolean checkIfDayIsWorkingDay(LocalDate date, List<TimeConfig> timeConfigs) {
+	public static boolean checkIfDayIsWorkingDay(LocalDate date, List<TimeConfig> timeConfigs,
+			String organizationTimeZone) {
+
 		DayOfWeek checkingDay = date.getDayOfWeek();
+
+		if (organizationTimeZone != null) {
+			ZoneId orgTimeZone = ZoneId.of(organizationTimeZone);
+			ZonedDateTime orgDateTime = date.atStartOfDay(ZoneOffset.UTC).withZoneSameInstant(orgTimeZone);
+			checkingDay = orgDateTime.getDayOfWeek();
+		}
 
 		if (timeConfigs.isEmpty()) {
 			return true;
@@ -59,10 +69,6 @@ public class CommonModuleUtils {
 		return chunkedList;
 	}
 
-	public static <T> boolean isListNotNullAndNotEmpty(List<T> anyList) {
-		return anyList != null && !anyList.isEmpty();
-	}
-
 	public static boolean isValidFloat(String floatStr) {
 		if (floatStr != null && !floatStr.isBlank()) {
 			try {
@@ -87,45 +93,46 @@ public class CommonModuleUtils {
 	}
 
 	public static int addUpWorkingDaysForAllEmployee(List<Employee> employees, LocalDate startDate, LocalDate endDate,
-			List<TimeConfig> timeConfigs, List<LocalDate> holidays) {
+			List<TimeConfig> timeConfigs, List<LocalDate> holidays, String organizationTimeZone) {
 		int totalWorkingDays = 0;
 		for (Employee employee : employees) {
 			if (employee.getJoinDate() != null && startDate.isBefore(employee.getJoinDate())
 					&& employee.getTerminationDate() != null && endDate.isAfter(employee.getTerminationDate())) {
 				totalWorkingDays = totalWorkingDays + getWorkingDaysBetweenTwoDates(employee.getJoinDate(),
-						employee.getTerminationDate(), timeConfigs, holidays);
+						employee.getTerminationDate(), timeConfigs, holidays, organizationTimeZone);
 			}
 			else if (employee.getJoinDate() != null && startDate.isBefore(employee.getJoinDate())
 					&& employee.getTerminationDate() == null) {
-				totalWorkingDays = totalWorkingDays
-						+ getWorkingDaysBetweenTwoDates(employee.getJoinDate(), endDate, timeConfigs, holidays);
+				totalWorkingDays = totalWorkingDays + getWorkingDaysBetweenTwoDates(employee.getJoinDate(), endDate,
+						timeConfigs, holidays, organizationTimeZone);
 			}
 			else if (employee.getJoinDate() != null && startDate.isAfter(employee.getJoinDate())
 					&& employee.getTerminationDate() == null) {
-				totalWorkingDays = totalWorkingDays
-						+ getWorkingDaysBetweenTwoDates(startDate, endDate, timeConfigs, holidays);
+				totalWorkingDays = totalWorkingDays + getWorkingDaysBetweenTwoDates(startDate, endDate, timeConfigs,
+						holidays, organizationTimeZone);
 			}
 			else if (employee.getJoinDate() != null && startDate.isAfter(employee.getJoinDate())
 					&& employee.getTerminationDate() != null && endDate.isAfter(employee.getTerminationDate())) {
 				totalWorkingDays = totalWorkingDays + getWorkingDaysBetweenTwoDates(startDate,
-						employee.getTerminationDate(), timeConfigs, holidays);
+						employee.getTerminationDate(), timeConfigs, holidays, organizationTimeZone);
 			}
 			else {
-				totalWorkingDays = totalWorkingDays
-						+ getWorkingDaysBetweenTwoDates(startDate, endDate, timeConfigs, holidays);
+				totalWorkingDays = totalWorkingDays + getWorkingDaysBetweenTwoDates(startDate, endDate, timeConfigs,
+						holidays, organizationTimeZone);
 			}
 		}
 		return totalWorkingDays;
 	}
 
 	public static int getWorkingDaysBetweenTwoDates(LocalDate startDate, LocalDate endDate,
-			List<TimeConfig> timeConfigs, List<LocalDate> holidays) {
-		return getWorkingDaysBetweenTwoDates(startDate, endDate, timeConfigs, holidays, null, null);
+			List<TimeConfig> timeConfigs, List<LocalDate> holidays, String organizationTimeZone) {
+		return getWorkingDaysBetweenTwoDates(startDate, endDate, timeConfigs, holidays, null, null,
+				organizationTimeZone);
 	}
 
 	public static int getWorkingDaysBetweenTwoDates(LocalDate startDate, LocalDate endDate,
 			List<TimeConfig> timeConfigs, List<LocalDate> holidays, List<Holiday> holidayObjects,
-			LeaveRequest leaveRequest) {
+			LeaveRequest leaveRequest, String organizationTimeZone) {
 		// Ensure the start date is before the end date
 		if (startDate.isAfter(endDate)) {
 			LocalDate temp = startDate;
@@ -138,7 +145,7 @@ public class CommonModuleUtils {
 		LocalDate currentDate = startDate;
 
 		while (!currentDate.isAfter(endDate)) {
-			if (checkIfDayIsWorkingDay(currentDate, timeConfigs)
+			if (checkIfDayIsWorkingDay(currentDate, timeConfigs, organizationTimeZone)
 					&& checkIfDayIsNotAHoliday(leaveRequest, holidayObjects, holidays, currentDate)) {
 				workDays++;
 			}
@@ -213,22 +220,33 @@ public class CommonModuleUtils {
 		return workingDaysIndex;
 	}
 
-	public static String encodeToBase64(String password) {
-		return Base64.getEncoder().encodeToString(password.getBytes());
-	}
-
 	public static String generateSecureRandomPassword() {
-		String upperCaseLetters = RandomStringUtils.random(2, 65, 90, true, true);
-		String lowerCaseLetters = RandomStringUtils.random(2, 97, 122, true, true);
-		String numbers = RandomStringUtils.randomNumeric(2);
-		String specialChar = RandomStringUtils.random(2, 33, 47, false, false);
-		String totalChars = RandomStringUtils.randomAlphanumeric(2);
+		RandomStringGenerator upperGen = new RandomStringGenerator.Builder().withinRange('A', 'Z').get();
+		String upperCaseLetters = upperGen.generate(2);
+
+		RandomStringGenerator lowerGen = new RandomStringGenerator.Builder().withinRange('a', 'z').get();
+		String lowerCaseLetters = lowerGen.generate(2);
+
+		RandomStringGenerator numberGen = new RandomStringGenerator.Builder().withinRange('0', '9').get();
+		String numbers = numberGen.generate(2);
+
+		RandomStringGenerator specialGen = new RandomStringGenerator.Builder().withinRange('!', '/').get();
+		String specialChar = specialGen.generate(2);
+
+		RandomStringGenerator alphaNumGen = new RandomStringGenerator.Builder().withinRange('0', '9')
+			.withinRange('a', 'z')
+			.withinRange('A', 'Z')
+			.get();
+		String totalChars = alphaNumGen.generate(2);
+
 		String combinedChars = upperCaseLetters.concat(lowerCaseLetters)
 			.concat(numbers)
 			.concat(specialChar)
 			.concat(totalChars);
+
 		List<Character> pwdChars = combinedChars.chars().mapToObj(c -> (char) c).collect(Collectors.toList());
 		Collections.shuffle(pwdChars);
+
 		return pwdChars.stream().collect(StringBuilder::new, StringBuilder::append, StringBuilder::append).toString();
 	}
 

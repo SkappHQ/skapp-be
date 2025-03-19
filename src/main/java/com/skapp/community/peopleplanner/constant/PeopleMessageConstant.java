@@ -16,6 +16,8 @@ public enum PeopleMessageConstant implements MessageConstant {
 	PEOPLE_SUCCESS_ROLE_RESTRICT("api.success.people.role-restrict"),
 	PEOPLE_SUCCESS_TEAM_DELETED("api.success.people.team-deleted"),
 	PEOPLE_SUCCESS_EMPLOYEE_ADDED("api.success.people.employee-added"),
+	PEOPLE_SUCCESS_EMPLOYEE_TERMINATED("api.success.people.employee-terminated"),
+	PEOPLE_SUCCESS_EMPLOYEE_DELETED("api.success.people.employee-deleted"),
 
 	// Error messages
 	PEOPLE_ERROR_TEAM_SUPERVISOR_IDS_NOT_VALID("api.error.people.notnull.team.supervisors.invalid"),
@@ -31,6 +33,7 @@ public enum PeopleMessageConstant implements MessageConstant {
 	PEOPLE_ERROR_EMPLOYEE_NOT_FOUND("api.error.people.employee.not.found"),
 	PEOPLE_ERROR_EMPLOYEE_TERMINATED("api.error.people.employee.terminated"),
 	PEOPLE_ERROR_EMPLOYEE_BULK_LIMIT_EXCEEDED("api.error.people.employee.bulk-limit-exceeded"),
+	PEOPLE_ERROR_EMPLOYEE_LIMIT_EXCEEDED("api.error.people.employee.limit-exceeded"),
 	PEOPLE_ERROR_ONLY_ONE_SUPER_ADMIN("api.error.people.super-admin.only-one-super-admin"),
 	PEOPLE_ERROR_HOLIDAYS_BULK_CANNOT_ADDED_IN_PAST_OR_CURRENT_DAY(
 			"api.error.people.holiday-bulk.cannot.add.current.or.past.days"),

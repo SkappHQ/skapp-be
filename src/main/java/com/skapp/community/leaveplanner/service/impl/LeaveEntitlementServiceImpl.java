@@ -217,8 +217,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 		}
 
 		leaveEntitlementDao.saveAll(leaveEntitlements);
-
-		addBulkLeaveEntitlementsTimeLineRecords(optionalEmployee.get(), leaveEntitlements, false);
+		addBulkLeaveEntitlementsTimeLineRecords(optionalEmployee.get(), leaveEntitlements);
 
 		log.info("processLeaveEntitlements: execution ended");
 		return message;
@@ -274,6 +273,18 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 		}
 
 		LeaveEntitlement customLeaveEntitlement = optionalCustomLeaveEntitlement.get();
+
+		if (customLeaveEntitlementPatchRequestDto.getNumberOfDaysOff() != null
+				&& customLeaveEntitlementPatchRequestDto.getNumberOfDaysOff() <= 0) {
+			throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_NUMBER_OF_DAYS_NOT_VALID);
+		}
+
+		float totalDaysUsed = customLeaveEntitlement.getTotalDaysUsed();
+
+		if (customLeaveEntitlementPatchRequestDto.getNumberOfDaysOff() != null
+				&& customLeaveEntitlementPatchRequestDto.getNumberOfDaysOff() < totalDaysUsed) {
+			throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_NUMBER_OF_DAYS_CANNOT_BE_LESS_THAN_USED_DAYS);
+		}
 
 		String oldHistoryRecord = customLeaveEntitlement.getLeaveType().getName() + " "
 				+ customLeaveEntitlement.getTotalDaysAllocated();
@@ -648,12 +659,21 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 				carryForwardLeaveTypesFilterDto.getSize(), Sort.by(carryForwardLeaveTypesFilterDto.getSortOrder(),
 						carryForwardLeaveTypesFilterDto.getSortKey().toString()));
 
-		PageDto pageDto = leaveEntitlementDao.findLeaveEntitlementsByLeaveTypesAndActiveState(
-				carryForwardLeaveTypesFilterDto.getLeaveTypes(), true, leaveCycleEndDate, pageable);
+		Page<LeaveEntitlement> leaveEntitlementPage = leaveEntitlementDao
+			.findLeaveEntitlementsByLeaveTypesAndActiveState(carryForwardLeaveTypesFilterDto.getLeaveTypes(), true,
+					leaveCycleEndDate, pageable);
+		List<LeaveEntitlement> entitlements = leaveEntitlementPage.getContent();
+
 		List<CarryForwardDetailsResponseDto> entitlementDetailsDtos = getEmployeesWithCarryForwardEntitlements(
-				(List<LeaveEntitlement>) pageDto.getItems(), leaveCycleEndDate);
-		pageDto.setItems(entitlementDetailsDtos);
-		return new ResponseEntityDto(false, pageDto);
+				entitlements, leaveCycleEndDate);
+
+		PageDto responsePageDto = new PageDto();
+		responsePageDto.setTotalItems(leaveEntitlementPage.getTotalElements());
+		responsePageDto.setCurrentPage(leaveEntitlementPage.getNumber());
+		responsePageDto.setTotalPages(leaveEntitlementPage.getTotalPages());
+		responsePageDto.setItems(entitlementDetailsDtos);
+
+		return new ResponseEntityDto(false, responsePageDto);
 	}
 
 	@Override
@@ -837,6 +857,11 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 	public static void processLeaveEntitlements(LeaveMapper mapStructMapper, PeopleMapper peopleMapper,
 			Map<Long, LeaveEntitlementResponseDto> responseDtoList, LeaveEntitlement entitlement) {
+
+		if (entitlement.getTotalDaysAllocated() <= 0) {
+			return;
+		}
+
 		long typeID = entitlement.getLeaveType().getTypeId();
 		LeaveEntitlementResponseDto filterResponseListDto = responseDtoList.get(typeID);
 
@@ -1023,7 +1048,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 			leaveEntitlementDao.saveAll(entitlements);
 
-			addBulkLeaveEntitlementsTimeLineRecords(employee, entitlements, false);
+			addBulkLeaveEntitlementsTimeLineRecords(employee, entitlements);
 
 			bulkStatusSummary.incrementSuccessCount();
 
@@ -1358,10 +1383,8 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 	 * available only for Pro tenants.
 	 * @param employee The employee for whom bulk leave entitlements are assigned.
 	 * @param entitlements The list of leave entitlements assigned.
-	 * @param isCustom Indicates whether the entitlements are custom leave policies.
 	 */
-	protected void addBulkLeaveEntitlementsTimeLineRecords(Employee employee, List<LeaveEntitlement> entitlements,
-			boolean isCustom) {
+	protected void addBulkLeaveEntitlementsTimeLineRecords(Employee employee, List<LeaveEntitlement> entitlements) {
 		// This feature is available only for Pro tenants.
 	}
 

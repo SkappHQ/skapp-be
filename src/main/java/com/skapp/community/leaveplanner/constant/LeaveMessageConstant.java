@@ -60,7 +60,9 @@ public enum LeaveMessageConstant implements MessageConstant {
 	LEAVE_ERROR_UNABLE_TO_NUDGE_PRE_APPROVED_DENIED_LEAVE_REQUEST(
 			"api.error.leave.unable-to-nudge-pre-approved-denied-leave-request"),
 	LEAVE_ERROR_PARSING_LEAVE_CYCLE_DATA("api.error.leave.parsing-leave-cycle-data"),
-	LEAVE_ERROR_MAX_CARRY_FORWARD_DAYS_EXCEEDS_LIMIT("api.error.leave.max-carry-forward-days-exceeds-limit"),;
+	LEAVE_ERROR_MAX_CARRY_FORWARD_DAYS_EXCEEDS_LIMIT("api.error.leave.max-carry-forward-days-exceeds-limit"),
+	LEAVE_ERROR_NUMBER_OF_DAYS_CANNOT_BE_LESS_THAN_USED_DAYS(
+			"api.error.leave.number-of-days-cannot-be-less-than-used-days"),;
 
 	private final String messageKey;
 

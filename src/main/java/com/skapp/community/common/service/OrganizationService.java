@@ -20,4 +20,6 @@ public interface OrganizationService {
 
 	ResponseEntityDto updateOrganization(UpdateOrganizationRequestDto organizationDto);
 
+	String getOrganizationTimeZone();
+
 }

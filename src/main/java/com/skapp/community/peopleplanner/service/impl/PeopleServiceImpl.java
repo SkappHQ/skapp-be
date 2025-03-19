@@ -54,6 +54,7 @@ import com.skapp.community.peopleplanner.payload.request.EmployeeDataValidationD
 import com.skapp.community.peopleplanner.payload.request.EmployeeDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeEducationDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeEmergencyDto;
+import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFamilyDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeePersonalInfoDto;
@@ -67,6 +68,7 @@ import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.request.ProbationPeriodDto;
 import com.skapp.community.peopleplanner.payload.request.RoleRequestDto;
 import com.skapp.community.peopleplanner.payload.response.AnalyticsSearchResponseDto;
+import com.skapp.community.peopleplanner.payload.response.EmployeeAllDataExportResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeBulkErrorResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeBulkResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeCountDto;
@@ -107,6 +109,7 @@ import com.skapp.community.peopleplanner.type.BulkItemStatus;
 import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.util.Validations;
 import jakarta.validation.constraints.NotNull;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -216,6 +219,10 @@ public class PeopleServiceImpl implements PeopleService {
 	public ResponseEntityDto addNewEmployee(EmployeeDetailsDto employeeDetailsDto) {
 		log.info("addNewEmployee: execution started");
 
+		if (checkUserCountExceeded()) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_LIMIT_EXCEEDED);
+		}
+
 		Optional<User> existingUser = userDao.findByEmail(employeeDetailsDto.getWorkEmail());
 		if (existingUser.isPresent()) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_USER_EMAIL_ALREADY_EXIST);
@@ -303,6 +310,7 @@ public class PeopleServiceImpl implements PeopleService {
 		peopleEmailService.sendUserInvitationEmail(user);
 
 		addNewEmployeeTimeLineRecords(finalEmployee, employeeDetailsDto);
+		updateSubscriptionQuantity(1L, true);
 
 		return new ResponseEntityDto(false, employeeResponseDto);
 	}
@@ -312,6 +320,10 @@ public class PeopleServiceImpl implements PeopleService {
 	public ResponseEntityDto quickAddEmployee(EmployeeQuickAddDto employeeQuickAddDto) {
 		User currentUser = userService.getCurrentUser();
 		log.info("quickAddEmployee: execution started by user: {}", currentUser.getUserId());
+
+		if (checkUserCountExceeded()) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_LIMIT_EXCEEDED);
+		}
 
 		Optional<User> existingUser = userDao.findByEmail(employeeQuickAddDto.getWorkEmail());
 		if (existingUser.isPresent()) {
@@ -368,6 +380,7 @@ public class PeopleServiceImpl implements PeopleService {
 		employeeResponseDto.setEmployeeCredentials(employeeCredentials);
 
 		addNewQuickUploadedEmployeeTimeLineRecords(finalEmployee, employeeQuickAddDto);
+		updateSubscriptionQuantity(1L, true);
 
 		log.info("quickAddEmployee: execution ended by user: {}", currentUser.getUserId());
 		return new ResponseEntityDto(false, employeeResponseDto);
@@ -472,6 +485,60 @@ public class PeopleServiceImpl implements PeopleService {
 					responseDtos.size());
 			return new ResponseEntityDto(false, responseDtos);
 		}
+	}
+
+	@Override
+	public ResponseEntityDto exportEmployees(EmployeeExportFilterDto employeeExportFilterDto) {
+		User currentUser = userService.getCurrentUser();
+		log.info("exportEmployees: execution started by user: {}", currentUser.getUserId());
+
+		List<Employee> employees = employeeDao.findEmployeesForExport(employeeExportFilterDto);
+
+		List<Long> employeeIds = employees.stream().map(Employee::getEmployeeId).toList();
+		List<EmployeeTeamDto> teamList = employeeDao.findTeamsByEmployees(employeeIds);
+
+		List<EmployeeAllDataExportResponseDto> responseDtos = exportAllEmployeeData(employees, teamList, employeeIds);
+		log.info("exportEmployees: Successfully finished returning {} employees on exportEmployeeData",
+				responseDtos.size());
+
+		return new ResponseEntityDto(false, responseDtos);
+	}
+
+	public List<EmployeeAllDataExportResponseDto> exportAllEmployeeData(List<Employee> employees,
+			List<EmployeeTeamDto> teamList, List<Long> employeeIds) {
+		List<EmployeeManagerDto> employeeManagerDtos = employeeDao.findManagersByEmployeeIds(employeeIds);
+		List<EmployeeAllDataExportResponseDto> responseDtos = new ArrayList<>();
+
+		for (Employee employee : employees) {
+			EmployeeAllDataExportResponseDto responseDto = peopleMapper
+				.employeeToEmployeeAllDataExportResponseDto(employee);
+			responseDto.setJobFamily(peopleMapper.jobFamilyToJobFamilyDto(employee.getJobFamily()));
+			responseDto.setJobTitle(peopleMapper.jobTitleToJobTitleDto(employee.getJobTitle()));
+			responseDto.setEmployeePersonalInfoDto(
+					peopleMapper.employeePersonalInfoToEmployeePersonalInfoDto(employee.getPersonalInfo()));
+			responseDto.setEmployeeEmergencyDto(
+					peopleMapper.employeeEmergencyToemployeeEmergencyDTo(employee.getEmployeeEmergencies()));
+
+			List<Team> teams = teamList.stream()
+				.filter(e -> Objects.equals(e.getEmployeeId(), employee.getEmployeeId()))
+				.map(EmployeeTeamDto::getTeam)
+				.toList();
+			responseDto.setTeamResponseDto(peopleMapper.teamListToTeamResponseDtoList(teams));
+
+			List<Employee> managers = employeeManagerDtos.stream()
+				.filter(e -> Objects.equals(e.getEmployeeId(), employee.getEmployeeId()))
+				.map(EmployeeManagerDto::getManagers)
+				.toList();
+			responseDto.setManagers(peopleMapper.employeeListToEmployeeResponseDtoList(managers));
+
+			Optional<EmployeePeriod> period = employeePeriodDao
+				.findEmployeePeriodByEmployee_EmployeeIdAndIsActiveTrue(employee.getEmployeeId());
+			period.ifPresent(employeePeriod -> responseDto
+				.setEmployeePeriod(peopleMapper.employeePeriodToEmployeePeriodResponseDto(employeePeriod)));
+
+			responseDtos.add(responseDto);
+		}
+		return responseDtos;
 	}
 
 	@Override
@@ -651,7 +718,11 @@ public class PeopleServiceImpl implements PeopleService {
 
 		List<EmployeeBulkResponseDto> totalResults = getTotalResultList(results, overflowedEmployeeBulkDtoList);
 
-		generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), totalResults);
+		int successCount = generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), totalResults);
+		updateSubscriptionQuantity(successCount, true);
+
+		addNewBulkUploadedEmployeeTimeLineRecords(totalResults);
+
 		return outValues.get();
 	}
 
@@ -757,25 +828,38 @@ public class PeopleServiceImpl implements PeopleService {
 	@Override
 	@Transactional
 	public ResponseEntityDto terminateUser(Long userId) {
+		log.info("terminateUser: execution started");
+		updateUserStatus(userId, AccountStatus.TERMINATED, false);
+		log.info("terminateUser: execution ended");
+		return new ResponseEntityDto(messageUtil.getMessage(PeopleMessageConstant.PEOPLE_SUCCESS_EMPLOYEE_TERMINATED),
+				false);
+	}
+
+	@Override
+	@Transactional
+	public ResponseEntityDto deleteUser(Long userId) {
+		log.info("deleteUser: execution started");
+		updateUserStatus(userId, AccountStatus.DELETED, true);
+		log.info("deleteUser: execution ended");
+		return new ResponseEntityDto(messageUtil.getMessage(PeopleMessageConstant.PEOPLE_SUCCESS_EMPLOYEE_DELETED),
+				false);
+	}
+
+	private void updateUserStatus(Long userId, AccountStatus status, boolean isDelete) {
 		log.info("updateUserStatus: execution started");
 
-		Optional<User> optionalUser = userDao.findById(userId);
-		if (optionalUser.isEmpty()) {
-			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND);
-		}
-		User user = optionalUser.get();
+		User user = userDao.findById(userId)
+			.orElseThrow(() -> new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND));
 
 		if (!Boolean.TRUE.equals(user.getIsActive())) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_ACCOUNT_DEACTIVATED);
 		}
 
-		List<Team> teamsManagedByUser = teamDao.findTeamsManagedByUser(user.getUserId(), true);
-		if (!teamsManagedByUser.isEmpty()) {
+		if (!teamDao.findTeamsManagedByUser(user.getUserId(), true).isEmpty()) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_TEAM_EMPLOYEE_SUPERVISING_TEAMS);
 		}
 
-		Long supervisingEmployees = employeeDao.countEmployeesByManagerId(user.getUserId());
-		if (supervisingEmployees > 0) {
+		if (employeeDao.countEmployeesByManagerId(user.getUserId()) > 0) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EMPLOYEE_SUPERVISING_EMPLOYEES);
 		}
 
@@ -788,19 +872,22 @@ public class PeopleServiceImpl implements PeopleService {
 		employee.setTeams(null);
 
 		user.setIsActive(false);
-		user.getEmployee().setAccountStatus(AccountStatus.TERMINATED);
-		user.getEmployee().setTerminationDate(DateTimeUtils.getCurrentUtcDate());
+		employee.setAccountStatus(status);
+		employee.setTerminationDate(DateTimeUtils.getCurrentUtcDate());
 
-		peopleEmailService.sendUserTerminationEmail(user);
+		if (isDelete) {
+			user.setEmail(PeopleConstants.DELETED_PREFIX + user.getEmail());
+		}
+		else {
+			peopleEmailService.sendUserTerminationEmail(user);
+		}
 
 		userDao.save(user);
 		employeeDao.save(employee);
 		applicationEventPublisher.publishEvent(new UserDeactivatedEvent(this, user));
 
-		userVersionService.upgradeUserVersion(employee.getUser().getUserId(), VersionType.MAJOR);
-
-		log.info("updateUserStatus: execution ended");
-		return new ResponseEntityDto(false, "User status updated successfully");
+		updateSubscriptionQuantity(1L, false);
+		userVersionService.upgradeUserVersion(user.getUserId(), VersionType.MAJOR);
 	}
 
 	@Override
@@ -1062,6 +1149,10 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 	}
 
+	protected void updateSubscriptionQuantity(long quantity, boolean isIncrement) {
+		log.info("updateSubscriptionQuantity: PRO feature {}, {}", quantity, isIncrement);
+	}
+
 	private List<CompletableFuture<Void>> createEmployeeTasks(List<EmployeeBulkDto> employeeBulkDtoList,
 			ExecutorService executorService, List<EmployeeBulkResponseDto> results) {
 		List<CompletableFuture<Void>> tasks = new ArrayList<>();
@@ -1101,7 +1192,7 @@ public class PeopleServiceImpl implements PeopleService {
 	private void saveEmployeeInTransaction(EmployeeBulkDto employeeBulkDto, TransactionTemplate transactionTemplate) {
 		transactionTemplate.execute(new TransactionCallbackWithoutResult() {
 			@Override
-			protected void doInTransactionWithoutResult(TransactionStatus status) {
+			protected void doInTransactionWithoutResult(@NonNull TransactionStatus status) {
 				createNewEmployeeFromBulk(employeeBulkDto);
 			}
 		});
@@ -1177,16 +1268,20 @@ public class PeopleServiceImpl implements PeopleService {
 				executorService.isTerminated());
 	}
 
-	private void generateBulkErrorResponse(AtomicReference<ResponseEntityDto> outValues, int totalSize,
+	private int generateBulkErrorResponse(AtomicReference<ResponseEntityDto> outValues, int totalSize,
 			List<EmployeeBulkResponseDto> results) {
 		EmployeeBulkErrorResponseDto errorResponseDto = new EmployeeBulkErrorResponseDto();
+
 		List<EmployeeBulkResponseDto> errorResults = results.stream()
 			.filter(responseDto -> responseDto.getStatus() == BulkItemStatus.ERROR)
 			.toList();
-		errorResponseDto
-			.setBulkStatusSummary(new BulkStatusSummary(totalSize - errorResults.size(), errorResults.size()));
+
+		int successCount = totalSize - errorResults.size();
+		errorResponseDto.setBulkStatusSummary(new BulkStatusSummary(successCount, errorResults.size()));
 		errorResponseDto.setBulkRecordErrorLogs(errorResults);
 		outValues.set(new ResponseEntityDto(false, errorResponseDto));
+
+		return successCount;
 	}
 
 	private void createNewEmployeeFromBulk(EmployeeBulkDto employeeBulkDto) {
@@ -1267,8 +1362,6 @@ public class PeopleServiceImpl implements PeopleService {
 		if (employeeBulkDto.getEmployeePeriod() != null) {
 			saveEmployeePeriod(employee, employeeBulkDto.getEmployeePeriod());
 		}
-
-		addNewEmployeeTimeLineRecords(employee, employeeDetailsDto);
 	}
 
 	private void saveEmployeeTeams(Employee employee, EmployeeBulkDto employeeBulkDto) {
@@ -1760,7 +1853,8 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 		if (employeeUpdateDto.getAccountStatus() != null) {
 			employee.setAccountStatus(employeeUpdateDto.getAccountStatus());
-			if (employeeUpdateDto.getAccountStatus() == AccountStatus.TERMINATED) {
+			if (employeeUpdateDto.getAccountStatus() == AccountStatus.TERMINATED
+					|| employeeUpdateDto.getAccountStatus() == AccountStatus.DELETED) {
 				employee.getUser().setIsActive(false);
 			}
 			else if (employeeUpdateDto.getAccountStatus() == AccountStatus.ACTIVE) {
@@ -2723,6 +2817,15 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	/**
+	 * Validate the current user count with user limit. This method is only available for
+	 * Pro tenants.
+	 * @return eligibility for a new user upload.
+	 */
+	protected boolean checkUserCountExceeded() {
+		return false;
+	}
+
+	/**
 	 * Retrieves a deep copy of the given employee. This method is only available for Pro
 	 * tenants.
 	 * @param currentEmployee The employee to create a deep copy from.
@@ -2750,6 +2853,15 @@ public class PeopleServiceImpl implements PeopleService {
 	 */
 	protected void addNewQuickUploadedEmployeeTimeLineRecords(Employee savedEmployee,
 			EmployeeQuickAddDto employeeQuickAddDto) {
+		// This feature is available only for Pro tenants.
+	}
+
+	/**
+	 * Adds new timeline records for employees who are added via bulk upload. This feature
+	 * is available only for Pro tenants.
+	 * @param results The employees added through bulk upload.
+	 */
+	protected void addNewBulkUploadedEmployeeTimeLineRecords(List<EmployeeBulkResponseDto> results) {
 		// This feature is available only for Pro tenants.
 	}
 

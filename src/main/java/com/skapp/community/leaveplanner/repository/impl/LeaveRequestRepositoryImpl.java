@@ -205,7 +205,8 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 
 	@Override
 	public Float findAllEmployeeRequestsByWithinThirtyDays(LocalDate startDate, LocalDate endDate,
-			List<TimeConfig> timeConfigs, List<LocalDate> holidayDates, List<Long> teamIds) {
+			List<TimeConfig> timeConfigs, List<LocalDate> holidayDates, List<Long> teamIds,
+			String organizationTimeZone) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 
 		CriteriaQuery<LeaveRequest> criteriaQuery = criteriaBuilder.createQuery(LeaveRequest.class);
@@ -235,7 +236,7 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 		criteriaQuery.where(predicates.toArray(new Predicate[0]));
 		TypedQuery<LeaveRequest> query = entityManager.createQuery(criteriaQuery);
 
-		return getLeaveCount(query.getResultList(), holidayDates, timeConfigs);
+		return getLeaveCount(query.getResultList(), holidayDates, timeConfigs, organizationTimeZone);
 	}
 
 	private List<Predicate> createPredicatesForLeaverRequest(CriteriaBuilder cb, Root<LeaveRequest> leaveRequest,
@@ -393,7 +394,8 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 		List<Predicate> predicates = new ArrayList<>();
 
 		predicates.add(criteriaBuilder.equal(user.get(User_.isActive), true));
-		predicates.add(criteriaBuilder.notEqual(employee.get(Employee_.ACCOUNT_STATUS), AccountStatus.TERMINATED));
+		predicates.add(criteriaBuilder
+			.not(employee.get(Employee_.ACCOUNT_STATUS).in(AccountStatus.TERMINATED, AccountStatus.DELETED)));
 		predicates.add(criteriaBuilder.equal(root.get(LeaveRequest_.LEAVE_TYPE).get(LeaveType_.TYPE_ID), leaveTypeId));
 		predicates
 			.add(criteriaBuilder.and(criteriaBuilder.lessThanOrEqualTo(root.get(LeaveRequest_.startDate), endDate),
@@ -984,7 +986,7 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 		CriteriaQuery<OrganizationConfig> criteriaQuery = criteriaBuilder.createQuery(OrganizationConfig.class);
 		Root<OrganizationConfig> root = criteriaQuery.from(OrganizationConfig.class);
 		criteriaQuery.where(criteriaBuilder.equal(root.get(OrganizationConfig_.ORGANIZATION_CONFIG_TYPE),
-				OrganizationConfigType.LEAVE_CYCLE));
+				OrganizationConfigType.LEAVE_CYCLE.name()));
 
 		TypedQuery<OrganizationConfig> query = entityManager.createQuery(criteriaQuery);
 		List<OrganizationConfig> resultList = query.getResultList();
@@ -1020,16 +1022,16 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 	}
 
 	public static float getLeaveCount(List<LeaveRequest> leaveRequests, List<LocalDate> holidays,
-			List<TimeConfig> timeConfigs) {
+			List<TimeConfig> timeConfigs, String organizationTimeZone) {
 		float leaveCount = 0;
 		for (LeaveRequest leaveRequest : leaveRequests) {
 			if (leaveRequest.getLeaveState().equals(LeaveState.FULLDAY)
 					&& leaveRequest.getEndDate().isAfter(leaveRequest.getStartDate())) {
 				leaveCount = leaveCount + getAllDaysBetween(leaveRequest.getStartDate(), leaveRequest.getEndDate(),
-						holidays, timeConfigs);
+						holidays, timeConfigs, organizationTimeZone);
 			}
-			else if (!holidays.contains(leaveRequest.getStartDate())
-					&& !CommonModuleUtils.checkIfDayIsWorkingDay(leaveRequest.getStartDate(), timeConfigs)) {
+			else if (!holidays.contains(leaveRequest.getStartDate()) && !CommonModuleUtils
+				.checkIfDayIsWorkingDay(leaveRequest.getStartDate(), timeConfigs, organizationTimeZone)) {
 				leaveCount = leaveRequest.getLeaveState().equals(LeaveState.FULLDAY) ? leaveCount + 1
 						: (float) (leaveCount + 0.5);
 			}
@@ -1038,10 +1040,11 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 	}
 
 	public static Integer getAllDaysBetween(LocalDate startDate, LocalDate endDate, List<LocalDate> holidays,
-			List<TimeConfig> timeConfigs) {
+			List<TimeConfig> timeConfigs, String organizationTimeZone) {
 		int daysBetween = 0;
 
-		while (!holidays.contains(startDate) && !CommonModuleUtils.checkIfDayIsWorkingDay(startDate, timeConfigs)
+		while (!holidays.contains(startDate)
+				&& !CommonModuleUtils.checkIfDayIsWorkingDay(startDate, timeConfigs, organizationTimeZone)
 				&& (startDate.isBefore(endDate) || startDate.isEqual(endDate))) {
 			daysBetween = daysBetween + 1;
 			startDate = startDate.plusDays(1);

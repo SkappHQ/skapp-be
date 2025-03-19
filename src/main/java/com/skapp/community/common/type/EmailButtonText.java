@@ -5,10 +5,8 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum EmailMainTemplates implements EmailTemplates {
+public enum EmailButtonText {
 
-	MAIN_TEMPLATE_V1("main-template-v1");
-
-	private final String templateId;
+	COMMON_EMAIL_BUTTON_TEXT;
 
 }
