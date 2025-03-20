@@ -47,7 +47,7 @@ public class EmployeeManagerRepositoryImpl implements EmployeeManagerRepository 
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
 		Root<Employee> root = criteriaQuery.from(Employee.class);
-		Join<Employee, EmployeeManager> employeeManagerJoin = root.join(Employee_.managers);
+		Join<Employee, EmployeeManager> employeeManagerJoin = root.join(Employee_.employeeManagers);
 
 		List<Predicate> predicates = new ArrayList<>();
 

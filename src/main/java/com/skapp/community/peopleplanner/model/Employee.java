@@ -70,7 +70,7 @@ public class Employee extends Auditable<String> {
 	private String country;
 
 	@Column(name = "address")
-	private String address;
+	private String addressLine1;
 
 	@Column(name = "personal_email")
 	private String personalEmail;
@@ -108,21 +108,6 @@ public class Employee extends Auditable<String> {
 	@Column(name = "last_clock_in_date")
 	private LocalDate lastClockInDate;
 
-	@OneToOne(mappedBy = "employee", cascade = CascadeType.ALL)
-	@PrimaryKeyJoinColumn
-	private EmployeeRole employeeRole;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "job_family_id")
-	private JobFamily jobFamily;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "job_title_id")
-	private JobTitle jobTitle;
-
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private Set<EmployeeTeam> teams;
-
 	@Enumerated(EnumType.STRING)
 	@Column(name = "eeo", columnDefinition = "varchar(255)")
 	private EEO eeo;
@@ -130,15 +115,22 @@ public class Employee extends Auditable<String> {
 	@Column(name = "termination_date")
 	private LocalDate terminationDate;
 
+	@OneToOne(mappedBy = "employee", cascade = CascadeType.ALL)
+	@PrimaryKeyJoinColumn
+	private EmployeeRole employeeRole;
+
+	@OneToOne(mappedBy = "employee", cascade = CascadeType.ALL)
+	@PrimaryKeyJoinColumn
+	private EmployeePersonalInfo personalInfo;
+
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	private Set<EmployeeTeam> employeeTeams;
+
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private List<EmployeeEducation> employeeEducations;
 
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private List<EmployeeProgression> employeeProgressions;
-
-	@OneToOne(mappedBy = "employee", cascade = CascadeType.ALL)
-	@PrimaryKeyJoinColumn
-	private EmployeePersonalInfo personalInfo;
 
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private List<EmployeeVisa> employeeVisas;
@@ -149,13 +141,21 @@ public class Employee extends Auditable<String> {
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private List<EmployeeEmergency> employeeEmergencies;
 
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	Set<EmployeeManager> employees;
-
 	@OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	Set<EmployeeManager> managers;
+	Set<EmployeeManager> employeeManagers;
+
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	Set<EmployeePeriod> employeePeriods;
 
 	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<Notification> notifications = new ArrayList<>();
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "job_family_id")
+	private JobFamily jobFamily;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "job_title_id")
+	private JobTitle jobTitle;
 
 }

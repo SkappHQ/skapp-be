@@ -118,17 +118,71 @@ public enum PeopleMessageConstant implements MessageConstant {
 	PEOPLE_ERROR_PEOPLE_ROLE_REQUIRED("api.error.people.people-role-required"),
 	PEOPLE_ERROR_ATTENDANCE_ROLE_REQUIRED("api.error.people.attendance-role-required"),
 	PEOPLE_ERROR_LEAVE_ROLE_REQUIRED("api.error.people.leave-role-required"),
-	PEOPLE_ERROR_ESIGN_ROLE_REQUIRED("api.error.people.esign-role-required"),
 	PEOPLE_ERROR_INVALID_PEOPLE_ROLE("api.error.people.invalid-people-role"),
 	PEOPLE_ERROR_INVALID_ATTENDANCE_ROLE("api.error.people.invalid-attendance-role"),
 	PEOPLE_ERROR_INVALID_LEAVE_ROLE("api.error.people.invalid-leave-role"),
-	PEOPLE_ERROR_INVALID_ESIGN_ROLE("api.error.people.invalid-esign-role"),
 	PEOPLE_ERROR_ATTENDANCE_RESTRICTED_ROLE_ACCESS("api.error.people.attendance-restricted-role-access"),
 	PEOPLE_ERROR_PEOPLE_RESTRICTED_ROLE_ACCESS("api.error.people.people-restricted-role-access"),
 	PEOPLE_ERROR_LEAVE_RESTRICTED_ROLE_ACCESS("api.error.people.leave-restricted-role-access"),
-	PEOPLE_ERROR_ESIGN_RESTRICTED_ROLE_ACCESS("api.error.people.esign-restricted-role-access"),
 	PEOPLE_ERROR_FAMILY_DOB_FUTURE_DATE("api.error.people.family-dob-future-date"),
-	PEOPLE_ERROR_DOB_FUTURE_DATE("api.error.people.dob-future-date"),;
+	PEOPLE_ERROR_DOB_FUTURE_DATE("api.error.people.dob-future-date"),
+	PEOPLE_ERROR_EDUCATION_START_END_DATE("api.error.people.education-start-end-date"),
+	PEOPLE_ERROR__VALIDATION_EMPLOYMENT_JOINED_DATE_FUTURE_DATE(
+			"api.error.people.validation-employment-joined-date-future-date"),
+	PEOPLE_ERROR_VALIDATION_PROBATION_START_DATE_BEFORE_JOINED_DATE(
+			"api.error.people.validation-probation-start-date-before-joined-date"),
+	PEOPLE_ERROR_VALIDATION_PROBATION_END_DATE_BEFORE_START_DATE(
+			"api.error.people.validation-probation-end-date-before-start-date"),
+	PEOPLE_ERROR_VALIDATION_PROBATION_END_DATE_BEFORE_JOINED_DATE(
+			"api.error.people.validation-probation-end-date-before-joined-date"),
+	PEOPLE_ERROR_VALIDATION_EMPLOYMENT_TYPE_REQUIRED("api.error.people.validation-employment-type-required"),
+	PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_JOB_FAMILY_REQUIRED(
+			"api.error.people.validation-career-progression-job-family-required"),
+	PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_JOB_TITLE_REQUIRED(
+			"api.error.people.validation-career-progression-job-title-required"),
+	PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_START_DATE_REQUIRED(
+			"api.error.people.validation-career-progression-start-date-required"),
+	PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_END_DATE_REQUIRED(
+			"api.error.people.validation-career-progression-end-date-required"),
+	PEOPLE_ERROR_VALIDATION_CAREER_END_DATE_BEFORE_START_DATE(
+			"api.error.people.validation-career-end-date-before-start-date"),
+	PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_END_DATE_NOT_REQUIRED_FOR_CURRENT_EMPLOYMENT_TRUE(
+			"api.error.people.validation-career-progression-end-date-not-required-for-current-employment-true"),
+	PEOPLE_ERROR_VALIDATION_COUNTRY("api.error.people.validation.country"),
+	PEOPLE_ERROR_VALIDATION_CITY("api.error.people.validation.city"),
+	PEOPLE_ERROR_VALIDATION_STATE("api.error.people.validation.state"),
+	PEOPLE_ERROR_VALIDATION__WORK_EMAIL("api.error.people.validation.work-email"),
+	PEOPLE_ERROR_VALIDATION__WORK_EMAIL_LENGTH("api.error.people.validation.work-email-length"),
+	PEOPLE_ERROR_VALIDATION__PERSONAL_EMAIL("api.error.people.validation.personal-email"),
+	PEOPLE_ERROR_VALIDATION__PERSONAL_EMAIL_LENGTH("api.error.people.validation.personal-email-length"),
+	PEOPLE_ERROR_VALIDATION_EMPLOYEE_PHONE_NUMBER("api.error.people.validation.employee-phone-number"),
+	PEOPLE_ERROR_VALIDATION_EMPLOYEE_PHONE_NUMBER_LENGTH("api.error.people.validation.employee-phone-number-length"),
+	PEOPLE_ERROR_VALIDATION_FAMILY_FIRST_NAME("api.error.people.validation.family-first-name"),
+	PEOPLE_ERROR_VALIDATION_FAMILY_FIRST_NAME_LENGTH("api.error.people.validation.family-first-name-length"),
+	PEOPLE_ERROR_VALIDATION_FAMILY_LAST_NAME("api.error.people.validation.family-last-name"),
+	PEOPLE_ERROR_VALIDATION_FAMILY_LAST_NAME_LENGTH("api.error.people.validation.family-last-name-length"),
+	PEOPLE_ERROR_VALIDATION_FAMILY_PARENT_NAME("api.error.people.validation.family-parent-name"),
+	PEOPLE_ERROR_VALIDATION_FAMILY_PARENT_NAME_LENGTH("api.error.people.validation.family-parent-name-length"),
+	PEOPLE_ERROR_VALIDATION_ADDRESS_LINE1("api.error.people.validation.address-line1"),
+	PEOPLE_ERROR_VALIDATION_ADDRESS_LINE1_LENGTH("api.error.people.validation.address-line1-length"),
+	PEOPLE_ERROR_VALIDATION_ADDRESS_LINE12("api.error.people.validation.address-line2"),
+	PEOPLE_ERROR_VALIDATION_ADDRESS_LINE2_LENGTH("api.error.people.validation.address-line2-length"),
+	PEOPLE_ERROR_VALIDATION__MIDDLE_NAME("api.error.people.validation.middle-name"),
+	PEOPLE_ERROR_VALIDATION__MIDDLE_NAME_LENGTH("api.error.people.validation.middle-name-length"),
+	PEOPLE_ERROR_VALIDATION_EMPLOYEE_NUMBER("api.error.people.validation.employee-number"),
+	PEOPLE_ERROR_VALIDATION_EMPLOYEE_NUMBER_LENGTH("api.error.people.validation.employee-number-length"),
+	PEOPLE_ERROR_VALIDATION_INVALID_TEAM_IDS("api.error.people.validation.invalid-team-ids"),
+	PEOPLE_ERROR_VALIDATION_POSTAL_CODE("api.error.people.validation.postal-code"),
+	PEOPLE_ERROR_VALIDATION_PRIMARY_SUPERVISOR_EMPLOYEE_ID_REQUIRED(
+			"api.error.people.validation.primary-supervisor-employee-id-required"),
+	PEOPLE_ERROR_VALIDATION_PRIMARY_SUPERVISOR_EMPLOYEE_NOT_FOUND(
+			"api.error.people.validation.primary-supervisor-employee-not-found"),
+	PEOPLE_ERROR_VALIDATION_PRIMARY_SUPERVISOR_MANAGER_TYPE_REQUIRED(
+			"api.error.people.validation.primary-supervisor-manager-type-required"),
+	PEOPLE_ERROR_VALIDATION_PRIMARY_SECONDARY_SUPERVISOR_SAME(
+			"api.error.people.validation.primary-secondary-supervisor-same"),
+	PEOPLE_ERROR_VALIDATION_SECONDARY_SUPERVISOR_EMPLOYEE_NOT_FOUND(
+			"api.error.people.validation.secondary-supervisor-employee-not-found"),;
 
 	private final String messageKey;
 

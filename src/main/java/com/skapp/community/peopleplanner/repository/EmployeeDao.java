@@ -20,6 +20,8 @@ public interface EmployeeDao
 
 	Optional<Employee> findByEmployeeId(Long employeeId);
 
+	Employee findEmployeeByEmployeeId(Long employeeId);
+
 	List<Employee> findByIdentificationNo(String identificationNo);
 
 	Employee findEmployeeByEmployeeIdAndUserIsActiveTrue(Long primaryManager);

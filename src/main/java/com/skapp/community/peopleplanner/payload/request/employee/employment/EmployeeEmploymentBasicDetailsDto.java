@@ -16,7 +16,7 @@ public class EmployeeEmploymentBasicDetailsDto {
 
 	private EmploymentAllocation employmentAllocation;
 
-	private int[] teamIds;
+	private Long[] teamIds;
 
 	private EmployeeEmploymentBasicDetailsManagerDetailsDto primarySupervisor;
 

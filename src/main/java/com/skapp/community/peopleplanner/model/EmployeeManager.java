@@ -37,7 +37,7 @@ public class EmployeeManager {
 	private Employee manager;
 
 	@Column(name = "is_direct_manager")
-	private boolean isPrimaryManager;
+	private Boolean isPrimaryManager;
 
 	@Column(name = "manager_type", columnDefinition = "varchar(255)")
 	@Enumerated(EnumType.STRING)

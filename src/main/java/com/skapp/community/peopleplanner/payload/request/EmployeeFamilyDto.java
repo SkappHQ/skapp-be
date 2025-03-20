@@ -1,7 +1,7 @@
 package com.skapp.community.peopleplanner.payload.request;
 
-import com.skapp.community.peopleplanner.type.FamilyRelationship;
 import com.skapp.community.peopleplanner.type.Gender;
+import com.skapp.community.peopleplanner.type.RelationshipTypes;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,6 +23,6 @@ public class EmployeeFamilyDto {
 
 	private LocalDate birthDate;
 
-	private FamilyRelationship familyRelationship;
+	private RelationshipTypes familyRelationship;
 
 }

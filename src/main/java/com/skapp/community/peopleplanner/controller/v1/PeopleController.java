@@ -7,7 +7,6 @@ import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeIsAvailableDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
-import com.skapp.community.peopleplanner.payload.request.EmployeeUpdateDto;
 import com.skapp.community.peopleplanner.payload.request.NotificationSettingsPatchRequestDto;
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.request.employee.CreateEmployeeRequestDto;
@@ -66,18 +65,8 @@ public class PeopleController {
 	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_ADMIN')")
 	public ResponseEntity<ResponseEntityDto> updateEmployee(
 			@PathVariable @Schema(description = "ID of the employee to update", example = "1") Long id,
-			@Valid @RequestBody EmployeeUpdateDto employeeUpdateDto) {
-		ResponseEntityDto response = peopleService.updateEmployee(id, employeeUpdateDto);
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
-
-	@Operation(summary = "Update an employee", description = "This endpoint updates an existing employee by their ID.")
-	@PatchMapping(value = "/employee/me/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAnyRole('ROLE_ATTENDANCE_EMPLOYEE','ROLE_PEOPLE_EMPLOYEE','ROLE_LEAVE_EMPLOYEE')")
-	public ResponseEntity<ResponseEntityDto> updateCurrentEmployee(
-			@PathVariable @Schema(description = "ID of the employee to update", example = "1") Long id,
-			@Valid @RequestBody EmployeeUpdateDto employeeUpdateDto) {
-		ResponseEntityDto response = peopleService.updateLoggedInUser(id, employeeUpdateDto);
+			@Valid @RequestBody CreateEmployeeRequestDto createEmployeeRequestDto) {
+		ResponseEntityDto response = peopleService.updateEmployee(id, createEmployeeRequestDto);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

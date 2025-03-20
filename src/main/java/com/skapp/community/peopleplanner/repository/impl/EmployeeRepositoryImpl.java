@@ -106,7 +106,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		}
 
 		if (employeeFilterDto.getTeam() != null && !employeeFilterDto.getTeam().isEmpty()) {
-			Join<Employee, EmployeeTeam> employeeTeam = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeam = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeam.get(EmployeeTeam_.TEAM).get(Team_.TEAM_ID).in(employeeFilterDto.getTeam()));
 		}
 
@@ -201,7 +201,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		}
 
 		if (employeeExportFilterDto.getTeam() != null && !employeeExportFilterDto.getTeam().isEmpty()) {
-			Join<Employee, EmployeeTeam> employeeTeam = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeam = root.join(Employee_.employeeTeams);
 			predicates
 				.add(employeeTeam.get(EmployeeTeam_.TEAM).get(Team_.TEAM_ID).in(employeeExportFilterDto.getTeam()));
 		}
@@ -281,7 +281,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		CriteriaQuery<EmployeeTeamDto> criteriaQuery = criteriaBuilder.createQuery(EmployeeTeamDto.class);
 		Root<Employee> root = criteriaQuery.from(Employee.class);
-		Join<Employee, EmployeeTeam> employeeTeam = root.join(Employee_.TEAMS);
+		Join<Employee, EmployeeTeam> employeeTeam = root.join(Employee_.employeeTeams);
 		Join<EmployeeTeam, Team> team = employeeTeam.join(EmployeeTeam_.TEAM);
 
 		List<Predicate> predicates = new ArrayList<>();
@@ -301,7 +301,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		CriteriaQuery<EmployeeManagerDto> criteriaQuery = criteriaBuilder.createQuery(EmployeeManagerDto.class);
 		Root<Employee> root = criteriaQuery.from(Employee.class);
-		Join<Employee, EmployeeManager> managers = root.join(Employee_.EMPLOYEES);
+		Join<Employee, EmployeeManager> managers = root.join(Employee_.employeeManagers);
 		Join<EmployeeManager, Employee> manEmp = managers.join(EmployeeManager_.MANAGER);
 		Join<Employee, User> userJoin = root.join(Employee_.user);
 
@@ -508,8 +508,8 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 			}
 		}
 		else {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = employee.join(Employee_.teams);
-			Join<Employee, EmployeeTeam> totalEmployeeTeamJoin = totalEmployeeRoot.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = employee.join(Employee_.employeeTeams);
+			Join<Employee, EmployeeTeam> totalEmployeeTeamJoin = totalEmployeeRoot.join(Employee_.employeeTeams);
 
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(filterDto.getTeamIds()));
 
@@ -544,7 +544,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		List<Predicate> predicates = new ArrayList<>();
 
-		Join<Employee, EmployeeManager> empJoin = root.join(Employee_.employees);
+		Join<Employee, EmployeeManager> empJoin = root.join(Employee_.employeeManagers);
 		Join<EmployeeManager, Employee> empMan = empJoin.join(EmployeeManager_.manager);
 		Join<Employee, User> userJoin = root.join(Employee_.user);
 		predicates.add(criteriaBuilder.notEqual(userJoin.get(User_.isActive), false));
@@ -592,7 +592,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		List<Predicate> predicates = new ArrayList<>();
 
-		Join<Employee, EmployeeManager> managers = root.join(Employee_.managers);
+		Join<Employee, EmployeeManager> managers = root.join(Employee_.employeeManagers);
 		Join<EmployeeManager, Employee> employeeJoin = managers.join(EmployeeManager_.employee);
 		Join<Employee, User> userJoin = root.join(Employee_.user);
 
@@ -655,7 +655,8 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		}
 		else if (filterDto.getTeamIds() != null && !filterDto.getTeamIds().isEmpty()) {
 			// Filter by specific team IDs
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(LeaveRequest_.employee).join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(LeaveRequest_.employee)
+				.join(Employee_.employeeTeams);
 			predicates.add(criteriaBuilder.and(criteriaBuilder.not(isAdminPredicate),
 					employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(filterDto.getTeamIds())));
 		}
@@ -688,7 +689,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		List<Predicate> predicates = new ArrayList<>();
 
-		Join<Employee, EmployeeManager> managers = root.join(Employee_.managers);
+		Join<Employee, EmployeeManager> managers = root.join(Employee_.employeeManagers);
 		Join<EmployeeManager, Employee> manEmp = managers.join(EmployeeManager_.employee);
 		Join<Employee, User> userJoin = root.join(Employee_.user);
 		predicates.add(criteriaBuilder.notEqual(userJoin.get(User_.isActive), false));
@@ -720,7 +721,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		predicates.add(criteriaBuilder.equal(root.get(Employee_.accountStatus), accountStatus));
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -760,7 +761,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		}
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -790,7 +791,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		sumPredicates.add(criteriaBuilder.equal(sumUserJoin.get(User_.isActive), true));
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> sumEmployeeTeamJoin = sumRoot.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> sumEmployeeTeamJoin = sumRoot.join(Employee_.employeeTeams);
 			sumPredicates.add(sumEmployeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -820,7 +821,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		countPredicates.add(criteriaBuilder.equal(countUserJoin.get(User_.isActive), true));
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> countEmployeeTeamJoin = countRoot.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> countEmployeeTeamJoin = countRoot.join(Employee_.employeeTeams);
 			countPredicates.add(countEmployeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -865,7 +866,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		predicates.add(criteriaBuilder.between(terminationDate, startDate, endDate));
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -895,7 +896,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		predicates.add(criteriaBuilder.lessThanOrEqualTo(createdDateAsLocalDate, endDate));
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(new ArrayList<>(teamIds)));
 		}
 
@@ -926,7 +927,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		predicates.add(criteriaBuilder.equal(root.get(Employee_.GENDER), gender));
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -963,7 +964,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		}
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -999,7 +1000,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		}
 
 		if (teamId != null) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(criteriaBuilder.equal(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId), teamId));
 		}
 
@@ -1028,7 +1029,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		List<Predicate> predicates = new ArrayList<>();
 
-		Join<Employee, EmployeeManager> empJoin = root.join(Employee_.employees);
+		Join<Employee, EmployeeManager> empJoin = root.join(Employee_.employeeManagers);
 		Join<EmployeeManager, Employee> empMan = empJoin.join(EmployeeManager_.manager);
 		Join<Employee, User> userJoin = root.join(Employee_.user);
 		predicates.add(criteriaBuilder.notEqual(userJoin.get(User_.isActive), false));
@@ -1128,7 +1129,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		List<Predicate> predicates = new ArrayList<>();
 
-		Join<Employee, EmployeeManager> empJoin = root.join(Employee_.employees);
+		Join<Employee, EmployeeManager> empJoin = root.join(Employee_.employeeManagers);
 		Join<EmployeeManager, Employee> empMan = empJoin.join(EmployeeManager_.manager);
 		Join<Employee, User> userJoin = root.join(Employee_.user);
 

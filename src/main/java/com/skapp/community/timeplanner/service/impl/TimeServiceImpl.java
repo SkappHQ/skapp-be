@@ -793,7 +793,7 @@ public class TimeServiceImpl implements TimeService {
 		}
 
 		boolean isManager = user.getEmployee()
-			.getManagers()
+			.getEmployeeManagers()
 			.stream()
 			.anyMatch(manager -> manager.getEmployee()
 				.getEmployeeId()
@@ -1142,7 +1142,7 @@ public class TimeServiceImpl implements TimeService {
 		}
 
 		if (employeeOpt.get()
-			.getEmployees()
+			.getEmployeeManagers()
 			.stream()
 			.noneMatch(em -> em.getManager().getEmployeeId().equals(currentUser.getEmployee().getEmployeeId()))) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_MANAGER_CANNOT_VIEW_EMPLOYEE_DATA);
@@ -1211,9 +1211,9 @@ public class TimeServiceImpl implements TimeService {
 
 		TimeRequest timeRequestResponse;
 		Optional<EmployeeManager> primaryManager = currentUser.getEmployee()
-			.getEmployees()
+			.getEmployeeManagers()
 			.stream()
-			.filter(EmployeeManager::isPrimaryManager)
+			.filter(EmployeeManager::getIsPrimaryManager)
 			.findFirst();
 
 		if (primaryManager.isEmpty()) {

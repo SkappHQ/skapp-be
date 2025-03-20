@@ -83,19 +83,13 @@ public class RolesServiceImpl implements RolesService {
 	}
 
 	@Override
-	public void assignRolesToEmployee(RoleRequestDto roleRequestDto, Employee employee) {
+	public EmployeeRole assignRolesToEmployee(EmployeeSystemPermissionsDto roleRequestDto, Employee employee) {
 		log.info("assignRolesToEmployee: execution started");
 
-		Optional<Employee> optionalEmployee = employeeDao.findById(employee.getEmployeeId());
-		if (optionalEmployee.isEmpty()) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
-		}
-
 		EmployeeRole employeeRole = createEmployeeRole(roleRequestDto, employee);
-		employeeRoleDao.save(employeeRole);
 
 		log.info("assignRolesToEmployee: execution ended");
-		new ResponseEntityDto(false, peopleMapper.employeeRoleToEmployeeRoleResponseDto(employeeRole));
+		return employeeRole;
 	}
 
 	@Override
@@ -442,17 +436,17 @@ public class RolesServiceImpl implements RolesService {
 		};
 	}
 
-	protected EmployeeRole createEmployeeRole(RoleRequestDto roleRequestDto, Employee employee) {
+	protected EmployeeRole createEmployeeRole(EmployeeSystemPermissionsDto roleRequestDto, Employee employee) {
 		EmployeeRole employeeRole = new EmployeeRole();
 		User currentUser = userService.getCurrentUser();
 
-		employeeRole.setEmployee(employee);
 		employeeRole.setPeopleRole(roleRequestDto.getPeopleRole());
 		employeeRole.setLeaveRole(roleRequestDto.getLeaveRole());
 		employeeRole.setAttendanceRole(roleRequestDto.getAttendanceRole());
 		employeeRole.setIsSuperAdmin(roleRequestDto.getIsSuperAdmin());
 		employeeRole.setChangedDate(DateTimeUtils.getCurrentUtcDate());
 		employeeRole.setRoleChangedBy(currentUser.getEmployee());
+		employeeRole.setEmployee(employee);
 
 		return employeeRole;
 	}

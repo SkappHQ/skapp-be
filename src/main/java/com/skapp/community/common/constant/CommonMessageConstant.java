@@ -117,19 +117,10 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_EPOCH_MILLIS_CANNOT_BE_NULL("api.error.common.epoch-millis-cannot-be-null"),
 	COMMON_ERROR_INVALID_TOKEN("api.error.common.invalid-token"),
 	COMMON_ERROR_JWT_SIGNIN_KEY_GENERATION_ISSUE("api.error.common.jwt-signin-key-generation-issue"),
-	COMMON_ERROR_SYSTEM_VERSION_MISMATCH("api.error.ep.common.system-version-mismatch"),
-	COMMON_ERROR_USER_VERSION_MISMATCH("api.error.ep.common.user-version-mismatch"),
 	COMMON_ERROR_INVALID_AUTHORIZATION_HEADER("api.error.common.invalid-authorization-header"),
 	COMMON_ERROR_SAME_PASSWORD("api.error.common.same-password"),
-	COMMON_ERROR_VALIDATION_COUNTRY("api.error.common.validation.country"),
-	COMMON_ERROR_VALIDATION_CITY("api.error.common.validation.city"),
-	COMMON_ERROR_VALIDATION_STATE("api.error.common.validation.state"),
-	COMMON_ERROR_VALIDATION__WORK_EMAIL("api.error.common.validation.work-email"),
-	COMMON_ERROR_VALIDATION__WORK_EMAIL_LENGTH("api.error.common.validation.work-email-length"),
-	COMMON_ERROR_VALIDATION__PERSONAL_EMAIL("api.error.common.validation.personal-email"),
-	COMMON_ERROR_VALIDATION__PERSONAL_EMAIL_LENGTH("api.error.common.validation.personal-email-length"),
-	COMMON_ERROR_VALIDATION_EMPLOYEE_PHONE_NUMBER("api.error.common.validation.employee-phone-number"),
-	COMMON_ERROR_VALIDATION_EMPLOYEE_PHONE_NUMBER_LENGTH("api.error.common.validation.employee-phone-number-length"),;
+	COMMON_ERROR_SYSTEM_VERSION_MISMATCH("api.error.common.system-version-mismatch"),
+	COMMON_ERROR_USER_VERSION_MISMATCH("api.error.common.user-version-mismatch");
 
 	private final String messageKey;
 

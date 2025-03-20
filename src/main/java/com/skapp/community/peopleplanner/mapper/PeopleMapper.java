@@ -10,12 +10,10 @@ import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.EmployeeEducation;
 import com.skapp.community.peopleplanner.model.EmployeeEmergency;
 import com.skapp.community.peopleplanner.model.EmployeeFamily;
-import com.skapp.community.peopleplanner.model.EmployeeManager;
 import com.skapp.community.peopleplanner.model.EmployeePeriod;
 import com.skapp.community.peopleplanner.model.EmployeePersonalInfo;
 import com.skapp.community.peopleplanner.model.EmployeeProgression;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
-import com.skapp.community.peopleplanner.model.EmployeeTeam;
 import com.skapp.community.peopleplanner.model.EmployeeVisa;
 import com.skapp.community.peopleplanner.model.Holiday;
 import com.skapp.community.peopleplanner.model.JobFamily;
@@ -51,19 +49,16 @@ import com.skapp.community.peopleplanner.payload.response.JobFamilyResponseDto;
 import com.skapp.community.peopleplanner.payload.response.JobTitleResponseDetailDto;
 import com.skapp.community.peopleplanner.payload.response.ManagerCoreDetailsDto;
 import com.skapp.community.peopleplanner.payload.response.ManagerEmployeeDto;
-import com.skapp.community.peopleplanner.payload.response.ManagingEmployeesResponseDto;
 import com.skapp.community.peopleplanner.payload.response.ModuleRoleRestrictionResponseDto;
 import com.skapp.community.peopleplanner.payload.response.SummarizedEmployeeDtoForEmployees;
 import com.skapp.community.peopleplanner.payload.response.SummarizedManagerEmployeeDto;
 import com.skapp.community.peopleplanner.payload.response.TeamBasicDetailsResponseDto;
 import com.skapp.community.peopleplanner.payload.response.TeamDetailResponseDto;
-import com.skapp.community.peopleplanner.payload.response.TeamEmployeeResponseDto;
 import com.skapp.community.peopleplanner.payload.response.TeamResponseDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.util.List;
-import java.util.Set;
 
 @Mapper(componentModel = "spring")
 public interface PeopleMapper {
@@ -96,14 +91,6 @@ public interface PeopleMapper {
 
 	JobFamilyDto jobFamilyToJobFamilyDto(JobFamily jobFamily);
 
-	@Mapping(target = "user.email", source = "employeeDetailsDto.workEmail")
-	@Mapping(target = "firstName", source = "employeeDetailsDto.firstName")
-	@Mapping(target = "managers", ignore = true)
-	@Mapping(target = "teams", ignore = true)
-	@Mapping(target = "employeeProgressions", ignore = true)
-	@Mapping(target = "employeeVisas", ignore = true)
-	Employee employeeDetailsDtoToEmployee(EmployeeDetailsDto employeeDetailsDto);
-
 	EmployeeProgression employeeProgressionDtoToEmployeeProgression(EmployeeProgressionsDto employeeProgressionsDto);
 
 	List<EmployeeEmergency> employeeEmergencyDtoListToEmployeeEmergencyList(
@@ -131,7 +118,7 @@ public interface PeopleMapper {
 
 	@Mapping(target = "email", source = "user.email")
 	@Mapping(target = "isActive", source = "user.isActive")
-	@Mapping(target = "managers", source = "employees")
+	@Mapping(target = "managers", source = "employeeManagers")
 	EmployeeDetailedResponseDto employeeToEmployeeDetailedResponseDto(Employee employee);
 
 	EmployeePeriodResponseDto employeePeriodToEmployeePeriodResponseDto(EmployeePeriod employeePeriod);
@@ -162,17 +149,12 @@ public interface PeopleMapper {
 	@Mapping(target = "email", source = "user.email")
 	SummarizedEmployeeDtoForEmployees employeeToSummarizedEmployeeDtoForEmployees(Employee employee);
 
-	List<TeamEmployeeResponseDto> employeeTeamToTeamEmployeeResponseDto(Set<EmployeeTeam> teams);
-
 	@Mapping(target = "isSuperAdmin", source = "isSuperAdmin")
 	EmployeeRoleResponseDto employeeRoleToEmployeeRoleResponseDto(EmployeeRole employeeRole);
 
-	List<ManagingEmployeesResponseDto> employeeManagerToManagingEmployeesResponseDto(
-			Set<EmployeeManager> employeeManager);
-
 	@Mapping(target = "user.email", source = "employeeBulkDto.workEmail")
 	@Mapping(target = "firstName", source = "employeeBulkDto.firstName")
-	@Mapping(target = "teams", ignore = true)
+	@Mapping(target = "employeeTeams", ignore = true)
 	@Mapping(target = "joinDate", source = "employeeBulkDto.joinedDate")
 	@Mapping(target = "jobFamily", ignore = true)
 	@Mapping(target = "jobTitle", ignore = true)

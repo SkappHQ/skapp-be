@@ -13,7 +13,7 @@ public interface RolesService {
 
 	ResponseEntityDto getSystemRoles();
 
-	void assignRolesToEmployee(RoleRequestDto roleRequestDto, Employee employee);
+	EmployeeRole assignRolesToEmployee(EmployeeSystemPermissionsDto roleRequestDto, Employee employee);
 
 	ResponseEntityDto updateRoleRestrictions(ModuleRoleRestrictionRequestDto moduleRoleRestrictionRequestDto);
 
