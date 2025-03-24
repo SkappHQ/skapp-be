@@ -237,10 +237,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 
 		List<Predicate> predicates = new ArrayList<>();
 		predicates.add(criteriaBuilder.equal(root.get(LeaveEntitlement_.isManual), true));
-		predicates.add(criteriaBuilder.or(
-				criteriaBuilder.notEqual(root.get(LeaveEntitlement_.reason),
-						LeaveModuleConstant.DISCARD_LEAVE_REQUEST_REASON),
-				criteriaBuilder.isNull(root.get(LeaveEntitlement_.reason))));
+
 		if (search != null) {
 			predicates.add(
 					criteriaBuilder.or(
