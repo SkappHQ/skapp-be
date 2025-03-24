@@ -179,19 +179,19 @@ public class Validations {
 
 	public static void validateWorkEmail(String email) {
 		if (email != null && !email.trim().matches(EMAIL_REGEX))
-			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION__WORK_EMAIL);
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_WORK_EMAIL);
 
 		if (email != null && email.length() > PeopleConstants.MAX_EMAIL_LENGTH)
-			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION__WORK_EMAIL_LENGTH,
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_WORK_EMAIL_LENGTH,
 					List.of(String.valueOf(PeopleConstants.MAX_EMAIL_LENGTH)));
 	}
 
 	public static void validatePersonalEmail(String email) {
 		if (email != null && !email.trim().matches(EMAIL_REGEX))
-			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION__PERSONAL_EMAIL);
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_PERSONAL_EMAIL);
 
 		if (email != null && email.length() > PeopleConstants.MAX_EMAIL_LENGTH)
-			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION__PERSONAL_EMAIL_LENGTH,
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_PERSONAL_EMAIL_LENGTH,
 					List.of(String.valueOf(PeopleConstants.MAX_EMAIL_LENGTH)));
 	}
 
@@ -224,10 +224,10 @@ public class Validations {
 
 	public static void validateMiddleName(String name) {
 		if (name != null && !name.trim().matches(NAME_REGEX))
-			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION__MIDDLE_NAME);
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_MIDDLE_NAME);
 
 		if (name != null && name.length() > PeopleConstants.MAX_NAME_LENGTH)
-			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION__MIDDLE_NAME_LENGTH,
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_MIDDLE_NAME_LENGTH,
 					List.of(String.valueOf(PeopleConstants.MAX_NAME_LENGTH)));
 	}
 

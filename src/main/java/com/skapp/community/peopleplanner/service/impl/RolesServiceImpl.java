@@ -336,20 +336,20 @@ public class RolesServiceImpl implements RolesService {
 			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_SHOULD_ASSIGN_PROPER_PERMISSIONS);
 		}
 
-		if (userRoles != null && hasOnlyPeopleAdminPermissions(currentUser)
-				&& validateRestrictedRoleAssignment(userRoles.getAttendanceRole(), ModuleType.ATTENDANCE)) {
+		if (userRoles != null && hasOnlyPeopleAdminPermissions(currentUser) && Boolean.TRUE
+			.equals(validateRestrictedRoleAssignment(userRoles.getAttendanceRole(), ModuleType.ATTENDANCE))) {
 			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_ATTENDANCE_RESTRICTED_ROLE_ACCESS,
 					new String[] { userRoles.getAttendanceRole().name() });
 		}
 
-		if (userRoles != null && hasOnlyPeopleAdminPermissions(currentUser)
-				&& validateRestrictedRoleAssignment(userRoles.getPeopleRole(), ModuleType.PEOPLE)) {
+		if (userRoles != null && hasOnlyPeopleAdminPermissions(currentUser) && Boolean.TRUE
+			.equals(validateRestrictedRoleAssignment(userRoles.getPeopleRole(), ModuleType.PEOPLE))) {
 			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_PEOPLE_RESTRICTED_ROLE_ACCESS,
 					new String[] { userRoles.getPeopleRole().name() });
 		}
 
 		if (userRoles != null && hasOnlyPeopleAdminPermissions(currentUser)
-				&& validateRestrictedRoleAssignment(userRoles.getLeaveRole(), ModuleType.LEAVE)) {
+				&& Boolean.TRUE.equals(validateRestrictedRoleAssignment(userRoles.getLeaveRole(), ModuleType.LEAVE))) {
 			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_LEAVE_RESTRICTED_ROLE_ACCESS,
 					new String[] { userRoles.getLeaveRole().name() });
 		}

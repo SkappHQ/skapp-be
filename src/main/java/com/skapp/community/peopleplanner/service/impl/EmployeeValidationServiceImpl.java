@@ -138,13 +138,13 @@ public class EmployeeValidationServiceImpl implements EmployeeValidationService 
 					if (employmentDetailsDto.getEmploymentDetails().getJoinedDate() != null
 							&& employmentDetailsDto.getEmploymentDetails().getJoinedDate().isAfter(LocalDate.now())) {
 						throw new ValidationException(
-								PeopleMessageConstant.PEOPLE_ERROR__VALIDATION_EMPLOYMENT_JOINED_DATE_FUTURE_DATE);
+								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_EMPLOYMENT_JOINED_DATE_FUTURE_DATE);
 					}
 
 					if (employmentDetailsDto.getEmploymentDetails().getJoinedDate() != null
 							&& employmentDetailsDto.getEmploymentDetails().getJoinedDate().isAfter(LocalDate.now())) {
 						throw new ValidationException(
-								PeopleMessageConstant.PEOPLE_ERROR__VALIDATION_EMPLOYMENT_JOINED_DATE_FUTURE_DATE);
+								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_EMPLOYMENT_JOINED_DATE_FUTURE_DATE);
 					}
 
 					LocalDate joinedDate = employmentDetailsDto.getEmploymentDetails().getJoinedDate();
