@@ -182,7 +182,16 @@ public enum PeopleMessageConstant implements MessageConstant {
 	PEOPLE_ERROR_VALIDATION_PRIMARY_SECONDARY_SUPERVISOR_SAME(
 			"api.error.people.validation.primary-secondary-supervisor-same"),
 	PEOPLE_ERROR_VALIDATION_SECONDARY_SUPERVISOR_EMPLOYEE_NOT_FOUND(
-			"api.error.people.validation.secondary-supervisor-employee-not-found"),;
+			"api.error.people.validation.secondary-supervisor-employee-not-found"),
+	PEOPLE_ERROR_PERSONAL_GENERAL_DETAILS_REQUIRED("api.error.people.personal-general-details-required"),
+	PEOPLE_ERROR_EMPLOYMENT_DETAILS_REQUIRED("api.error.people.employment-details-required"),
+	PEOPLE_ERROR_CANNOT_CHANGE_OWN_PERMISSIONS("api.error.people.cannot-change-own-permissions"),
+	PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_JOB_FAMILY_NOT_EXIST(
+			"api.error.people.validation-career-progression-job-family-not-exist"),
+	PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_JOB_TITLE_NOT_EXIST(
+			"api.error.people.validation-career-progression-job-title-not-exist"),
+	PEOPLE_ERROR_VALIDATION_CANNOT_CHANGE_ACTIVE_USER_EMAIL(
+			"api.error.people.validation-cannot-change-active-user-email"),;
 
 	private final String messageKey;
 

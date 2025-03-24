@@ -120,7 +120,7 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_INVALID_AUTHORIZATION_HEADER("api.error.common.invalid-authorization-header"),
 	COMMON_ERROR_SAME_PASSWORD("api.error.common.same-password"),
 	COMMON_ERROR_SYSTEM_VERSION_MISMATCH("api.error.common.system-version-mismatch"),
-	COMMON_ERROR_USER_VERSION_MISMATCH("api.error.common.user-version-mismatch");
+	COMMON_ERROR_USER_VERSION_MISMATCH("api.error.common.user-version-mismatch"),;
 
 	private final String messageKey;
 

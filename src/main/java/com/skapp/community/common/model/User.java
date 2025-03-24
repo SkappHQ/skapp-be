@@ -14,7 +14,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,7 +24,6 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "\"user\"")
@@ -49,11 +47,9 @@ public class User {
 	@Column(name = "login_method", columnDefinition = "varchar(255)")
 	private LoginMethod loginMethod;
 
-	@Builder.Default
 	@Column(name = "is_active", nullable = false)
 	private Boolean isActive = true;
 
-	@Builder.Default
 	@Column(name = "is_password_changed")
 	private Boolean isPasswordChangedForTheFirstTime = false;
 

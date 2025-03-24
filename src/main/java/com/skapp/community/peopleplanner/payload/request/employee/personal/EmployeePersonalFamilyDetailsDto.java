@@ -11,6 +11,8 @@ import java.time.LocalDate;
 @Setter
 public class EmployeePersonalFamilyDetailsDto {
 
+	private Long familyId;
+
 	private String firstName;
 
 	private String lastName;

@@ -10,6 +10,8 @@ import java.time.LocalDate;
 @Setter
 public class EmployeeEmploymentCareerProgressionDetailsDto {
 
+	private Long progressionId;
+
 	private EmploymentType employmentType;
 
 	private Long jobFamilyId;

@@ -35,6 +35,7 @@ import com.skapp.community.peopleplanner.payload.request.JobFamilyDto;
 import com.skapp.community.peopleplanner.payload.request.JobTitleDto;
 import com.skapp.community.peopleplanner.payload.request.ModuleRoleRestrictionRequestDto;
 import com.skapp.community.peopleplanner.payload.request.TeamRequestDto;
+import com.skapp.community.peopleplanner.payload.response.CreateEmployeeResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeAllDataExportResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeDataExportResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeDetailedResponseDto;
@@ -204,5 +205,7 @@ public interface PeopleMapper {
 	List<TeamBasicDetailsResponseDto> teamListToTeamBasicDetailsResponseDtoList(List<Team> teams);
 
 	TeamBasicDetailsResponseDto teamToTeamBasicDetailsResponseDto(Team team);
+
+	CreateEmployeeResponseDto employeeToCreateEmployeeResponseDto(Employee employee);
 
 }

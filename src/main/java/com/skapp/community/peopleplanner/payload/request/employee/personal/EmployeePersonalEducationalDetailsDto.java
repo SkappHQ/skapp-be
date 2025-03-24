@@ -9,6 +9,8 @@ import java.time.LocalDate;
 @Setter
 public class EmployeePersonalEducationalDetailsDto {
 
+	private Long educationId;
+
 	private String institutionName;
 
 	private String degree;

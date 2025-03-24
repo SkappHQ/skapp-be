@@ -9,6 +9,8 @@ import java.time.LocalDate;
 @Setter
 public class EmployeeEmploymentVisaDetailsDto {
 
+	private Long visaId;
+
 	private String visaType;
 
 	private String issuingCountry;
