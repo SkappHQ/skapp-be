@@ -41,7 +41,7 @@ public interface LeaveEntitlementRepository {
 	List<Long> findAllEmployeeIdsCreatedWithValidDates(LocalDate validFrom, LocalDate validTo, Sort creationDate);
 
 	List<LeaveEntitlement> findLeaveEntitlementByValidDate(LocalDate validFrom, LocalDate validTo, Sort sort,
-			List<Long> employeeIds);
+			List<Long> employeeIds, String keyword);
 
 	Float findAllEmployeesAnnualEntitlementDaysByDateRangeQuery(Long typeId, LocalDate firstDateOfYear,
 			LocalDate lastDateOfYear);

@@ -790,14 +790,14 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 			}
 
 			List<LeaveEntitlement> list = leaveEntitlementDao.findLeaveEntitlementByValidDate(validFrom, validTo,
-					pageable.getSort(), employeeIds);
+					pageable.getSort(), employeeIds, customLeaveEntitlementsFilterDto.getKeyword());
 
 			if (!list.isEmpty()) {
 				entitlementDetails = getEmployeesWithEntitlements(list);
 			}
 
 			if (Boolean.FALSE.equals(customLeaveEntitlementsFilterDto.getIsExport())) {
-				Long totalItems = leaveEntitlementDao.findEmployeeIdsCountCreatedWithValidDates(validFrom, validTo);
+				Long totalItems = (long) list.size();
 				pageDto.setTotalItems(totalItems);
 				pageDto.setCurrentPage(customLeaveEntitlementsFilterDto.getPage());
 				pageDto.setTotalPages(customLeaveEntitlementsFilterDto.getSize() == 0 ? 1
