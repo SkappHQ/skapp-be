@@ -15,7 +15,7 @@ public class DataResetRepositoryImpl implements DataResetRepository {
 
 	private final EntityManager entityManager;
 
-	@Value("${spring.datasource.url}")
+	@Value("${spring.datasource.master.write.url}")
 	private String dataSourceUrl;
 
 	@Override
