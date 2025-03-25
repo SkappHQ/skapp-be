@@ -25,8 +25,8 @@ public class CommonConstants {
 
 	public static final Integer DEFAULT_TIME_CONFIG_VALUE_START_MINUTE = 30;
 
-	public static final String EMAIL_TITLE = "title";
+	public static final String NOTIFICATION_TITLE = "title";
 
-	public static final String EMAIL_MESSAGE = "message";
+	public static final String NOTIFICATION_MESSAGE = "message";
 
 }

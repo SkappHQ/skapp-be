@@ -72,8 +72,8 @@ public class NotificationServiceImpl implements NotificationService {
 
 			Map<String, String> notificationContent = getNotificationContent(emailBodyTemplates, dynamicFields,
 					notificationCategory);
-			String title = notificationContent.get(CommonConstants.EMAIL_TITLE);
-			String body = notificationContent.get(CommonConstants.EMAIL_MESSAGE);
+			String title = notificationContent.get(CommonConstants.NOTIFICATION_TITLE);
+			String body = notificationContent.get(CommonConstants.NOTIFICATION_MESSAGE);
 
 			notification.setBody(body);
 			notification.setIsViewed(false);
@@ -109,10 +109,10 @@ public class NotificationServiceImpl implements NotificationService {
 			}));
 
 		Map<String, String> result = new HashMap<>();
-		result.put(CommonConstants.EMAIL_TITLE,
-				replacePlaceholders(contentMap.get(CommonConstants.EMAIL_TITLE), translatedPlaceholders));
-		result.put(CommonConstants.EMAIL_MESSAGE,
-				replacePlaceholders(contentMap.get(CommonConstants.EMAIL_MESSAGE), translatedPlaceholders));
+		result.put(CommonConstants.NOTIFICATION_TITLE,
+				replacePlaceholders(contentMap.get(CommonConstants.NOTIFICATION_TITLE), translatedPlaceholders));
+		result.put(CommonConstants.NOTIFICATION_MESSAGE,
+				replacePlaceholders(contentMap.get(CommonConstants.NOTIFICATION_MESSAGE), translatedPlaceholders));
 
 		return result;
 	}
