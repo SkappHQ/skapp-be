@@ -90,6 +90,11 @@ public class EmailServiceImpl implements EmailService {
 		}
 	}
 
+	/**
+	 * The other implementation is available only for Pro tenants.
+	 * @param emailTemplate Email template.
+	 * @param placeholders Placeholders to replace.
+	 */
 	protected void setTemplatePlaceholderData(EmailTemplates emailTemplate, Map<String, String> placeholders,
 			EmailTemplateMetadata templateDetails) {
 		placeholders.put("subject", templateDetails.getSubject());
