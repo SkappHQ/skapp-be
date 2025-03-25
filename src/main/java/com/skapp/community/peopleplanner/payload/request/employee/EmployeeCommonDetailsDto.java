@@ -14,4 +14,6 @@ public class EmployeeCommonDetailsDto {
 
 	private AccountStatus accountStatus;
 
+	private String jobTitle;
+
 }

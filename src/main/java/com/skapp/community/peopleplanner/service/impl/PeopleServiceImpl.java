@@ -1,6 +1,7 @@
 package com.skapp.community.peopleplanner.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -53,7 +54,6 @@ import com.skapp.community.peopleplanner.payload.CurrentEmployeeDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeBulkDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDataValidationDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDetailsDto;
-import com.skapp.community.peopleplanner.payload.request.EmployeeEmergencyDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeProgressionsDto;
@@ -71,6 +71,10 @@ import com.skapp.community.peopleplanner.payload.request.employee.EmployeeSystem
 import com.skapp.community.peopleplanner.payload.request.employee.emergency.EmployeeEmergencyContactDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentBasicDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentBasicDetailsManagerDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentCareerProgressionDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentIdentificationAndDiversityDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentPreviousEmploymentDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentVisaDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeeExtraInfoDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalContactDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalEducationalDetailsDto;
@@ -837,7 +841,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	@Override
-	@Transactional
+	@Transactional(readOnly = true)
 	public ResponseEntityDto getEmployeeById(Long employeeId) {
 		Optional<Employee> employeeOptional = employeeDao.findById(employeeId);
 		if (employeeOptional.isEmpty()) {
@@ -890,21 +894,6 @@ public class PeopleServiceImpl implements PeopleService {
 	private List<EmployeePersonalEducationalDetailsDto> mapEmployeeEducationToEducationalDtos(
 			List<EmployeeEducation> employeeEducations) {
 		return employeeEducations.stream().map(this::mapPersonalEducationalDetails).collect(Collectors.toList());
-	}
-
-	private List<EmployeeEmergencyDto> employeeEmergencyToEmployeeEmergencyDto(
-			List<EmployeeEmergency> employeeEmergencies) {
-		return employeeEmergencies.stream().map(this::mapToEmployeeEmergencyDto).collect(Collectors.toList());
-	}
-
-	private EmployeeEmergencyDto mapToEmployeeEmergencyDto(EmployeeEmergency emergency) {
-		EmployeeEmergencyDto dto = new EmployeeEmergencyDto();
-		dto.setEmergencyId(emergency.getEmergencyId());
-		dto.setName(emergency.getName());
-		dto.setEmergencyRelationship(emergency.getEmergencyRelationship());
-		dto.setContactNo(emergency.getContactNo());
-		dto.setIsPrimary(emergency.getIsPrimary());
-		return dto;
 	}
 
 	private EmployeePersonalGeneralDetailsDto mapPersonalGeneralDetails(Employee employee) {
@@ -1054,6 +1043,81 @@ public class PeopleServiceImpl implements PeopleService {
 
 		dto.setEmploymentDetails(mapEmploymentBasicDetails(employee));
 
+		if (employee.getEmployeeProgressions() != null) {
+			dto.setCareerProgression(mapCareerProgressionDetails(employee.getEmployeeProgressions()));
+		}
+
+		dto.setIdentificationAndDiversityDetails(mapIdentificationAndDiversityDetails(employee));
+		dto.setPreviousEmployment(mapPreviousEmploymentDetails(employee));
+
+		if (employee.getEmployeeVisas() != null) {
+			dto.setVisaDetails(mapVisaDetails(employee.getEmployeeVisas()));
+		}
+
+		return dto;
+	}
+
+	private List<EmployeeEmploymentCareerProgressionDetailsDto> mapCareerProgressionDetails(
+			List<EmployeeProgression> progressions) {
+		return progressions.stream().map(this::mapCareerProgressionDetail).collect(Collectors.toList());
+	}
+
+	private EmployeeEmploymentCareerProgressionDetailsDto mapCareerProgressionDetail(EmployeeProgression progression) {
+		EmployeeEmploymentCareerProgressionDetailsDto dto = new EmployeeEmploymentCareerProgressionDetailsDto();
+
+		dto.setProgressionId(progression.getProgressionId());
+		dto.setEmploymentType(progression.getEmploymentType());
+		dto.setJobFamilyId(progression.getJobFamilyId() != null ? progression.getJobFamilyId() : null);
+		dto.setJobTitleId(progression.getJobTitleId() != null ? progression.getJobTitleId() : null);
+		dto.setStartDate(progression.getStartDate());
+		dto.setEndDate(progression.getEndDate());
+		dto.setIsCurrentEmployment(progression.getIsCurrent());
+
+		return dto;
+	}
+
+	private EmployeeEmploymentIdentificationAndDiversityDetailsDto mapIdentificationAndDiversityDetails(
+			Employee employee) {
+		EmployeeEmploymentIdentificationAndDiversityDetailsDto dto = new EmployeeEmploymentIdentificationAndDiversityDetailsDto();
+
+		if (employee.getPersonalInfo() != null) {
+			dto.setSsn(employee.getPersonalInfo().getSsn());
+			dto.setEthnicity(employee.getPersonalInfo().getEthnicity());
+		}
+
+		dto.setEeoJobCategory(employee.getEeo());
+
+		return dto;
+	}
+
+	private List<EmployeeEmploymentPreviousEmploymentDetailsDto> mapPreviousEmploymentDetails(Employee employee) {
+		if (employee.getPersonalInfo() != null && employee.getPersonalInfo().getPreviousEmploymentDetails() != null) {
+			try {
+				return mapper.treeToValue(employee.getPersonalInfo().getPreviousEmploymentDetails(),
+						new TypeReference<List<EmployeeEmploymentPreviousEmploymentDetailsDto>>() {
+						});
+			}
+			catch (JsonProcessingException e) {
+				log.error("Error converting previous employment details JSON to DTO", e);
+			}
+		}
+
+		return null;
+	}
+
+	private List<EmployeeEmploymentVisaDetailsDto> mapVisaDetails(List<EmployeeVisa> employeeVisas) {
+		return employeeVisas.stream().map(this::mapVisaDetail).collect(Collectors.toList());
+	}
+
+	private EmployeeEmploymentVisaDetailsDto mapVisaDetail(EmployeeVisa visa) {
+		EmployeeEmploymentVisaDetailsDto dto = new EmployeeEmploymentVisaDetailsDto();
+
+		dto.setVisaId(visa.getVisaId());
+		dto.setVisaType(visa.getVisaType());
+		dto.setIssuingCountry(visa.getIssuingCountry());
+		dto.setIssuedDate(visa.getIssuedDate());
+		dto.setExpiryDate(visa.getExpirationDate());
+
 		return dto;
 	}
 
@@ -1142,6 +1206,8 @@ public class PeopleServiceImpl implements PeopleService {
 
 		dto.setAccountStatus(employee.getAccountStatus());
 		dto.setAuthPic(employee.getAuthPic());
+		dto.setEmployeeId(employee.getEmployeeId());
+		dto.setJobTitle(employee.getJobTitle().getName());
 
 		return dto;
 	}
