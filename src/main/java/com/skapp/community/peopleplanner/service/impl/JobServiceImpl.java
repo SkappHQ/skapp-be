@@ -57,7 +57,7 @@ public class JobServiceImpl implements JobService {
 	private final MessageUtil messageUtil;
 
 	@Override
-	@Transactional
+	@Transactional(readOnly = true)
 	public ResponseEntityDto getAllJobFamilies() {
 		log.info("getAllJobFamilies: execution started");
 
