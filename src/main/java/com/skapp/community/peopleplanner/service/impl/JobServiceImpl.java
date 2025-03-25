@@ -69,7 +69,7 @@ public class JobServiceImpl implements JobService {
 	private final EmployeeTimelineService employeeTimelineService;
 
 	@Override
-	@Transactional
+	@Transactional(readOnly = true)
 	public ResponseEntityDto getAllJobFamilies() {
 		log.info("getAllJobFamilies: execution started");
 
