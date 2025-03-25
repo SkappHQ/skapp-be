@@ -24,6 +24,7 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_FILE_URL("api.error.common.file-url"),
 	COMMON_ERROR_USER_ACCOUNT_ACTIVATED("api.error.common.user-account-already-activated"),
 	COMMON_ERROR_USER_ACCOUNT_DEACTIVATED("api.error.common.user-account-deactivated"),
+	COMMON_ERROR_CANNOT_TERMINATE_OR_DELETE_YOUR_SELF("api.error.common.cannot-terminate-or-delete-yourself"),
 	COMMON_ERROR_EXCEED_MAX_ORGANIZATION_COUNT("api.error.common.organization-create"),
 	COMMON_ERROR_USER_ALREADY_EXISTS("api.error.common.user-already-exists"),
 	COMMON_ERROR_USER_NOT_FOUND("api.error.common.user-not-found"),
