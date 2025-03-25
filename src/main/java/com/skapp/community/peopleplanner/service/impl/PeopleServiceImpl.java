@@ -62,6 +62,8 @@ import com.skapp.community.peopleplanner.payload.request.NotificationSettingsPat
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.request.ProbationPeriodDto;
 import com.skapp.community.peopleplanner.payload.request.employee.CreateEmployeeRequestDto;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeeCommonDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeeEmergencyDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.EmployeeEmploymentDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.EmployeePersonalDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.EmployeeSystemPermissionsDto;
@@ -69,9 +71,11 @@ import com.skapp.community.peopleplanner.payload.request.employee.emergency.Empl
 import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentBasicDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentBasicDetailsManagerDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeeExtraInfoDto;
+import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalContactDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalEducationalDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalFamilyDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalGeneralDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalHealthAndOtherDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalSocialMediaDetailsDto;
 import com.skapp.community.peopleplanner.payload.response.AnalyticsSearchResponseDto;
 import com.skapp.community.peopleplanner.payload.response.CreateEmployeeResponseDto;
@@ -89,11 +93,7 @@ import com.skapp.community.peopleplanner.payload.response.EmployeeManagerRespons
 import com.skapp.community.peopleplanner.payload.response.EmployeePeriodResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeProgressionResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeTeamDto;
-import com.skapp.community.peopleplanner.payload.response.ManagerEmployeeDto;
-import com.skapp.community.peopleplanner.payload.response.ManagingEmployeesResponseDto;
 import com.skapp.community.peopleplanner.payload.response.PrimarySecondaryOrTeamSupervisorResponseDto;
-import com.skapp.community.peopleplanner.payload.response.SummarizedEmployeeDtoForEmployees;
-import com.skapp.community.peopleplanner.payload.response.SummarizedManagerEmployeeDto;
 import com.skapp.community.peopleplanner.payload.response.TeamDetailResponseDto;
 import com.skapp.community.peopleplanner.payload.response.TeamEmployeeResponseDto;
 import com.skapp.community.peopleplanner.repository.EmployeeDao;
@@ -845,89 +845,148 @@ public class PeopleServiceImpl implements PeopleService {
 		User currentUser = userService.getCurrentUser();
 		log.info("getEmployeeById: execution started by user: {}", currentUser.getUserId());
 
-		Boolean isPeopleOrSuperAdmin = currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin()
-				|| currentUser.getEmployee().getEmployeeRole().getPeopleRole().equals(Role.PEOPLE_ADMIN)
-				|| currentUser.getEmployee().getEmployeeRole().getPeopleRole().equals(Role.PEOPLE_MANAGER);
-
-		Boolean isAttendanceAdminOrManager = (!currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin()
-				&& !currentUser.getEmployee().getEmployeeRole().getPeopleRole().equals(Role.PEOPLE_ADMIN))
-				&& (currentUser.getEmployee().getEmployeeRole().getAttendanceRole().equals(Role.ATTENDANCE_MANAGER)
-						|| currentUser.getEmployee()
-							.getEmployeeRole()
-							.getAttendanceRole()
-							.equals(Role.ATTENDANCE_ADMIN));
-
-		Boolean isLeaveAdminOrManager = (!currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin()
-				&& !currentUser.getEmployee().getEmployeeRole().getPeopleRole().equals(Role.PEOPLE_ADMIN))
-				&& (currentUser.getEmployee().getEmployeeRole().getAttendanceRole().equals(Role.LEAVE_MANAGER)
-						|| currentUser.getEmployee().getEmployeeRole().getAttendanceRole().equals(Role.LEAVE_ADMIN));
-
 		Optional<Employee> employeeOptional = employeeDao.findById(employeeId);
 		if (employeeOptional.isEmpty()) {
 			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
 		}
 		Employee employee = employeeOptional.get();
 
-		if (Boolean.TRUE.equals(isPeopleOrSuperAdmin)) {
-			ManagerEmployeeDto managerEmployeeDto = peopleMapper.employeeToManagerEmployeeDto(employee);
-			Optional<EmployeePeriod> period = employeePeriodDao
-				.findEmployeePeriodByEmployee_EmployeeId(employee.getEmployeeId());
+		CreateEmployeeRequestDto createEmployeeRequestDto = new CreateEmployeeRequestDto(); // main
 
-			List<EmployeeProgressionResponseDto> progressionResponseDtos = employee.getEmployeeProgressions()
-				.stream()
-				.map(this::mapToEmployeeProgressionResponseDto)
-				.toList();
+		EmployeePersonalDetailsDto employeePersonalDetailsDto = new EmployeePersonalDetailsDto(); // personal
 
-			managerEmployeeDto.setEmployeeProgressions(progressionResponseDtos);
+		EmployeePersonalGeneralDetailsDto employeePersonalGeneralDetailsDto = getEmployeePersonalGeneralDetailsDto(
+				employee);
+		EmployeePersonalContactDetailsDto employeePersonalContactDetailsDto = getEmployeePersonalContactDetailsDto(
+				employee);
 
-			List<ManagingEmployeesResponseDto> managers = new ArrayList<>();
+		EmployeePersonalSocialMediaDetailsDto employeePersonalSocialMediaDetailsDto = new EmployeePersonalSocialMediaDetailsDto();
+		// employeePersonalSocialMediaDetailsDto.setLinkedIn(employee.getPersonalInfo().getSocialMediaDetails().get());
+		// employeePersonalSocialMediaDetailsDto.setFacebook(employee.getPersonalInfo().getSocialMediaDetails());
+		// employeePersonalSocialMediaDetailsDto.setX(employee.getPersonalInfo().getSocialMediaDetails());
+		// employeePersonalSocialMediaDetailsDto.setInstagram(employee.getPersonalInfo().getSocialMediaDetails());
 
-			employee.getEmployeeManagers().forEach(employeeManager -> {
-				ManagingEmployeesResponseDto emp = new ManagingEmployeesResponseDto();
-				emp.setEmployee(peopleMapper.employeeToManagerCoreDetailsDto(employeeManager.getEmployee()));
-				emp.setManagerType(employeeManager.getManagerType());
-				emp.setIsPrimaryManager(employeeManager.getIsPrimaryManager());
+		EmployeePersonalHealthAndOtherDetailsDto employeePersonalHealthAndOtherDetailsDto = new EmployeePersonalHealthAndOtherDetailsDto();
+		employeePersonalHealthAndOtherDetailsDto.setBloodGroup(employee.getPersonalInfo().getBloodGroup());
+		// employeePersonalHealthAndOtherDetailsDto.setAllergies(employee.getPersonalInfo().geta);
+		// employeePersonalHealthAndOtherDetailsDto.setDietaryRestrictions(employee.getPersonalInfo().getR);
+		// employeePersonalHealthAndOtherDetailsDto.setTShirtSize(employee.getPersonalInfo().getT);
 
-				managers.add(emp);
-			});
+		// List<EmployeePersonalFamilyDetailsDto>
+		//
+		// List<EmployeePersonalEducationalDetailsDto>
 
-			managerEmployeeDto.setManagers(managers);
+		employeePersonalDetailsDto.setGeneral(employeePersonalGeneralDetailsDto);
+		employeePersonalDetailsDto.setContact(employeePersonalContactDetailsDto);
+		employeePersonalDetailsDto.setSocialMedia(employeePersonalSocialMediaDetailsDto);
+		employeePersonalDetailsDto.setHealthAndOther(employeePersonalHealthAndOtherDetailsDto);
 
-			List<TeamEmployeeResponseDto> teams = new ArrayList<>();
+		EmployeeEmergencyDetailsDto employeeEmergencyDetailsDto = new EmployeeEmergencyDetailsDto(); // emergency
 
-			setEmployeeTeams(teams, employee);
-			managerEmployeeDto.setTeams(teams);
-			managerEmployeeDto
-				.setUserRoles(peopleMapper.employeeRoleToEmployeeRoleResponseDto(employee.getEmployeeRole()));
-			if (period.isPresent()) {
-				EmployeePeriodResponseDto periodResponseDto = peopleMapper
-					.employeePeriodToEmployeePeriodResponseDto(period.get());
-				managerEmployeeDto.setPeriodResponseDto(periodResponseDto);
-			}
+		EmployeeEmergencyContactDetailsDto employeePrimaryEmergencyContactDetailsDto = getPrimaryEmergencyContactDetailsDto(
+				employee);
+		EmployeeEmergencyContactDetailsDto employeeSecondaryEmergencyContactDetailsDto = getSecondaryEmergencyContactDetailsDto(
+				employee);
 
-			log.info("getEmployeeById: Successfully finished returning employee data");
-			return new ResponseEntityDto(false, managerEmployeeDto);
-		}
-		else if (Boolean.TRUE.equals(isAttendanceAdminOrManager) || Boolean.TRUE.equals(isLeaveAdminOrManager)) {
-			SummarizedManagerEmployeeDto summarizedManagerEmployeeDto = peopleMapper
-				.employeeToSummarizedManagerEmployeeDto(employee);
-			List<TeamEmployeeResponseDto> teams = new ArrayList<>();
-			setEmployeeTeams(teams, employee);
-			summarizedManagerEmployeeDto.setTeams(teams);
+		employeeEmergencyDetailsDto.setPrimaryEmergencyContact(employeePrimaryEmergencyContactDetailsDto);
+		employeeEmergencyDetailsDto.setSecondaryEmergencyContact(employeeSecondaryEmergencyContactDetailsDto);
 
-			log.info("getEmployeeById: Successfully finished returning employee data for managers");
-			return new ResponseEntityDto(false, summarizedManagerEmployeeDto);
-		}
-		else {
-			SummarizedEmployeeDtoForEmployees summarizedEmployeeDtoForEmployees = peopleMapper
-				.employeeToSummarizedEmployeeDtoForEmployees(employee);
-			List<TeamEmployeeResponseDto> teams = new ArrayList<>();
-			setEmployeeTeams(teams, employee);
-			summarizedEmployeeDtoForEmployees.setTeams(teams);
+		EmployeeEmploymentDetailsDto employeeEmploymentDetailsDto = new EmployeeEmploymentDetailsDto(); // employment
 
-			log.info("getEmployeeById: Successfully finished returning employee data for employee");
-			return new ResponseEntityDto(false, summarizedEmployeeDtoForEmployees);
-		}
+		EmployeeEmploymentBasicDetailsDto employeeEmploymentBasicDetailsDto = new EmployeeEmploymentBasicDetailsDto();
+		// employeeEmploymentBasicDetailsDto.setEmployeeNumber(employee.getEm);
+		// employeeEmploymentBasicDetailsDto.setEmail(employee);
+		// employeeEmploymentBasicDetailsDto.setEmploymentAllocation();
+		// employeeEmploymentBasicDetailsDto.setTeamIds(employee.getEmployeeTeams());
+
+		EmployeeEmploymentBasicDetailsManagerDetailsDto primarySupervisor = new EmployeeEmploymentBasicDetailsManagerDetailsDto();
+		// primarySupervisor.setEmployeeId(employee.getEmployeeManagers().);
+		// primarySupervisor.setFirstName(employee.getEmployeeManagers().);
+		// primarySupervisor.setLastName(employee.getEmployeeManagers().);
+		// primarySupervisor.setAuthPic(employee.getEmployeeManagers().);
+
+		EmployeeEmploymentBasicDetailsManagerDetailsDto secondarySupervisor = new EmployeeEmploymentBasicDetailsManagerDetailsDto();
+		// primarySupervisor.setEmployeeId(employee.getEmployeeManagers().);
+		// primarySupervisor.setFirstName(employee.getEmployeeManagers().);
+		// primarySupervisor.setLastName(employee.getEmployeeManagers().);
+		// primarySupervisor.setAuthPic(employee.getEmployeeManagers().);
+
+		employeeEmploymentBasicDetailsDto.setPrimarySupervisor(primarySupervisor);
+		employeeEmploymentBasicDetailsDto.setSecondarySupervisor(secondarySupervisor);
+
+		employeeEmploymentBasicDetailsDto.setJoinedDate(employee.getJoinDate());
+		// employeeEmploymentBasicDetailsDto.setProbationStartDate(employee.getEmploymentAllocation().get);
+		// employeeEmploymentBasicDetailsDto.setProbationEndDate();
+		employeeEmploymentBasicDetailsDto.setWorkTimeZone(employee.getTimeZone());
+
+		employeeEmploymentDetailsDto.setEmploymentDetails(employeeEmploymentBasicDetailsDto);
+
+		EmployeeSystemPermissionsDto employeeSystemPermissionsDto = new EmployeeSystemPermissionsDto();
+		employeeSystemPermissionsDto.setIsSuperAdmin(employee.getEmployeeRole().getIsSuperAdmin());
+		employeeSystemPermissionsDto.setPeopleRole(employee.getEmployeeRole().getPeopleRole());
+		employeeSystemPermissionsDto.setLeaveRole(employee.getEmployeeRole().getLeaveRole());
+		employeeSystemPermissionsDto.setAttendanceRole(employee.getEmployeeRole().getAttendanceRole());
+		employeeSystemPermissionsDto.setEsignRole(employee.getEmployeeRole().getEsignRole());
+
+		EmployeeCommonDetailsDto employeeCommonDetailsDto = new EmployeeCommonDetailsDto();
+		employeeCommonDetailsDto.setAccountStatus(employee.getAccountStatus());
+		employeeCommonDetailsDto.setAuthPic(employee.getAuthPic());
+
+		createEmployeeRequestDto.setPersonal(employeePersonalDetailsDto);
+		createEmployeeRequestDto.setEmergency(employeeEmergencyDetailsDto);
+		createEmployeeRequestDto.setEmployment(employeeEmploymentDetailsDto);
+		createEmployeeRequestDto.setSystemPermissions(employeeSystemPermissionsDto);
+		createEmployeeRequestDto.setCommon(employeeCommonDetailsDto);
+
+		log.info("getEmployeeById: execution end");
+		return new ResponseEntityDto(false, createEmployeeRequestDto);
+
+	}
+
+	private static EmployeeEmergencyContactDetailsDto getSecondaryEmergencyContactDetailsDto(Employee employee) {
+		EmployeeEmergencyContactDetailsDto employeeSecondaryEmergencyContactDetailsDto = new EmployeeEmergencyContactDetailsDto();
+		// employeeSecondaryEmergencyContactDetailsDto.setName(employee.getEmployeeEmergencies().getLast().getName());
+		// employeeSecondaryEmergencyContactDetailsDto.setRelationship(employee.getEmployeeEmergencies().getLast().getEmergencyRelationship());
+		// employeeSecondaryEmergencyContactDetailsDto.setCountryCode(employee.getEmployeeEmergencies().getLast().);
+		// employeeSecondaryEmergencyContactDetailsDto.setContactNo(employee.getEmployeeEmergencies().getLast().getContactNo());
+		return employeeSecondaryEmergencyContactDetailsDto;
+	}
+
+	private static EmployeeEmergencyContactDetailsDto getPrimaryEmergencyContactDetailsDto(Employee employee) {
+		EmployeeEmergencyContactDetailsDto employeePrimaryEmergencyContactDetailsDto = new EmployeeEmergencyContactDetailsDto();
+		// employeePrimaryEmergencyContactDetailsDto.setName(employee.getEmployeeEmergencies().getFirst().getName());
+		// employeePrimaryEmergencyContactDetailsDto.setRelationship(employee.getEmployeeEmergencies().getFirst().getEmergencyRelationship());
+		// employeePrimaryEmergencyContactDetailsDto.setCountryCode(employee.getEmployeeEmergencies().getFirst().);
+		// employeePrimaryEmergencyContactDetailsDto.setContactNo(employee.getEmployeeEmergencies().getFirst().getContactNo());
+		return employeePrimaryEmergencyContactDetailsDto;
+	}
+
+	private static EmployeePersonalContactDetailsDto getEmployeePersonalContactDetailsDto(Employee employee) {
+		EmployeePersonalContactDetailsDto employeePersonalContactDetailsDto = new EmployeePersonalContactDetailsDto();
+		employeePersonalContactDetailsDto.setPersonalEmail(employee.getPersonalEmail());
+		// employeePersonalContactDetailsDto.setCountryCode(employee.getPersonalInfo().getco);
+		// employeePersonalContactDetailsDto.setContactNo(employee.getEmpl);
+		employeePersonalContactDetailsDto.setAddressLine1(employee.getAddressLine1());
+		employeePersonalContactDetailsDto.setAddressLine2(employee.getAddressLine2());
+		employeePersonalContactDetailsDto.setCity(employee.getPersonalInfo().getCity());
+		employeePersonalContactDetailsDto.setState(employee.getPersonalInfo().getState());
+		employeePersonalContactDetailsDto.setCountry(employee.getCountry());
+		employeePersonalContactDetailsDto.setPostalCode(employee.getPersonalInfo().getPostalCode());
+		return employeePersonalContactDetailsDto;
+	}
+
+	private static EmployeePersonalGeneralDetailsDto getEmployeePersonalGeneralDetailsDto(Employee employee) {
+		EmployeePersonalGeneralDetailsDto employeePersonalGeneralDetailsDto = new EmployeePersonalGeneralDetailsDto();
+		employeePersonalGeneralDetailsDto.setFirstName(employee.getFirstName());
+		employeePersonalGeneralDetailsDto.setMiddleName(employee.getMiddleName());
+		employeePersonalGeneralDetailsDto.setLastName(employee.getLastName());
+		employeePersonalGeneralDetailsDto.setGender(employee.getGender());
+		employeePersonalGeneralDetailsDto.setDateOfBirth(employee.getPersonalInfo().getBirthDate());
+		employeePersonalGeneralDetailsDto.setNationality(employee.getPersonalInfo().getNationality());
+		employeePersonalGeneralDetailsDto.setNin(employee.getPersonalInfo().getNin());
+		employeePersonalGeneralDetailsDto.setPassportNumber(employee.getPersonalInfo().getPassportNo());
+		employeePersonalGeneralDetailsDto.setMaritalStatus(employee.getPersonalInfo().getMaritalStatus());
+		return employeePersonalGeneralDetailsDto;
 	}
 
 	@Override
