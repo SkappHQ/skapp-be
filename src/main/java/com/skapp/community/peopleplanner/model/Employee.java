@@ -123,31 +123,31 @@ public class Employee extends Auditable<String> {
 	@PrimaryKeyJoinColumn
 	private EmployeePersonalInfo personalInfo;
 
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
 	private Set<EmployeeTeam> employeeTeams;
 
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
 	private List<EmployeeEducation> employeeEducations;
 
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
 	private List<EmployeeProgression> employeeProgressions;
 
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
 	private List<EmployeeVisa> employeeVisas;
 
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
 	private List<EmployeeFamily> employeeFamilies;
 
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
 	private List<EmployeeEmergency> employeeEmergencies;
 
-	@OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
 	private Set<EmployeeManager> employeeManagers;
 
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
 	private Set<EmployeePeriod> employeePeriods;
 
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
 	private List<Notification> notifications = new ArrayList<>();
 
 	@ManyToOne(fetch = FetchType.LAZY)
