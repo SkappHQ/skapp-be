@@ -579,6 +579,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 						List<LeaveEntitlement> leaveEntitlements = leaveEntitlementDao.findLeaveEntitlements(
 								leaveType.getTypeId(), true, leaveCycleEndDate, employeeToForward.getEmployeeId());
+
 						float carryForwardDaysMax;
 						double totalDaysAllocated = leaveEntitlements.stream()
 							.mapToDouble(LeaveEntitlement::getTotalDaysAllocated)
@@ -592,6 +593,13 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 						}
 						else {
 							carryForwardDaysMax = leaveType.getMaxCarryForwardDays();
+						}
+
+						if (!leaveEntitlements.isEmpty()) {
+							leaveEntitlements.removeIf(leaveEntitlement -> Objects.equals(leaveEntitlement.getReason(),
+									LeaveModuleConstant.DISCARD_LEAVE_REQUEST_REASON)
+									|| LeaveModuleConstant.CARRY_FORWARD_LEAVE_REQUEST_REASON
+										.equals(leaveEntitlement.getReason()));
 						}
 
 						if (!leaveEntitlements.isEmpty()) {
