@@ -903,18 +903,18 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 		Join<LeaveRequest, Employee> employeeJoin = leaveRequestRoot.join(LeaveRequest_.employee);
 		List<Predicate> predicates = new ArrayList<>();
 
-		if (isLeaveAdmin) {
-			Predicate leaveDatePredicate = criteriaBuilder.and(
-					criteriaBuilder.lessThanOrEqualTo(leaveRequestRoot.get(LeaveRequest_.startDate), current),
-					criteriaBuilder.greaterThanOrEqualTo(leaveRequestRoot.get(LeaveRequest_.endDate), current));
-			predicates.add(leaveDatePredicate);
+		if (teams != null && !teams.isEmpty() && teams.contains(-1L)) {
+			if (isLeaveAdmin) {
+				Predicate leaveDatePredicate = criteriaBuilder.and(
+						criteriaBuilder.lessThanOrEqualTo(leaveRequestRoot.get(LeaveRequest_.startDate), current),
+						criteriaBuilder.greaterThanOrEqualTo(leaveRequestRoot.get(LeaveRequest_.endDate), current));
+				predicates.add(leaveDatePredicate);
 
-			Predicate leaveStatusPredicate = leaveRequestRoot.get(LeaveRequest_.status)
-				.in(LeaveRequestStatus.APPROVED, LeaveRequestStatus.PENDING);
-			predicates.add(leaveStatusPredicate);
-		}
-		else {
-			if (teams != null && !teams.isEmpty() && teams.contains(-1L)) {
+				Predicate leaveStatusPredicate = leaveRequestRoot.get(LeaveRequest_.status)
+					.in(LeaveRequestStatus.APPROVED, LeaveRequestStatus.PENDING);
+				predicates.add(leaveStatusPredicate);
+			}
+			else {
 				Subquery<Long> managedEmployeesSubquery = criteriaQuery.subquery(Long.class);
 				Root<EmployeeManager> managerRoot = managedEmployeesSubquery.from(EmployeeManager.class);
 				managedEmployeesSubquery.select(managerRoot.get(EmployeeManager_.employee).get(Employee_.employeeId))
@@ -931,21 +931,22 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 				predicates.add(criteriaBuilder.or(employeeJoin.get(Employee_.employeeId).in(managedEmployeesSubquery),
 						employeeJoin.get(Employee_.employeeId).in(supervisedTeamsSubquery)));
 			}
-			else if (teams != null && !teams.isEmpty()) {
-				Join<Employee, EmployeeTeam> employeeTeamJoin = employeeJoin.join(Employee_.teams);
-				Predicate teamPredicate = employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teams);
-				predicates.add(teamPredicate);
-			}
 
-			Predicate leaveDatePredicate = criteriaBuilder.and(
-					criteriaBuilder.lessThanOrEqualTo(leaveRequestRoot.get(LeaveRequest_.startDate), current),
-					criteriaBuilder.greaterThanOrEqualTo(leaveRequestRoot.get(LeaveRequest_.endDate), current));
-			predicates.add(leaveDatePredicate);
-
-			Predicate leaveStatusPredicate = leaveRequestRoot.get(LeaveRequest_.status)
-				.in(LeaveRequestStatus.APPROVED, LeaveRequestStatus.PENDING);
-			predicates.add(leaveStatusPredicate);
 		}
+		else if (teams != null && !teams.isEmpty()) {
+			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeJoin.join(Employee_.teams);
+			Predicate teamPredicate = employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teams);
+			predicates.add(teamPredicate);
+		}
+
+		Predicate leaveDatePredicate = criteriaBuilder.and(
+				criteriaBuilder.lessThanOrEqualTo(leaveRequestRoot.get(LeaveRequest_.startDate), current),
+				criteriaBuilder.greaterThanOrEqualTo(leaveRequestRoot.get(LeaveRequest_.endDate), current));
+		predicates.add(leaveDatePredicate);
+
+		Predicate leaveStatusPredicate = leaveRequestRoot.get(LeaveRequest_.status)
+			.in(LeaveRequestStatus.APPROVED, LeaveRequestStatus.PENDING);
+		predicates.add(leaveStatusPredicate);
 
 		criteriaQuery.select(leaveRequestRoot).where(predicates.toArray(new Predicate[0]));
 		return entityManager.createQuery(criteriaQuery).getResultList();
