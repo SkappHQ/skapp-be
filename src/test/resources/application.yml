@@ -4,7 +4,11 @@ spring:
   profiles:
     active: test
   datasource:
-    url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1
+    master:
+      write:
+        url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1
+      read:
+        url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1
     driverClassName: org.h2.Driver
     username: sa
     password:
