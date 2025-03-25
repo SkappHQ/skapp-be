@@ -8,6 +8,8 @@ import lombok.Setter;
 @Setter
 public class EmployeeCommonDetailsDto {
 
+	private Long employeeId;
+
 	private String authPic;
 
 	private AccountStatus accountStatus;
