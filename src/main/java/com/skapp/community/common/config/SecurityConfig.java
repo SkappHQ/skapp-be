@@ -3,7 +3,6 @@ package com.skapp.community.common.config;
 import com.skapp.community.common.component.AuthEntryPoint;
 import com.skapp.community.common.component.ExceptionLoggingFilter;
 import com.skapp.community.common.component.JwtAuthFilter;
-import com.skapp.community.common.component.ResetDatabaseApiKeyFilter;
 import com.skapp.community.common.constant.AuthConstants;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -50,9 +49,6 @@ public class SecurityConfig {
 	@NonNull
 	private final ExceptionLoggingFilter exceptionLoggingFilter;
 
-	@NonNull
-	private final ResetDatabaseApiKeyFilter resetDatabaseApiKeyFilter;
-
 	@Bean
 	public AuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -90,7 +86,6 @@ public class SecurityConfig {
 
 		http.addFilterBefore(exceptionLoggingFilter, UsernamePasswordAuthenticationFilter.class);
 		http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-		http.addFilterBefore(resetDatabaseApiKeyFilter, UsernamePasswordAuthenticationFilter.class);
 		http.authenticationProvider(authenticationProvider());
 
 		return http.build();
