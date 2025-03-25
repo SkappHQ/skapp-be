@@ -848,6 +848,10 @@ public class PeopleServiceImpl implements PeopleService {
 	private void updateUserStatus(Long userId, AccountStatus status, boolean isDelete) {
 		log.info("updateUserStatus: execution started");
 
+		if (userService.getCurrentUser().getUserId().equals(userId)) {
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_CANNOT_TERMINATE_OR_DELETE_YOUR_SELF);
+		}
+
 		User user = userDao.findById(userId)
 			.orElseThrow(() -> new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND));
 
