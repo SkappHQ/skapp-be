@@ -58,7 +58,6 @@ import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeProgressionsDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
-import com.skapp.community.peopleplanner.payload.request.EmployeeUpdateDto;
 import com.skapp.community.peopleplanner.payload.request.NotificationSettingsPatchRequestDto;
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.request.ProbationPeriodDto;
@@ -229,7 +228,7 @@ public class PeopleServiceImpl implements PeopleService {
 		applicationEventPublisher.publishEvent(new UserCreatedEvent(this, user));
 		peopleEmailService.sendUserInvitationEmail(user);
 		addNewEmployeeTimeLineRecords(employee, requestDto);
-		updateSubscriptionQuantity(1L, true);
+		updateSubscriptionQuantity(1L, true, false);
 
 		return new ResponseEntityDto(false, processCreateEmployeeResponse(user));
 	}
@@ -255,7 +254,7 @@ public class PeopleServiceImpl implements PeopleService {
 		applicationEventPublisher.publishEvent(new UserCreatedEvent(this, user));
 		peopleEmailService.sendUserInvitationEmail(user);
 		addNewQuickUploadedEmployeeTimeLineRecords(employee, employeeQuickAddDto);
-		updateSubscriptionQuantity(1L, true);
+		updateSubscriptionQuantity(1L, true, false);
 
 		return new ResponseEntityDto(false, processCreateEmployeeResponse(user));
 	}
@@ -270,6 +269,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 		User user = optionalUser.get();
 		Employee employee = user.getEmployee();
+		CurrentEmployeeDto currentEmployeeDto = getEmployeeDeepCopy(employee);
 
 		employeeValidationService.validateCreateEmployeeRequestRequiredFields(requestDto, user);
 		employeeValidationService.validateCreateEmployeeRequestEmploymentDetails(requestDto.getEmployment(), user);
@@ -281,6 +281,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 		userDao.save(user);
 
+		addUpdatedEmployeeTimeLineRecords(currentEmployeeDto, requestDto);
 		return new ResponseEntityDto(false, requestDto);
 	}
 
@@ -1127,15 +1128,13 @@ public class PeopleServiceImpl implements PeopleService {
 		waitForTaskCompletion(tasks, executorService);
 
 		asyncEmailServiceImpl.sendEmailsInBackground(results);
-
-		generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), results);
 		List<EmployeeBulkDto> overflowedEmployeeBulkDtoList = getOverFlowedEmployeeBulkDtoList(employeeBulkDtoList,
 				validEmployeeBulkDtoList);
 
 		List<EmployeeBulkResponseDto> totalResults = getTotalResultList(results, overflowedEmployeeBulkDtoList);
 
 		int successCount = generateBulkErrorResponse(outValues, employeeBulkDtoList.size(), totalResults);
-		updateSubscriptionQuantity(successCount, true);
+		updateSubscriptionQuantity(successCount, true, true);
 
 		addNewBulkUploadedEmployeeTimeLineRecords(totalResults);
 
@@ -1647,7 +1646,7 @@ public class PeopleServiceImpl implements PeopleService {
 		return results;
 	}
 
-	protected void updateSubscriptionQuantity(long quantity, boolean isIncrement) {
+	protected void updateSubscriptionQuantity(long quantity, boolean isIncrement, boolean isFromEmployeeBulk) {
 		log.info("updateSubscriptionQuantity: PRO feature {}, {}", quantity, isIncrement);
 	}
 
@@ -1704,10 +1703,10 @@ public class PeopleServiceImpl implements PeopleService {
 	 * Adds a new timeline record when an existing employee's details are updated. This
 	 * feature is available only for Pro tenants.
 	 * @param currentEmployee The current state of the employee before the update.
-	 * @param employeeUpdateDto The updated details of the employee.
+	 * @param createEmployeeRequestDto The updated details of the employee.
 	 */
 	protected void addUpdatedEmployeeTimeLineRecords(CurrentEmployeeDto currentEmployee,
-			EmployeeUpdateDto employeeUpdateDto) {
+			CreateEmployeeRequestDto createEmployeeRequestDto) {
 		// This feature is available only for Pro tenants.
 	}
 
@@ -2287,7 +2286,7 @@ public class PeopleServiceImpl implements PeopleService {
 		userDao.save(user);
 		applicationEventPublisher.publishEvent(new UserDeactivatedEvent(this, user));
 
-		updateSubscriptionQuantity(1L, false);
+		updateSubscriptionQuantity(1L, false, false);
 		userVersionService.upgradeUserVersion(user.getUserId(), VersionType.MAJOR);
 	}
 
