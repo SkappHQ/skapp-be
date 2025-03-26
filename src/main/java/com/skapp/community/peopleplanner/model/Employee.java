@@ -158,4 +158,8 @@ public class Employee extends Auditable<String> {
 	@JoinColumn(name = "job_title_id")
 	private JobTitle jobTitle;
 
+	public String getFullName() {
+		return firstName + " " + lastName;
+	}
+
 }
