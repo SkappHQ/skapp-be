@@ -229,7 +229,7 @@ public class PeopleServiceImpl implements PeopleService {
 		applicationEventPublisher.publishEvent(new UserCreatedEvent(this, user));
 		peopleEmailService.sendUserInvitationEmail(user);
 		addNewEmployeeTimeLineRecords(employee, requestDto);
-		// updateSubscriptionQuantity(1L, true);
+		updateSubscriptionQuantity(1L, true);
 
 		return new ResponseEntityDto(false, processCreateEmployeeResponse(user));
 	}
@@ -255,7 +255,7 @@ public class PeopleServiceImpl implements PeopleService {
 		applicationEventPublisher.publishEvent(new UserCreatedEvent(this, user));
 		peopleEmailService.sendUserInvitationEmail(user);
 		addNewQuickUploadedEmployeeTimeLineRecords(employee, employeeQuickAddDto);
-		// updateSubscriptionQuantity(1L, true);
+		updateSubscriptionQuantity(1L, true);
 
 		return new ResponseEntityDto(false, processCreateEmployeeResponse(user));
 	}
@@ -281,7 +281,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 		userDao.save(user);
 
-		return new ResponseEntityDto(false, null);
+		return new ResponseEntityDto(false, requestDto);
 	}
 
 	private CreateEmployeeRequestDto createEmployeeRequest(EmployeeQuickAddDto dto) {
