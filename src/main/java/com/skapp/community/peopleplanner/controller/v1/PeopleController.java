@@ -62,7 +62,7 @@ public class PeopleController {
 
 	@Operation(summary = "Update an employee", description = "This endpoint updates an existing employee by their ID.")
 	@PatchMapping(value = "/employee/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_ADMIN')")
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_EMPLOYEE')")
 	public ResponseEntity<ResponseEntityDto> updateEmployee(
 			@PathVariable @Schema(description = "ID of the employee to update", example = "1") Long id,
 			@Valid @RequestBody CreateEmployeeRequestDto createEmployeeRequestDto) {

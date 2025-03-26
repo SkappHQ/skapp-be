@@ -381,6 +381,12 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	private User createUserEntity(User user, CreateEmployeeRequestDto requestDto) {
+		if (user.getUserId() != null) {
+			CommonModuleUtils.setIfExists(() -> createNotificationSettings(requestDto.getSystemPermissions(), user),
+					user::setSettings);
+			return user;
+		}
+
 		CommonModuleUtils.setIfExists(() -> requestDto.getEmployment().getEmploymentDetails().getEmail(),
 				user::setEmail);
 
