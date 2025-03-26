@@ -195,23 +195,25 @@ public class LeaveServiceImpl implements LeaveService {
 				leaveRequest.getStartDate(), leaveRequest.getEndDate(), leaveRequest.getLeaveState().toString(),
 				leaveRequest.getRequestDesc(), isSingleDay);
 
-		leaveEmailService.sendReceivedLeaveRequestManagerEmail(employeeManagers, user.getEmployee().getFirstName(),
-				user.getEmployee().getLastName(), leaveRequest.getLeaveState().toString(),
-				leaveRequest.getLeaveType().getName(), leaveRequest.getStartDate(), leaveRequest.getEndDate(),
-				isSingleDay);
-
 		leaveNotificationService.sendApplyLeaveRequestEmployeeNotification(user.getEmployee(),
 				leaveRequest.getLeaveRequestId(), leaveRequest.getLeaveState().toString(),
 				leaveRequest.getLeaveType().getName(), leaveRequest.getStartDate(), leaveRequest.getEndDate(),
 				isSingleDay);
 
-		leaveNotificationService.sendReceivedLeaveRequestManagerNotification(employeeManagers,
-				user.getEmployee().getFirstName(), user.getEmployee().getLastName(), leaveRequest.getLeaveRequestId(),
-				leaveRequest.getLeaveState().toString(), leaveRequest.getLeaveType().getName(),
-				leaveRequest.getStartDate(), leaveRequest.getEndDate(), isSingleDay);
-
 		if (Boolean.TRUE.equals(leaveType.getIsAutoApproval())) {
 			handleAutoApprovalLeave(leaveRequest);
+		}
+		else {
+			leaveEmailService.sendReceivedLeaveRequestManagerEmail(employeeManagers, user.getEmployee().getFirstName(),
+					user.getEmployee().getLastName(), leaveRequest.getLeaveState().toString(),
+					leaveRequest.getLeaveType().getName(), leaveRequest.getStartDate(), leaveRequest.getEndDate(),
+					isSingleDay);
+
+			leaveNotificationService.sendReceivedLeaveRequestManagerNotification(employeeManagers,
+					user.getEmployee().getFirstName(), user.getEmployee().getLastName(),
+					leaveRequest.getLeaveRequestId(), leaveRequest.getLeaveState().toString(),
+					leaveRequest.getLeaveType().getName(), leaveRequest.getStartDate(), leaveRequest.getEndDate(),
+					isSingleDay);
 		}
 
 		log.info("applyLeaveRequest: execution ended. Leave Request ID: {}", leaveRequest.getLeaveRequestId());
@@ -270,7 +272,9 @@ public class LeaveServiceImpl implements LeaveService {
 		leaveRequest.setReviewedDate(DateTimeUtils.getCurrentUtcDateTime());
 		LeaveRequest saveResponse = leaveRequestDao.save(leaveRequest);
 
-		sendLeaveUpdateEmailsAndNotifications(leaveRequest);
+		if (isInvokedByManager) {
+			sendLeaveUpdateEmailsAndNotifications(leaveRequest);
+		}
 
 		LeaveRequestByIdResponseDto responseDto = leaveMapper.leaveRequestToLeaveRequestByIdResponseDto(saveResponse);
 
@@ -1184,7 +1188,7 @@ public class LeaveServiceImpl implements LeaveService {
 
 		updateLeaveRequestByManager(leaveRequest.getLeaveRequestId(), managerUpdateDto, false);
 
-		if (leaveRequest.getStartDate() == leaveRequest.getEndDate()) {
+		if (leaveRequest.getStartDate().equals(leaveRequest.getEndDate())) {
 			leaveEmailService.sendAutoApprovedSingleDayLeaveRequestEmployeeEmail(leaveRequest);
 			leaveNotificationService.sendAutoApprovedSingleDayLeaveRequestEmployeeNotification(leaveRequest);
 
