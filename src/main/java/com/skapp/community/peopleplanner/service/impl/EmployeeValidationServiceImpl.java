@@ -245,6 +245,8 @@ public class EmployeeValidationServiceImpl implements EmployeeValidationService 
 
 		if ((user.getEmail() != null && user.getEmployee() != null
 				&& user.getEmployee().getAccountStatus() != AccountStatus.PENDING)
+				&& createEmployeeRequestDto.getEmployment() != null
+				&& createEmployeeRequestDto.getEmployment().getEmploymentDetails() != null
 				&& createEmployeeRequestDto.getEmployment().getEmploymentDetails().getEmail() != null) {
 			throw new ValidationException(
 					PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CANNOT_CHANGE_ACTIVE_USER_EMAIL);
