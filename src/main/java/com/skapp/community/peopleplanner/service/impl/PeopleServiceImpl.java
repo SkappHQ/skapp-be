@@ -71,10 +71,8 @@ import com.skapp.community.peopleplanner.payload.request.employee.EmployeeSystem
 import com.skapp.community.peopleplanner.payload.request.employee.emergency.EmployeeEmergencyContactDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentBasicDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentBasicDetailsManagerDetailsDto;
-import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentCareerProgressionDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentIdentificationAndDiversityDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentPreviousEmploymentDetailsDto;
-import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentVisaDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeeExtraInfoDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalContactDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalEducationalDetailsDto;
@@ -283,8 +281,6 @@ public class PeopleServiceImpl implements PeopleService {
 
 		userDao.save(user);
 
-		userVersionService.upgradeUserVersion(employee.getUser().getUserId(), VersionType.MINOR);
-
 		return new ResponseEntityDto(false, null);
 	}
 
@@ -377,7 +373,9 @@ public class PeopleServiceImpl implements PeopleService {
 				() -> rolesService.assignRolesToEmployee(requestDto.getSystemPermissions(), employee),
 				employee::setEmployeeRole);
 
-		employee.setAccountStatus(AccountStatus.PENDING);
+		if (employee.getAccountStatus() == null) {
+			employee.setAccountStatus(AccountStatus.PENDING);
+		}
 
 		return employee;
 	}
@@ -843,126 +841,74 @@ public class PeopleServiceImpl implements PeopleService {
 	@Override
 	@Transactional(readOnly = true)
 	public ResponseEntityDto getEmployeeById(Long employeeId) {
-		Optional<Employee> employeeOptional = employeeDao.findById(employeeId);
-		if (employeeOptional.isEmpty()) {
-			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
-		}
-		Employee employee = employeeOptional.get();
-
-		CreateEmployeeRequestDto createEmployeeRequestDto = mapEmployeeToDto(employee);
-
-		return new ResponseEntityDto(false, createEmployeeRequestDto);
+		return new ResponseEntityDto(false, mapEmployeeToDto(employeeDao.findById(employeeId)
+			.orElseThrow(() -> new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND))));
 	}
 
 	private CreateEmployeeRequestDto mapEmployeeToDto(Employee employee) {
 		CreateEmployeeRequestDto dto = new CreateEmployeeRequestDto();
-
 		dto.setPersonal(mapPersonalDetails(employee));
 		dto.setEmergency(mapEmergencyDetails(employee));
 		dto.setEmployment(mapEmploymentDetails(employee));
 		dto.setSystemPermissions(mapSystemPermissions(employee));
 		dto.setCommon(mapCommonDetails(employee));
-
 		return dto;
 	}
 
 	private EmployeePersonalDetailsDto mapPersonalDetails(Employee employee) {
 		EmployeePersonalDetailsDto dto = new EmployeePersonalDetailsDto();
-
 		dto.setGeneral(mapPersonalGeneralDetails(employee));
 		dto.setContact(mapPersonalContactDetails(employee));
 
-		if (employee.getEmployeeFamilies() != null) {
-			dto.setFamily(mapEmployeeFamilyToFamilyDtos(employee.getEmployeeFamilies()));
-		}
+		Optional.ofNullable(employee.getEmployeeFamilies())
+			.ifPresent(families -> dto
+				.setFamily(families.stream().map(peopleMapper::employeeFamilyToFamilyDetailsDto).toList()));
 
-		if (employee.getEmployeeEducations() != null) {
-			dto.setEducational(mapEmployeeEducationToEducationalDtos(employee.getEmployeeEducations()));
-		}
+		Optional.ofNullable(employee.getEmployeeEducations())
+			.ifPresent(educations -> dto.setEducational(
+					educations.stream().map(peopleMapper::employeeEducationToEducationalDetailsDto).toList()));
 
 		dto.setSocialMedia(mapPersonalSocialMediaDetails(employee));
 		dto.setHealthAndOther(mapPersonalHealthAndOtherDetails(employee));
-
 		return dto;
-	}
-
-	private List<EmployeePersonalFamilyDetailsDto> mapEmployeeFamilyToFamilyDtos(
-			List<EmployeeFamily> employeeFamilies) {
-		return employeeFamilies.stream().map(this::mapPersonalFamilyDetails).collect(Collectors.toList());
-	}
-
-	private List<EmployeePersonalEducationalDetailsDto> mapEmployeeEducationToEducationalDtos(
-			List<EmployeeEducation> employeeEducations) {
-		return employeeEducations.stream().map(this::mapPersonalEducationalDetails).collect(Collectors.toList());
 	}
 
 	private EmployeePersonalGeneralDetailsDto mapPersonalGeneralDetails(Employee employee) {
 		EmployeePersonalGeneralDetailsDto dto = new EmployeePersonalGeneralDetailsDto();
-
 		dto.setFirstName(employee.getFirstName());
 		dto.setMiddleName(employee.getMiddleName());
 		dto.setLastName(employee.getLastName());
 		dto.setGender(employee.getGender());
+		dto.setNin(employee.getIdentificationNo());
 
-		if (employee.getPersonalInfo() != null) {
-			dto.setDateOfBirth(employee.getPersonalInfo().getBirthDate());
-			dto.setNationality(employee.getPersonalInfo().getNationality());
-			dto.setNin(employee.getIdentificationNo());
-			dto.setPassportNumber(employee.getPersonalInfo().getPassportNo());
-			dto.setMaritalStatus(employee.getPersonalInfo().getMaritalStatus());
-		}
+		Optional.ofNullable(employee.getPersonalInfo()).ifPresent(personalInfo -> {
+			dto.setDateOfBirth(personalInfo.getBirthDate());
+			dto.setNationality(personalInfo.getNationality());
+			dto.setPassportNumber(personalInfo.getPassportNo());
+			dto.setMaritalStatus(personalInfo.getMaritalStatus());
+		});
 
 		return dto;
 	}
 
 	private EmployeePersonalContactDetailsDto mapPersonalContactDetails(Employee employee) {
 		EmployeePersonalContactDetailsDto dto = new EmployeePersonalContactDetailsDto();
-
 		dto.setPersonalEmail(employee.getPersonalEmail());
 		dto.setContactNo(employee.getPhone());
 		dto.setAddressLine1(employee.getAddressLine1());
 		dto.setAddressLine2(employee.getAddressLine2());
 		dto.setCountry(employee.getCountry());
 
-		if (employee.getPersonalInfo() != null) {
-			dto.setCity(employee.getPersonalInfo().getCity());
-			dto.setState(employee.getPersonalInfo().getState());
-			dto.setPostalCode(employee.getPersonalInfo().getPostalCode());
-		}
-
-		return dto;
-	}
-
-	private EmployeePersonalFamilyDetailsDto mapPersonalFamilyDetails(EmployeeFamily family) {
-		EmployeePersonalFamilyDetailsDto dto = new EmployeePersonalFamilyDetailsDto();
-
-		dto.setFamilyId(family.getFamilyId());
-		dto.setFirstName(family.getFirstName());
-		dto.setLastName(family.getLastName());
-		dto.setGender(family.getGender());
-		dto.setRelationship(family.getFamilyRelationship());
-		dto.setDateOfBirth(family.getBirthDate());
-		dto.setParentName(family.getParentName());
-
-		return dto;
-	}
-
-	private EmployeePersonalEducationalDetailsDto mapPersonalEducationalDetails(EmployeeEducation education) {
-		EmployeePersonalEducationalDetailsDto dto = new EmployeePersonalEducationalDetailsDto();
-
-		dto.setEducationId(education.getEducationId());
-		dto.setInstitutionName(education.getInstitution());
-		dto.setDegree(education.getDegree());
-		dto.setMajor(education.getSpecialization());
-		dto.setStartDate(education.getStartDate());
-		dto.setEndDate(education.getEndDate());
+		Optional.ofNullable(employee.getPersonalInfo()).ifPresent(personalInfo -> {
+			dto.setCity(personalInfo.getCity());
+			dto.setState(personalInfo.getState());
+			dto.setPostalCode(personalInfo.getPostalCode());
+		});
 
 		return dto;
 	}
 
 	private EmployeePersonalSocialMediaDetailsDto mapPersonalSocialMediaDetails(Employee employee) {
-		EmployeePersonalSocialMediaDetailsDto dto = new EmployeePersonalSocialMediaDetailsDto();
-
 		if (employee.getPersonalInfo() != null && employee.getPersonalInfo().getSocialMediaDetails() != null) {
 			try {
 				return mapper.treeToValue(employee.getPersonalInfo().getSocialMediaDetails(),
@@ -972,24 +918,23 @@ public class PeopleServiceImpl implements PeopleService {
 				log.error("Error converting social media details JSON to DTO", e);
 			}
 		}
-
-		return dto;
+		return new EmployeePersonalSocialMediaDetailsDto();
 	}
 
 	private EmployeePersonalHealthAndOtherDetailsDto mapPersonalHealthAndOtherDetails(Employee employee) {
 		EmployeePersonalHealthAndOtherDetailsDto dto = new EmployeePersonalHealthAndOtherDetailsDto();
 
 		if (employee.getPersonalInfo() != null) {
-			dto.setBloodGroup(employee.getPersonalInfo().getBloodGroup());
+			EmployeePersonalInfo personalInfo = employee.getPersonalInfo();
+			dto.setBloodGroup(personalInfo.getBloodGroup());
 
-			if (employee.getPersonalInfo().getExtraInfo() != null) {
+			if (personalInfo.getExtraInfo() != null) {
 				try {
-					EmployeeExtraInfoDto extraInfoDto = mapper.treeToValue(employee.getPersonalInfo().getExtraInfo(),
+					EmployeeExtraInfoDto extraInfo = mapper.treeToValue(personalInfo.getExtraInfo(),
 							EmployeeExtraInfoDto.class);
-
-					dto.setAllergies(extraInfoDto.getAllergies());
-					dto.setDietaryRestrictions(extraInfoDto.getDietaryRestrictions());
-					dto.setTShirtSize(extraInfoDto.getTShirtSize());
+					dto.setAllergies(extraInfo.getAllergies());
+					dto.setDietaryRestrictions(extraInfo.getDietaryRestrictions());
+					dto.setTShirtSize(extraInfo.getTShirtSize());
 				}
 				catch (JsonProcessingException e) {
 					log.error("Error converting extra info JSON to DTO", e);
@@ -1006,72 +951,37 @@ public class PeopleServiceImpl implements PeopleService {
 		if (employee.getEmployeeEmergencies() != null && !employee.getEmployeeEmergencies().isEmpty()) {
 			List<EmployeeEmergency> emergencies = new ArrayList<>(employee.getEmployeeEmergencies());
 
-			Optional<EmployeeEmergency> primaryEmergency = emergencies.stream()
+			emergencies.stream()
 				.filter(EmployeeEmergency::getIsPrimary)
-				.findFirst();
+				.findFirst()
+				.or(() -> emergencies.isEmpty() ? Optional.empty() : Optional.of(emergencies.getFirst()))
+				.ifPresent(e -> dto.setPrimaryEmergencyContact(peopleMapper.employeeEmergencyToEmergencyContactDto(e)));
 
-			if (primaryEmergency.isPresent()) {
-				dto.setPrimaryEmergencyContact(mapEmergencyContactDetails(primaryEmergency.get()));
-			}
-			else if (!emergencies.isEmpty()) {
-				dto.setPrimaryEmergencyContact(mapEmergencyContactDetails(emergencies.getFirst()));
-			}
-
-			Optional<EmployeeEmergency> secondaryEmergency = emergencies.stream()
+			emergencies.stream()
 				.filter(e -> !e.getIsPrimary())
-				.findFirst();
-
-			secondaryEmergency.ifPresent(employeeEmergency -> dto
-				.setSecondaryEmergencyContact(mapEmergencyContactDetails(employeeEmergency)));
+				.findFirst()
+				.ifPresent(
+						e -> dto.setSecondaryEmergencyContact(peopleMapper.employeeEmergencyToEmergencyContactDto(e)));
 		}
-
-		return dto;
-	}
-
-	private EmployeeEmergencyContactDetailsDto mapEmergencyContactDetails(EmployeeEmergency emergency) {
-		EmployeeEmergencyContactDetailsDto dto = new EmployeeEmergencyContactDetailsDto();
-
-		dto.setName(emergency.getName());
-		dto.setRelationship(emergency.getEmergencyRelationship());
-		dto.setContactNo(emergency.getContactNo());
 
 		return dto;
 	}
 
 	private EmployeeEmploymentDetailsDto mapEmploymentDetails(Employee employee) {
 		EmployeeEmploymentDetailsDto dto = new EmployeeEmploymentDetailsDto();
-
 		dto.setEmploymentDetails(mapEmploymentBasicDetails(employee));
 
-		if (employee.getEmployeeProgressions() != null) {
-			dto.setCareerProgression(mapCareerProgressionDetails(employee.getEmployeeProgressions()));
-		}
+		Optional.ofNullable(employee.getEmployeeProgressions())
+			.ifPresent(progressions -> dto.setCareerProgression(progressions.stream()
+				.map(peopleMapper::employeeProgressionToCareerProgressionDto)
+				.collect(Collectors.toList())));
 
 		dto.setIdentificationAndDiversityDetails(mapIdentificationAndDiversityDetails(employee));
 		dto.setPreviousEmployment(mapPreviousEmploymentDetails(employee));
 
-		if (employee.getEmployeeVisas() != null) {
-			dto.setVisaDetails(mapVisaDetails(employee.getEmployeeVisas()));
-		}
-
-		return dto;
-	}
-
-	private List<EmployeeEmploymentCareerProgressionDetailsDto> mapCareerProgressionDetails(
-			List<EmployeeProgression> progressions) {
-		return progressions.stream().map(this::mapCareerProgressionDetail).collect(Collectors.toList());
-	}
-
-	private EmployeeEmploymentCareerProgressionDetailsDto mapCareerProgressionDetail(EmployeeProgression progression) {
-		EmployeeEmploymentCareerProgressionDetailsDto dto = new EmployeeEmploymentCareerProgressionDetailsDto();
-
-		dto.setProgressionId(progression.getProgressionId());
-		dto.setEmploymentType(progression.getEmploymentType());
-		dto.setJobFamilyId(progression.getJobFamilyId() != null ? progression.getJobFamilyId() : null);
-		dto.setJobTitleId(progression.getJobTitleId() != null ? progression.getJobTitleId() : null);
-		dto.setStartDate(progression.getStartDate());
-		dto.setEndDate(progression.getEndDate());
-		dto.setIsCurrentEmployment(progression.getIsCurrent());
+		Optional.ofNullable(employee.getEmployeeVisas())
+			.ifPresent(visas -> dto
+				.setVisaDetails(visas.stream().map(peopleMapper::employeeVisaToVisaDetailsDto).toList()));
 
 		return dto;
 	}
@@ -1080,10 +990,10 @@ public class PeopleServiceImpl implements PeopleService {
 			Employee employee) {
 		EmployeeEmploymentIdentificationAndDiversityDetailsDto dto = new EmployeeEmploymentIdentificationAndDiversityDetailsDto();
 
-		if (employee.getPersonalInfo() != null) {
-			dto.setSsn(employee.getPersonalInfo().getSsn());
-			dto.setEthnicity(employee.getPersonalInfo().getEthnicity());
-		}
+		Optional.ofNullable(employee.getPersonalInfo()).ifPresent(personalInfo -> {
+			dto.setSsn(personalInfo.getSsn());
+			dto.setEthnicity(personalInfo.getEthnicity());
+		});
 
 		dto.setEeoJobCategory(employee.getEeo());
 
@@ -1094,95 +1004,53 @@ public class PeopleServiceImpl implements PeopleService {
 		if (employee.getPersonalInfo() != null && employee.getPersonalInfo().getPreviousEmploymentDetails() != null) {
 			try {
 				return mapper.treeToValue(employee.getPersonalInfo().getPreviousEmploymentDetails(),
-						new TypeReference<List<EmployeeEmploymentPreviousEmploymentDetailsDto>>() {
+						new TypeReference<>() {
 						});
 			}
 			catch (JsonProcessingException e) {
 				log.error("Error converting previous employment details JSON to DTO", e);
 			}
 		}
-
 		return null;
-	}
-
-	private List<EmployeeEmploymentVisaDetailsDto> mapVisaDetails(List<EmployeeVisa> employeeVisas) {
-		return employeeVisas.stream().map(this::mapVisaDetail).collect(Collectors.toList());
-	}
-
-	private EmployeeEmploymentVisaDetailsDto mapVisaDetail(EmployeeVisa visa) {
-		EmployeeEmploymentVisaDetailsDto dto = new EmployeeEmploymentVisaDetailsDto();
-
-		dto.setVisaId(visa.getVisaId());
-		dto.setVisaType(visa.getVisaType());
-		dto.setIssuingCountry(visa.getIssuingCountry());
-		dto.setIssuedDate(visa.getIssuedDate());
-		dto.setExpiryDate(visa.getExpirationDate());
-
-		return dto;
 	}
 
 	private EmployeeEmploymentBasicDetailsDto mapEmploymentBasicDetails(Employee employee) {
 		EmployeeEmploymentBasicDetailsDto dto = new EmployeeEmploymentBasicDetailsDto();
-
 		dto.setJoinedDate(employee.getJoinDate());
 		dto.setWorkTimeZone(employee.getTimeZone());
 		dto.setEmploymentAllocation(employee.getEmploymentAllocation());
 
-		if (employee.getUser() != null) {
+		Optional.ofNullable(employee.getUser()).ifPresent(user -> {
 			dto.setEmployeeNumber(employee.getIdentificationNo());
-			dto.setEmail(employee.getUser().getEmail());
-		}
+			dto.setEmail(user.getEmail());
+		});
 
-		if (employee.getEmployeeTeams() != null) {
-			dto.setTeamIds(
-					employee.getEmployeeTeams().stream().map(team -> team.getTeam().getTeamId()).toArray(Long[]::new));
-		}
+		Optional.ofNullable(employee.getEmployeeTeams())
+			.ifPresent(teams -> dto
+				.setTeamIds(teams.stream().map(team -> team.getTeam().getTeamId()).toArray(Long[]::new)));
 
-		dto.setPrimarySupervisor(getPrimarySupervisor(employee));
-		dto.setSecondarySupervisor(getSecondarySupervisor(employee));
-
-		if (employee.getEmployeePeriods() != null) {
-			employee.getEmployeePeriods().stream().findFirst().ifPresent(probation -> {
-				dto.setProbationStartDate(probation.getStartDate());
-				dto.setProbationEndDate(probation.getEndDate());
-			});
-		}
-
-		return dto;
-	}
-
-	private EmployeeEmploymentBasicDetailsManagerDetailsDto getPrimarySupervisor(Employee employee) {
 		if (employee.getEmployeeManagers() != null) {
-			return employee.getEmployeeManagers()
+			dto.setPrimarySupervisor(employee.getEmployeeManagers()
 				.stream()
 				.filter(EmployeeManager::getIsPrimaryManager)
 				.findFirst()
-				.map(this::mapManagerDetails)
-				.orElse(null);
-		}
-		return null;
-	}
+				.map(peopleMapper::employeeManagerToManagerDetailsDto)
+				.orElse(null));
 
-	private EmployeeEmploymentBasicDetailsManagerDetailsDto getSecondarySupervisor(Employee employee) {
-		if (employee.getEmployeeManagers() != null) {
-			return employee.getEmployeeManagers()
+			dto.setSecondarySupervisor(employee.getEmployeeManagers()
 				.stream()
-				.filter(managerRel -> !managerRel.getIsPrimaryManager())
+				.filter(m -> !m.getIsPrimaryManager())
 				.findFirst()
-				.map(this::mapManagerDetails)
-				.orElse(null);
+				.map(peopleMapper::employeeManagerToManagerDetailsDto)
+				.orElse(null));
 		}
-		return null;
-	}
 
-	private EmployeeEmploymentBasicDetailsManagerDetailsDto mapManagerDetails(EmployeeManager managerRel) {
-		EmployeeEmploymentBasicDetailsManagerDetailsDto dto = new EmployeeEmploymentBasicDetailsManagerDetailsDto();
-
-		Employee manager = managerRel.getManager();
-		dto.setEmployeeId(manager.getEmployeeId());
-		dto.setFirstName(manager.getFirstName());
-		dto.setLastName(manager.getLastName());
-		dto.setAuthPic(manager.getAuthPic());
+		Optional.ofNullable(employee.getEmployeePeriods())
+			.flatMap(periods -> periods.stream().findFirst())
+			.ifPresent(probation -> {
+				dto.setProbationStartDate(probation.getStartDate());
+				dto.setProbationEndDate(probation.getEndDate());
+			});
 
 		return dto;
 	}
@@ -1190,25 +1058,23 @@ public class PeopleServiceImpl implements PeopleService {
 	private EmployeeSystemPermissionsDto mapSystemPermissions(Employee employee) {
 		EmployeeSystemPermissionsDto dto = new EmployeeSystemPermissionsDto();
 
-		if (employee.getEmployeeRole() != null) {
-			dto.setIsSuperAdmin(employee.getEmployeeRole().getIsSuperAdmin());
-			dto.setPeopleRole(employee.getEmployeeRole().getPeopleRole());
-			dto.setLeaveRole(employee.getEmployeeRole().getLeaveRole());
-			dto.setAttendanceRole(employee.getEmployeeRole().getAttendanceRole());
-			dto.setEsignRole(employee.getEmployeeRole().getEsignRole());
-		}
+		Optional.ofNullable(employee.getEmployeeRole()).ifPresent(role -> {
+			dto.setIsSuperAdmin(role.getIsSuperAdmin());
+			dto.setPeopleRole(role.getPeopleRole());
+			dto.setLeaveRole(role.getLeaveRole());
+			dto.setAttendanceRole(role.getAttendanceRole());
+			dto.setEsignRole(role.getEsignRole());
+		});
 
 		return dto;
 	}
 
 	private EmployeeCommonDetailsDto mapCommonDetails(Employee employee) {
 		EmployeeCommonDetailsDto dto = new EmployeeCommonDetailsDto();
-
 		dto.setAccountStatus(employee.getAccountStatus());
 		dto.setAuthPic(employee.getAuthPic());
 		dto.setEmployeeId(employee.getEmployeeId());
-		dto.setJobTitle(employee.getJobTitle().getName());
-
+		dto.setJobTitle(employee.getJobTitle() != null ? employee.getJobTitle().getName() : null);
 		return dto;
 	}
 

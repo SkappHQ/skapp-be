@@ -10,6 +10,7 @@ import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.EmployeeEducation;
 import com.skapp.community.peopleplanner.model.EmployeeEmergency;
 import com.skapp.community.peopleplanner.model.EmployeeFamily;
+import com.skapp.community.peopleplanner.model.EmployeeManager;
 import com.skapp.community.peopleplanner.model.EmployeePeriod;
 import com.skapp.community.peopleplanner.model.EmployeePersonalInfo;
 import com.skapp.community.peopleplanner.model.EmployeeProgression;
@@ -28,13 +29,18 @@ import com.skapp.community.peopleplanner.payload.request.EmployeeEmergencyDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFamilyDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeePersonalInfoDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeProgressionsDto;
-import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
 import com.skapp.community.peopleplanner.payload.request.EmploymentVisaDto;
 import com.skapp.community.peopleplanner.payload.request.HolidayRequestDto;
 import com.skapp.community.peopleplanner.payload.request.JobFamilyDto;
 import com.skapp.community.peopleplanner.payload.request.JobTitleDto;
 import com.skapp.community.peopleplanner.payload.request.ModuleRoleRestrictionRequestDto;
 import com.skapp.community.peopleplanner.payload.request.TeamRequestDto;
+import com.skapp.community.peopleplanner.payload.request.employee.emergency.EmployeeEmergencyContactDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentBasicDetailsManagerDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentCareerProgressionDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentVisaDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalEducationalDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalFamilyDetailsDto;
 import com.skapp.community.peopleplanner.payload.response.CreateEmployeeResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeAllDataExportResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeDataExportResponseDto;
@@ -48,11 +54,7 @@ import com.skapp.community.peopleplanner.payload.response.HolidayResponseDto;
 import com.skapp.community.peopleplanner.payload.response.JobFamilyResponseDetailDto;
 import com.skapp.community.peopleplanner.payload.response.JobFamilyResponseDto;
 import com.skapp.community.peopleplanner.payload.response.JobTitleResponseDetailDto;
-import com.skapp.community.peopleplanner.payload.response.ManagerCoreDetailsDto;
-import com.skapp.community.peopleplanner.payload.response.ManagerEmployeeDto;
 import com.skapp.community.peopleplanner.payload.response.ModuleRoleRestrictionResponseDto;
-import com.skapp.community.peopleplanner.payload.response.SummarizedEmployeeDtoForEmployees;
-import com.skapp.community.peopleplanner.payload.response.SummarizedManagerEmployeeDto;
 import com.skapp.community.peopleplanner.payload.response.TeamBasicDetailsResponseDto;
 import com.skapp.community.peopleplanner.payload.response.TeamDetailResponseDto;
 import com.skapp.community.peopleplanner.payload.response.TeamResponseDto;
@@ -94,9 +96,6 @@ public interface PeopleMapper {
 
 	EmployeeProgression employeeProgressionDtoToEmployeeProgression(EmployeeProgressionsDto employeeProgressionsDto);
 
-	List<EmployeeEmergency> employeeEmergencyDtoListToEmployeeEmergencyList(
-			List<EmployeeEmergencyDto> employeeEmergencyDto);
-
 	EmployeePersonalInfo employeePersonalInfoDtoToEmployeePersonalInfo(EmployeePersonalInfoDto employeePersonalInfoDto);
 
 	EmployeePersonalInfoDto employeePersonalInfoToEmployeePersonalInfoDto(EmployeePersonalInfo employeePersonalInfo);
@@ -109,13 +108,6 @@ public interface PeopleMapper {
 	@Mapping(target = "jobFamily", ignore = true)
 	@Mapping(target = "managers", ignore = true)
 	EmployeeAllDataExportResponseDto employeeToEmployeeAllDataExportResponseDto(Employee employee);
-
-	List<EmployeeVisa> employeeVisaDtoListToEmployeeVisaList(List<EmploymentVisaDto> employmentVisa);
-
-	List<EmployeeEducation> employeeEducationDtoListToEmployeeEducationList(
-			List<EmployeeEducationDto> employeeEducations);
-
-	List<EmployeeFamily> employeeFamilyDtoListToEmployeeFamilyList(List<EmployeeFamilyDto> employeeFamilies);
 
 	@Mapping(target = "email", source = "user.email")
 	@Mapping(target = "isActive", source = "user.isActive")
@@ -141,15 +133,6 @@ public interface PeopleMapper {
 
 	EmployeeJobFamilyDto jobFamilyToEmployeeJobFamilyDto(JobFamily jobFamily);
 
-	@Mapping(target = "email", source = "user.email")
-	ManagerEmployeeDto employeeToManagerEmployeeDto(Employee employee);
-
-	@Mapping(target = "email", source = "user.email")
-	SummarizedManagerEmployeeDto employeeToSummarizedManagerEmployeeDto(Employee employee);
-
-	@Mapping(target = "email", source = "user.email")
-	SummarizedEmployeeDtoForEmployees employeeToSummarizedEmployeeDtoForEmployees(Employee employee);
-
 	@Mapping(target = "isSuperAdmin", source = "isSuperAdmin")
 	EmployeeRoleResponseDto employeeRoleToEmployeeRoleResponseDto(EmployeeRole employeeRole);
 
@@ -171,8 +154,6 @@ public interface PeopleMapper {
 
 	EmployeeEmergency employeeEmergencyDtoToEmployeeEmergency(EmployeeEmergencyDto employeeEmergency);
 
-	Employee employeeQuickAddDtoToEmployee(EmployeeQuickAddDto employeeQuickAddDto);
-
 	ModuleRoleRestriction roleRestrictionRequestDtoToRestrictRole(
 			ModuleRoleRestrictionRequestDto moduleRoleRestrictionRequestDto);
 
@@ -185,8 +166,6 @@ public interface PeopleMapper {
 
 	List<ManagerSummarizedTeamResponseDto> managerTeamsToManagerTeamCountTeamResponseDto(
 			List<Team> managerLeadingTeams);
-
-	ManagerCoreDetailsDto employeeToManagerCoreDetailsDto(Employee employee);
 
 	@Mapping(target = "jobFamily", source = "jobFamily.name")
 	@Mapping(target = "jobTitle", source = "jobTitle.name")
@@ -207,5 +186,89 @@ public interface PeopleMapper {
 	TeamBasicDetailsResponseDto teamToTeamBasicDetailsResponseDto(Team team);
 
 	CreateEmployeeResponseDto employeeToCreateEmployeeResponseDto(Employee employee);
+
+	@Mapping(source = "familyId", target = "familyId")
+	@Mapping(source = "firstName", target = "firstName")
+	@Mapping(source = "lastName", target = "lastName")
+	@Mapping(source = "gender", target = "gender")
+	@Mapping(source = "familyRelationship", target = "relationship")
+	@Mapping(source = "birthDate", target = "dateOfBirth")
+	@Mapping(source = "parentName", target = "parentName")
+	EmployeePersonalFamilyDetailsDto employeeFamilyToFamilyDetailsDto(EmployeeFamily family);
+
+	@Mapping(source = "educationId", target = "educationId")
+	@Mapping(source = "institution", target = "institutionName")
+	@Mapping(source = "degree", target = "degree")
+	@Mapping(source = "specialization", target = "major")
+	@Mapping(source = "startDate", target = "startDate")
+	@Mapping(source = "endDate", target = "endDate")
+	EmployeePersonalEducationalDetailsDto employeeEducationToEducationalDetailsDto(EmployeeEducation education);
+
+	@Mapping(source = "name", target = "name")
+	@Mapping(source = "emergencyRelationship", target = "relationship")
+	@Mapping(source = "contactNo", target = "contactNo")
+	EmployeeEmergencyContactDetailsDto employeeEmergencyToEmergencyContactDto(EmployeeEmergency emergency);
+
+	@Mapping(source = "progressionId", target = "progressionId")
+	@Mapping(source = "employmentType", target = "employmentType")
+	@Mapping(source = "jobFamilyId", target = "jobFamilyId")
+	@Mapping(source = "jobTitleId", target = "jobTitleId")
+	@Mapping(source = "startDate", target = "startDate")
+	@Mapping(source = "endDate", target = "endDate")
+	@Mapping(source = "isCurrent", target = "isCurrentEmployment")
+	EmployeeEmploymentCareerProgressionDetailsDto employeeProgressionToCareerProgressionDto(
+			EmployeeProgression progression);
+
+	@Mapping(source = "visaId", target = "visaId")
+	@Mapping(source = "visaType", target = "visaType")
+	@Mapping(source = "issuingCountry", target = "issuingCountry")
+	@Mapping(source = "issuedDate", target = "issuedDate")
+	@Mapping(source = "expirationDate", target = "expiryDate")
+	EmployeeEmploymentVisaDetailsDto employeeVisaToVisaDetailsDto(EmployeeVisa visa);
+
+	@Mapping(source = "manager.employeeId", target = "employeeId")
+	@Mapping(source = "manager.firstName", target = "firstName")
+	@Mapping(source = "manager.lastName", target = "lastName")
+	@Mapping(source = "manager.authPic", target = "authPic")
+	EmployeeEmploymentBasicDetailsManagerDetailsDto employeeManagerToManagerDetailsDto(EmployeeManager managerRel);
+
+	// DTO to Entity mappings
+	@Mapping(source = "familyId", target = "familyId")
+	@Mapping(source = "firstName", target = "firstName")
+	@Mapping(source = "lastName", target = "lastName")
+	@Mapping(source = "gender", target = "gender")
+	@Mapping(source = "relationship", target = "familyRelationship")
+	@Mapping(source = "dateOfBirth", target = "birthDate")
+	@Mapping(source = "parentName", target = "parentName")
+	EmployeeFamily familyDetailsDtoToEmployeeFamily(EmployeePersonalFamilyDetailsDto dto);
+
+	@Mapping(source = "educationId", target = "educationId")
+	@Mapping(source = "institutionName", target = "institution")
+	@Mapping(source = "degree", target = "degree")
+	@Mapping(source = "major", target = "specialization")
+	@Mapping(source = "startDate", target = "startDate")
+	@Mapping(source = "endDate", target = "endDate")
+	EmployeeEducation educationalDetailsDtoToEmployeeEducation(EmployeePersonalEducationalDetailsDto dto);
+
+	@Mapping(source = "name", target = "name")
+	@Mapping(source = "relationship", target = "emergencyRelationship")
+	@Mapping(source = "contactNo", target = "contactNo")
+	EmployeeEmergency emergencyContactDtoToEmployeeEmergency(EmployeeEmergencyContactDetailsDto dto);
+
+	@Mapping(source = "progressionId", target = "progressionId")
+	@Mapping(source = "employmentType", target = "employmentType")
+	@Mapping(source = "jobFamilyId", target = "jobFamilyId")
+	@Mapping(source = "jobTitleId", target = "jobTitleId")
+	@Mapping(source = "startDate", target = "startDate")
+	@Mapping(source = "endDate", target = "endDate")
+	@Mapping(source = "isCurrentEmployment", target = "isCurrent")
+	EmployeeProgression employeeProgressionDtoToEmployeeProgression(EmployeeEmploymentCareerProgressionDetailsDto dto);
+
+	@Mapping(source = "visaId", target = "visaId")
+	@Mapping(source = "visaType", target = "visaType")
+	@Mapping(source = "issuingCountry", target = "issuingCountry")
+	@Mapping(source = "issuedDate", target = "issuedDate")
+	@Mapping(source = "expiryDate", target = "expirationDate")
+	EmployeeVisa visaDetailsDtoToEmployeeVisa(EmployeeEmploymentVisaDetailsDto dto);
 
 }

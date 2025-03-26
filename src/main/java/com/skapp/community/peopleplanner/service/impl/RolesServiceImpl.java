@@ -259,11 +259,13 @@ public class RolesServiceImpl implements RolesService {
 		}
 
 		User currentUser = userService.getCurrentUser();
-		if (user.getEmployee() != null && Objects.equals(currentUser.getUserId(), user.getEmployee().getEmployeeId())) {
+		if (user.getEmployee() != null && userRoles != null
+				&& Objects.equals(currentUser.getUserId(), user.getEmployee().getEmployeeId())) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_CANNOT_CHANGE_OWN_PERMISSIONS);
 		}
 
-		if (user.getEmployee() != null && Boolean.TRUE.equals(user.getEmployee().getEmployeeRole().getIsSuperAdmin())
+		if (userRoles != null && user.getEmployee() != null
+				&& Boolean.TRUE.equals(user.getEmployee().getEmployeeRole().getIsSuperAdmin())
 				&& employeeRoleDao.countByIsSuperAdminTrue() == 1 && isUserRoleDowngraded(userRoles)) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_ONLY_ONE_SUPER_ADMIN);
 		}
@@ -282,22 +284,22 @@ public class RolesServiceImpl implements RolesService {
 			}
 		}
 
-		if ((user.getEmployee() == null || user.getEmployee().getEmployeeRole() == null)
+		if ((user.getEmployee() == null || user.getEmployee().getEmployeeRole() == null) && userRoles != null
 				&& userRoles.getIsSuperAdmin() == null) {
 			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_SUPER_ADMIN_REQUIRED);
 		}
 
-		if ((user.getEmployee() == null || user.getEmployee().getEmployeeRole() == null)
+		if ((user.getEmployee() == null || user.getEmployee().getEmployeeRole() == null) && userRoles != null
 				&& userRoles.getPeopleRole() == null) {
 			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_PEOPLE_ROLE_REQUIRED);
 		}
 
-		if ((user.getEmployee() == null || user.getEmployee().getEmployeeRole() == null)
+		if ((user.getEmployee() == null || user.getEmployee().getEmployeeRole() == null) && userRoles != null
 				&& userRoles.getAttendanceRole() == null) {
 			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_ATTENDANCE_ROLE_REQUIRED);
 		}
 
-		if ((user.getEmployee() == null || user.getEmployee().getEmployeeRole() == null)
+		if ((user.getEmployee() == null || user.getEmployee().getEmployeeRole() == null) && userRoles != null
 				&& userRoles.getLeaveRole() == null) {
 			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_LEAVE_ROLE_REQUIRED);
 		}
