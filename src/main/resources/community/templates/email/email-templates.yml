@@ -132,16 +132,16 @@ en:
       subject: A leave request has been approved!
 
     - id: leave-module-employee-revoked-single-day-leave
-      subject: Your supervisor has declined leave request!
+      subject: Your supervisor has revoked leave request!
 
     - id: leave-module-employee-revoked-multi-day-leave
-      subject: Your supervisor has declined leave request!
+      subject: Your supervisor has revoked leave request!
 
     - id: leave-module-manager-revoked-single-day-leave
-      subject: A leave request has been declined!
+      subject: A leave request has been revoked!
 
     - id: leave-module-manager-revoked-multi-day-leave
-      subject: A leave request has been declined!
+      subject: A leave request has been revoked!
 
     - id: leave-module-manager-nudge-single-day-leave
       subject: You have received a reminder for a leave request!
