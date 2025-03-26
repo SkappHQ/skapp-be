@@ -14,7 +14,7 @@ import com.skapp.community.peopleplanner.model.EmployeeRole;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeUpdateDto;
 import com.skapp.community.peopleplanner.payload.request.ProbationPeriodDto;
-import com.skapp.community.peopleplanner.payload.request.RoleRequestDto;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeeSystemPermissionsDto;
 import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.EEO;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
@@ -167,7 +167,7 @@ class PeopleControllerIntegrationTest {
 		employeeDetailsDto.setPrimaryManager(1L);
 		employeeDetailsDto.setSecondaryManager(3L);
 
-		RoleRequestDto roleRequestDto = new RoleRequestDto();
+		EmployeeSystemPermissionsDto roleRequestDto = new EmployeeSystemPermissionsDto();
 		roleRequestDto.setAttendanceRole(Role.ATTENDANCE_EMPLOYEE);
 		roleRequestDto.setLeaveRole(Role.LEAVE_EMPLOYEE);
 		roleRequestDto.setPeopleRole(Role.PEOPLE_EMPLOYEE);
