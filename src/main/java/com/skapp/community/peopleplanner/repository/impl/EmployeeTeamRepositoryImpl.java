@@ -92,7 +92,7 @@ public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 					employeeRoot.get(Employee_.employeeId).in(teamMembersSubquery)));
 		}
 		else {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeRoot.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeRoot.join(Employee_.employeeTeams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamsFilter));
 		}
 
@@ -121,7 +121,7 @@ public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 		Root<Employee> employeeRoot = criteriaQuery.from(Employee.class);
 
 		Join<Employee, User> userJoin = employeeRoot.join(Employee_.user, JoinType.LEFT);
-		Join<Employee, EmployeeTeam> employeeTeamJoin = employeeRoot.join(Employee_.teams, JoinType.LEFT);
+		Join<Employee, EmployeeTeam> employeeTeamJoin = employeeRoot.join(Employee_.employeeTeams, JoinType.LEFT);
 
 		List<Predicate> predicates = new ArrayList<>();
 
@@ -258,7 +258,7 @@ public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 			}
 		}
 		else if (teams != null && !teams.isEmpty()) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeRoot.join(Employee_.teams, JoinType.LEFT);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeRoot.join(Employee_.employeeTeams, JoinType.LEFT);
 			Predicate teamPredicate = employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teams);
 			predicates.add(teamPredicate);
 		}

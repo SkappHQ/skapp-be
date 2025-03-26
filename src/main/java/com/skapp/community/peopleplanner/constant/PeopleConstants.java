@@ -30,4 +30,6 @@ public class PeopleConstants {
 
 	public static final int MAX_SSN_LENGTH = 11;
 
+	public static final int MAX_EMPLOYEE_NUMBER_LENGTH = 10;
+
 }

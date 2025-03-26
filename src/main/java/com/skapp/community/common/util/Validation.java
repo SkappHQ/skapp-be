@@ -27,6 +27,10 @@ public class Validation {
 
 	public static final String ALPHANUMERIC_REGEX = "^[a-zA-Z0-9]*$";
 
+	public static final String LETTERS_AND_SPACE_REGEX = "^[a-zA-Z ]*$";
+
+	public static final String NUMERIC_REGEX = "^[0-9]*$";
+
 	public static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
 
 	private static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[~`\\-_={}\\[\\]@$!%*?&.^()|])[A-Za-z\\d~`\\-_={}\\[\\]@$!%*?&.^()|]{8,}$";

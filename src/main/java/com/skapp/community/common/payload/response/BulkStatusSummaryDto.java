@@ -4,9 +4,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class BulkStatusSummaryDto {
 
-	private AtomicInteger successCount = new AtomicInteger(0);
+	private final AtomicInteger successCount = new AtomicInteger(0);
 
-	private AtomicInteger failedCount = new AtomicInteger(0);
+	private final AtomicInteger failedCount = new AtomicInteger(0);
 
 	public void incrementSuccessCount() {
 		this.successCount.incrementAndGet();

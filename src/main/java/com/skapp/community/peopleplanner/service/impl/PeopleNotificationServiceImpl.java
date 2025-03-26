@@ -112,7 +112,7 @@ public class PeopleNotificationServiceImpl implements PeopleNotificationService 
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
 
 		leaveRequest.getEmployee()
-			.getManagers()
+			.getEmployeeManagers()
 			.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
 					holiday.getId().toString(), NotificationType.HOLIDAY,
 					EmailBodyTemplates.PEOPLE_MODULE_HOLIDAY_MULTI_DAY_APPROVED_LEAVE_REQUEST_UPDATED_EMPLOYEE,
@@ -128,7 +128,7 @@ public class PeopleNotificationServiceImpl implements PeopleNotificationService 
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
 
 		leaveRequest.getEmployee()
-			.getManagers()
+			.getEmployeeManagers()
 			.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
 					holiday.getId().toString(), NotificationType.HOLIDAY,
 					EmailBodyTemplates.PEOPLE_MODULE_HOLIDAY_DAY_MULTI_DAY_PENDING_LEAVE_REQUEST_UPDATED_MANAGER,
@@ -144,7 +144,7 @@ public class PeopleNotificationServiceImpl implements PeopleNotificationService 
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
 
 		leaveRequest.getEmployee()
-			.getManagers()
+			.getEmployeeManagers()
 			.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
 					holiday.getId().toString(), NotificationType.HOLIDAY,
 					EmailBodyTemplates.PEOPLE_MODULE_HOLIDAY_DAY_SINGLE_DAY_APPROVED_LEAVE_REQUEST_REVOKED_MANAGER,
@@ -161,7 +161,7 @@ public class PeopleNotificationServiceImpl implements PeopleNotificationService 
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
 
 		leaveRequest.getEmployee()
-			.getManagers()
+			.getEmployeeManagers()
 			.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
 					holiday.getId().toString(), NotificationType.HOLIDAY,
 					EmailBodyTemplates.PEOPLE_MODULE_HOLIDAY_MULTI_DAY_APPROVED_LEAVE_REQUEST_UPDATED_MANAGER,

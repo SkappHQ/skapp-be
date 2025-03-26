@@ -13,6 +13,7 @@ import com.skapp.community.peopleplanner.payload.request.EmployeeFamilyDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
 import com.skapp.community.peopleplanner.payload.request.EmploymentVisaDto;
 import com.skapp.community.peopleplanner.payload.request.ProbationPeriodDto;
+import lombok.experimental.UtilityClass;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -20,18 +21,18 @@ import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import static com.skapp.community.common.util.Validation.ADDRESS_REGEX;
+import static com.skapp.community.common.util.Validation.ALPHANUMERIC_REGEX;
 import static com.skapp.community.common.util.Validation.COUNTRY_CODE_PATTERN;
 import static com.skapp.community.common.util.Validation.EMAIL_REGEX;
+import static com.skapp.community.common.util.Validation.LETTERS_AND_SPACE_REGEX;
 import static com.skapp.community.common.util.Validation.NAME_REGEX;
+import static com.skapp.community.common.util.Validation.NUMERIC_REGEX;
 import static com.skapp.community.common.util.Validation.PHONE_NUMBER_PATTERN;
 import static com.skapp.community.common.util.Validation.VALID_IDENTIFICATION_NUMBER_REGEXP;
 import static com.skapp.community.common.util.Validation.VALID_NIN_NUMBER_REGEXP;
 
+@UtilityClass
 public class Validations {
-
-	private Validations() {
-		throw new IllegalStateException("Utility class");
-	}
 
 	public static boolean isEmployeeNameValid(String name) {
 		if (!name.matches(NAME_REGEX)) {
@@ -99,7 +100,7 @@ public class Validations {
 			validateEmail(employeeDetailsDto.getPersonalEmail());
 
 		if (employeeDetailsDto.getPhone() != null && !employeeDetailsDto.getPhone().isEmpty())
-			validatePhone(employeeDetailsDto.getPhone());
+			validateContactNo(employeeDetailsDto.getPhone());
 
 		if (employeeDetailsDto.getAddress() != null && !employeeDetailsDto.getAddress().isEmpty())
 			validateAddress(employeeDetailsDto.getAddress());
@@ -151,10 +152,10 @@ public class Validations {
 	}
 
 	public static void validateQuickAddEmployeeDetails(EmployeeQuickAddDto employeeQuickAddDto) {
-		if (employeeQuickAddDto.getWorkEmail() == null || employeeQuickAddDto.getWorkEmail().isEmpty())
+		if (employeeQuickAddDto.getEmail() == null || employeeQuickAddDto.getEmail().isEmpty())
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_EMAIL);
 		else
-			validateEmail(employeeQuickAddDto.getWorkEmail());
+			validateEmail(employeeQuickAddDto.getEmail());
 
 		if (employeeQuickAddDto.getFirstName() == null || employeeQuickAddDto.getFirstName().isEmpty())
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_ENTER_FIRST_NAME);
@@ -176,6 +177,24 @@ public class Validations {
 					List.of(String.valueOf(PeopleConstants.MAX_EMAIL_LENGTH)));
 	}
 
+	public static void validateWorkEmail(String email) {
+		if (email != null && !email.trim().matches(EMAIL_REGEX))
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_WORK_EMAIL);
+
+		if (email != null && email.length() > PeopleConstants.MAX_EMAIL_LENGTH)
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_WORK_EMAIL_LENGTH,
+					List.of(String.valueOf(PeopleConstants.MAX_EMAIL_LENGTH)));
+	}
+
+	public static void validatePersonalEmail(String email) {
+		if (email != null && !email.trim().matches(EMAIL_REGEX))
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_PERSONAL_EMAIL);
+
+		if (email != null && email.length() > PeopleConstants.MAX_EMAIL_LENGTH)
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_PERSONAL_EMAIL_LENGTH,
+					List.of(String.valueOf(PeopleConstants.MAX_EMAIL_LENGTH)));
+	}
+
 	public static void validateName(String name) {
 		if (name != null && !name.trim().matches(NAME_REGEX))
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_NAME);
@@ -183,7 +202,80 @@ public class Validations {
 		if (name != null && name.length() > PeopleConstants.MAX_NAME_LENGTH)
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_NAME_LENGTH,
 					List.of(String.valueOf(PeopleConstants.MAX_NAME_LENGTH)));
+	}
 
+	public static void validateFirstName(String name) {
+		if (name != null && !name.trim().matches(NAME_REGEX))
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_FIRST_NAME);
+
+		if (name != null && name.length() > PeopleConstants.MAX_NAME_LENGTH)
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_FIRST_NAME_LENGTH,
+					List.of(String.valueOf(PeopleConstants.MAX_NAME_LENGTH)));
+	}
+
+	public static void validateLastName(String name) {
+		if (name != null && !name.trim().matches(NAME_REGEX))
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_LAST_NAME);
+
+		if (name != null && name.length() > PeopleConstants.MAX_NAME_LENGTH)
+			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_LAST_NAME_LENGTH,
+					List.of(String.valueOf(PeopleConstants.MAX_NAME_LENGTH)));
+	}
+
+	public static void validateMiddleName(String name) {
+		if (name != null && !name.trim().matches(NAME_REGEX))
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_MIDDLE_NAME);
+
+		if (name != null && name.length() > PeopleConstants.MAX_NAME_LENGTH)
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_MIDDLE_NAME_LENGTH,
+					List.of(String.valueOf(PeopleConstants.MAX_NAME_LENGTH)));
+	}
+
+	public static void validateFamilyFirstName(String name) {
+		if (name != null && !name.trim().matches(NAME_REGEX))
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_FAMILY_FIRST_NAME);
+
+		if (name != null && name.length() > PeopleConstants.MAX_NAME_LENGTH)
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_FAMILY_FIRST_NAME_LENGTH,
+					List.of(String.valueOf(PeopleConstants.MAX_NAME_LENGTH)));
+	}
+
+	public static void validateFamilyLastName(String name) {
+		if (name != null && !name.trim().matches(NAME_REGEX))
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_FAMILY_LAST_NAME);
+
+		if (name != null && name.length() > PeopleConstants.MAX_NAME_LENGTH)
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_FAMILY_LAST_NAME_LENGTH,
+					List.of(String.valueOf(PeopleConstants.MAX_NAME_LENGTH)));
+	}
+
+	public static void validateFamilyParentName(String name) {
+		if (name != null && !name.trim().matches(LETTERS_AND_SPACE_REGEX))
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_FAMILY_PARENT_NAME);
+
+		if (name != null && name.length() > PeopleConstants.MAX_NAME_LENGTH)
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_FAMILY_PARENT_NAME_LENGTH,
+					List.of(String.valueOf(PeopleConstants.MAX_NAME_LENGTH)));
+	}
+
+	public static void validateCountry(String country) {
+		if (country != null && !country.trim().matches(LETTERS_AND_SPACE_REGEX))
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_COUNTRY);
+	}
+
+	public static void validateCity(String city) {
+		if (city != null && !city.trim().matches(LETTERS_AND_SPACE_REGEX))
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CITY);
+	}
+
+	public static void validateState(String state) {
+		if (state != null && !state.trim().matches(LETTERS_AND_SPACE_REGEX))
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_STATE);
+	}
+
+	public static void validatePostalCode(String country) {
+		if (country != null && !country.trim().matches(NUMERIC_REGEX))
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_POSTAL_CODE);
 	}
 
 	public static void validateAddress(String addressLine) {
@@ -193,17 +285,44 @@ public class Validations {
 		if (addressLine.length() > PeopleConstants.MAX_ADDRESS_LENGTH)
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_ADDRESS_LENGTH,
 					List.of(String.valueOf(PeopleConstants.MAX_ADDRESS_LENGTH)));
+	}
+
+	public static void validateAddressLine1(String addressLine) {
+		if (!addressLine.trim().matches(ADDRESS_REGEX))
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_ADDRESS_LINE1);
+
+		if (addressLine.length() > PeopleConstants.MAX_ADDRESS_LENGTH)
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_ADDRESS_LINE1_LENGTH,
+					List.of(String.valueOf(PeopleConstants.MAX_ADDRESS_LENGTH)));
 
 	}
 
-	public static void validatePhone(String phone) {
+	public static void validateAddressLine2(String addressLine) {
+		if (!addressLine.trim().matches(ADDRESS_REGEX))
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_ADDRESS_LINE12);
+
+		if (addressLine.length() > PeopleConstants.MAX_ADDRESS_LENGTH)
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_ADDRESS_LINE2_LENGTH,
+					List.of(String.valueOf(PeopleConstants.MAX_ADDRESS_LENGTH)));
+
+	}
+
+	public static void validateContactNo(String phone) {
 		if (!phone.trim().matches(PHONE_NUMBER_PATTERN))
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_PHONE_NUMBER);
 
 		if (phone.length() > PeopleConstants.MAX_PHONE_LENGTH)
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_PHONE_NUMBER_LENGTH,
 					List.of(String.valueOf(PeopleConstants.MAX_PHONE_LENGTH)));
+	}
 
+	public static void validateEmployeeContactNo(String phone) {
+		if (!phone.trim().matches(PHONE_NUMBER_PATTERN))
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_EMPLOYEE_PHONE_NUMBER);
+
+		if (phone.length() > PeopleConstants.MAX_PHONE_LENGTH)
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_EMPLOYEE_PHONE_NUMBER_LENGTH,
+					List.of(String.valueOf(PeopleConstants.MAX_PHONE_LENGTH)));
 	}
 
 	public static void validateEmployeeIdentificationNo(String identificationNo) {
@@ -223,7 +342,6 @@ public class Validations {
 		if (nin.length() > PeopleConstants.MAX_NIN_LENGTH)
 			throw new ValidationException(CommonMessageConstant.COMMON_ERROR_VALIDATION_NIN_LENGTH,
 					List.of(String.valueOf(PeopleConstants.MAX_NIN_LENGTH)));
-
 	}
 
 	public static void validateJoinedDate(LocalDate joinDate) {
@@ -280,6 +398,15 @@ public class Validations {
 			if (family.getBirthDate() != null)
 				validateBirthDate(family.getBirthDate());
 		}
+	}
+
+	public static void validateEmployeeNumber(String employeeNumber) {
+		if (!employeeNumber.trim().matches(ALPHANUMERIC_REGEX))
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_EMPLOYEE_NUMBER);
+
+		if (employeeNumber.length() > PeopleConstants.MAX_EMPLOYEE_NUMBER_LENGTH)
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_EMPLOYEE_NUMBER_LENGTH,
+					List.of(String.valueOf(PeopleConstants.MAX_EMPLOYEE_NUMBER_LENGTH)));
 	}
 
 }

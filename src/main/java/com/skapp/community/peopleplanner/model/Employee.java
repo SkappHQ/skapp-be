@@ -5,8 +5,8 @@ import com.skapp.community.common.model.Notification;
 import com.skapp.community.common.model.User;
 import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.EEO;
-import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
+import com.skapp.community.peopleplanner.type.EmploymentType;
 import com.skapp.community.peopleplanner.type.Gender;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -70,7 +70,7 @@ public class Employee extends Auditable<String> {
 	private String country;
 
 	@Column(name = "address")
-	private String address;
+	private String addressLine1;
 
 	@Column(name = "personal_email")
 	private String personalEmail;
@@ -95,7 +95,7 @@ public class Employee extends Auditable<String> {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "employee_type", columnDefinition = "varchar(255)")
-	private EmployeeType employeeType;
+	private EmploymentType employmentType;
 
 	@Column(name = "account_status", nullable = false, columnDefinition = "varchar(20)")
 	@Enumerated(EnumType.STRING)
@@ -108,9 +108,47 @@ public class Employee extends Auditable<String> {
 	@Column(name = "last_clock_in_date")
 	private LocalDate lastClockInDate;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "eeo", columnDefinition = "varchar(255)")
+	private EEO eeo;
+
+	@Column(name = "termination_date")
+	private LocalDate terminationDate;
+
 	@OneToOne(mappedBy = "employee", cascade = CascadeType.ALL)
 	@PrimaryKeyJoinColumn
 	private EmployeeRole employeeRole;
+
+	@OneToOne(mappedBy = "employee", cascade = CascadeType.ALL)
+	@PrimaryKeyJoinColumn
+	private EmployeePersonalInfo personalInfo;
+
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
+	private Set<EmployeeTeam> employeeTeams;
+
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
+	private List<EmployeeEducation> employeeEducations;
+
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
+	private List<EmployeeProgression> employeeProgressions;
+
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
+	private List<EmployeeVisa> employeeVisas;
+
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
+	private List<EmployeeFamily> employeeFamilies;
+
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
+	private List<EmployeeEmergency> employeeEmergencies;
+
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
+	private Set<EmployeeManager> employeeManagers;
+
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
+	private Set<EmployeePeriod> employeePeriods;
+
+	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
+	private List<Notification> notifications = new ArrayList<>();
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "job_family_id")
@@ -119,43 +157,5 @@ public class Employee extends Auditable<String> {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "job_title_id")
 	private JobTitle jobTitle;
-
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private Set<EmployeeTeam> teams;
-
-	@Enumerated(EnumType.STRING)
-	@Column(name = "eeo", columnDefinition = "varchar(255)")
-	private EEO eeo;
-
-	@Column(name = "termination_date")
-	private LocalDate terminationDate;
-
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private List<EmployeeEducation> employeeEducations;
-
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private List<EmployeeProgression> employeeProgressions;
-
-	@OneToOne(mappedBy = "employee", cascade = CascadeType.ALL)
-	@PrimaryKeyJoinColumn
-	private EmployeePersonalInfo personalInfo;
-
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private List<EmployeeVisa> employeeVisas;
-
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private List<EmployeeFamily> employeeFamilies;
-
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private List<EmployeeEmergency> employeeEmergencies;
-
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	Set<EmployeeManager> employees;
-
-	@OneToMany(mappedBy = "manager", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	Set<EmployeeManager> managers;
-
-	@OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	private List<Notification> notifications = new ArrayList<>();
 
 }

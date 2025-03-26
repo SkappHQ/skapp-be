@@ -442,7 +442,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		CriteriaQuery<Tuple> criteriaQuery = criteriaBuilder.createTupleQuery();
 		Root<LeaveEntitlement> root = criteriaQuery.from(LeaveEntitlement.class);
 		Join<LeaveEntitlement, Employee> employee = root.join(LeaveEntitlement_.employee);
-		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.teams);
+		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.employeeTeams);
 		Join<Employee, User> user = employee.join(Employee_.user);
 
 		List<Predicate> predicates = getTeamLeaveSummaryPredicates(criteriaBuilder, root, user, employeeTeam, teamId);
@@ -471,7 +471,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		CriteriaQuery<Tuple> criteriaQuery = criteriaBuilder.createTupleQuery();
 		Root<LeaveEntitlement> root = criteriaQuery.from(LeaveEntitlement.class);
 		Join<LeaveEntitlement, Employee> employee = root.join(LeaveEntitlement_.employee);
-		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.teams);
+		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.employeeTeams);
 		Join<Employee, User> user = employee.join(Employee_.user);
 
 		List<Predicate> predicates = getTeamLeaveSummaryPredicates(criteriaBuilder, root, user, employeeTeam, teamId);
@@ -549,7 +549,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		}
 		predicates.add(criteriaBuilder.equal(user.get(User_.isActive), true));
 		if (teamId != null) {
-			Join<Employee, EmployeeTeam> employeeTeam = employeeJoin.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeam = employeeJoin.join(Employee_.employeeTeams);
 			predicates.add(criteriaBuilder.equal(employeeTeam.get(EmployeeTeam_.team).get(Team_.teamId), teamId));
 		}
 		if (jobFamilyId != null) {
@@ -629,7 +629,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		}
 
 		if (team != null && teamId != null && teamId != -1) {
-			Join<Employee, EmployeeTeam> empTeam = employee.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> empTeam = employee.join(Employee_.employeeTeams);
 			Join<EmployeeTeam, Team> mainTeam = empTeam.join(EmployeeTeam_.team);
 			predicates.add(cb.equal(mainTeam.get(Team_.teamId), teamId));
 		}
@@ -654,7 +654,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		Join<Employee, User> user = employee.join(Employee_.user);
 		Join<LeaveEntitlement, LeaveType> leaveType = leaveEntitlement.join(LeaveEntitlement_.leaveType);
 		Join<Employee, JobFamily> jobFamily = employee.join(Employee_.jobFamily, JoinType.LEFT);
-		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.teams, JoinType.LEFT);
+		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.employeeTeams, JoinType.LEFT);
 		Join<EmployeeTeam, Team> team = employeeTeam.join(EmployeeTeam_.team, JoinType.LEFT);
 
 		Expression<String> employeeName = cb.concat(cb.concat(employee.get(Employee_.firstName), cb.literal(" ")),
@@ -682,7 +682,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		}
 
 		if (teamId != null && teamId != -1) {
-			Join<Employee, EmployeeTeam> empTeam = employee.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> empTeam = employee.join(Employee_.employeeTeams);
 			Join<EmployeeTeam, Team> mainTeam = empTeam.join(EmployeeTeam_.team);
 			predicates.add(cb.equal(mainTeam.get(Team_.teamId), teamId));
 		}
@@ -717,7 +717,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		Join<Employee, User> user = employee.join(Employee_.user);
 		Join<LeaveEntitlement, LeaveType> leaveType = leaveEntitlement.join(LeaveEntitlement_.leaveType);
 		Join<Employee, JobFamily> jobFamily = employee.join(Employee_.jobFamily, JoinType.LEFT);
-		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.teams, JoinType.LEFT);
+		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.employeeTeams, JoinType.LEFT);
 		Join<EmployeeTeam, Team> team = employeeTeam.join(EmployeeTeam_.team, JoinType.LEFT);
 
 		Expression<String> teams = cb.function(CriteriaBuilderSqlFunction.GROUP_CONCAT.getFunctionName(), String.class,
@@ -761,7 +761,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		Join<Employee, User> countUser = countEmployee.join(Employee_.user);
 		Join<LeaveEntitlement, LeaveType> countLeaveType = countRoot.join(LeaveEntitlement_.leaveType);
 		Join<Employee, JobFamily> countJobFamily = countEmployee.join(Employee_.jobFamily, JoinType.LEFT);
-		Join<Employee, EmployeeTeam> countEmployeeTeam = countEmployee.join(Employee_.teams, JoinType.LEFT);
+		Join<Employee, EmployeeTeam> countEmployeeTeam = countEmployee.join(Employee_.employeeTeams, JoinType.LEFT);
 		Join<EmployeeTeam, Team> countTeam = countEmployeeTeam.join(EmployeeTeam_.team, JoinType.LEFT);
 
 		List<Predicate> countPredicates = createPredicatesForLeaveEntitlement(cb, countRoot, countEmployee, countUser,
@@ -831,7 +831,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		}
 
 		if (teamId != null && teamId != -1) {
-			Join<Employee, EmployeeTeam> empTeam = employee.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> empTeam = employee.join(Employee_.employeeTeams);
 			Join<EmployeeTeam, Team> mainTeam = empTeam.join(EmployeeTeam_.team);
 			predicates.add(cb.equal(mainTeam.get(Team_.teamId), teamId));
 		}

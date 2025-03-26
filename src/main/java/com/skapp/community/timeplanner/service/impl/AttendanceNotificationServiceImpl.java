@@ -51,7 +51,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		attendanceEmailDynamicFields
 			.setEmployeeName(timeRequest.getEmployee().getFirstName() + " " + timeRequest.getEmployee().getLastName());
 
-		Set<EmployeeManager> employeeManagers = timeRequest.getEmployee().getManagers();
+		Set<EmployeeManager> employeeManagers = timeRequest.getEmployee().getEmployeeManagers();
 		employeeManagers
 			.forEach(employeeManager -> notificationService.createNotification(employeeManager.getEmployee(),
 					timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,

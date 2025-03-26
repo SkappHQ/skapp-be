@@ -1,5 +1,7 @@
 package com.skapp.community.peopleplanner.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -52,22 +54,34 @@ import com.skapp.community.peopleplanner.payload.CurrentEmployeeDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeBulkDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDataValidationDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDetailsDto;
-import com.skapp.community.peopleplanner.payload.request.EmployeeEducationDto;
-import com.skapp.community.peopleplanner.payload.request.EmployeeEmergencyDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto;
-import com.skapp.community.peopleplanner.payload.request.EmployeeFamilyDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
-import com.skapp.community.peopleplanner.payload.request.EmployeePersonalInfoDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeProgressionsDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeUpdateDto;
-import com.skapp.community.peopleplanner.payload.request.EmploymentVisaDto;
-import com.skapp.community.peopleplanner.payload.request.JobTitleDto;
 import com.skapp.community.peopleplanner.payload.request.NotificationSettingsPatchRequestDto;
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.request.ProbationPeriodDto;
-import com.skapp.community.peopleplanner.payload.request.RoleRequestDto;
+import com.skapp.community.peopleplanner.payload.request.employee.CreateEmployeeRequestDto;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeeCommonDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeeEmergencyDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeeEmploymentDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeePersonalDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeeSystemPermissionsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.emergency.EmployeeEmergencyContactDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentBasicDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentBasicDetailsManagerDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentIdentificationAndDiversityDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentPreviousEmploymentDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeeExtraInfoDto;
+import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalContactDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalEducationalDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalFamilyDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalGeneralDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalHealthAndOtherDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalSocialMediaDetailsDto;
 import com.skapp.community.peopleplanner.payload.response.AnalyticsSearchResponseDto;
+import com.skapp.community.peopleplanner.payload.response.CreateEmployeeResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeAllDataExportResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeBulkErrorResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeBulkResponseDto;
@@ -76,39 +90,26 @@ import com.skapp.community.peopleplanner.payload.response.EmployeeCredentialsRes
 import com.skapp.community.peopleplanner.payload.response.EmployeeDataExportResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeDataValidationResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeDetailedResponseDto;
-import com.skapp.community.peopleplanner.payload.response.EmployeeJobFamilyDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeManagerDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeManagerResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeePeriodResponseDto;
-import com.skapp.community.peopleplanner.payload.response.EmployeeProgressionResponseDto;
-import com.skapp.community.peopleplanner.payload.response.EmployeeResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeTeamDto;
-import com.skapp.community.peopleplanner.payload.response.ManagerEmployeeDto;
-import com.skapp.community.peopleplanner.payload.response.ManagingEmployeesResponseDto;
 import com.skapp.community.peopleplanner.payload.response.PrimarySecondaryOrTeamSupervisorResponseDto;
-import com.skapp.community.peopleplanner.payload.response.SummarizedEmployeeDtoForEmployees;
-import com.skapp.community.peopleplanner.payload.response.SummarizedManagerEmployeeDto;
-import com.skapp.community.peopleplanner.payload.response.TeamDetailResponseDto;
-import com.skapp.community.peopleplanner.payload.response.TeamEmployeeResponseDto;
 import com.skapp.community.peopleplanner.repository.EmployeeDao;
-import com.skapp.community.peopleplanner.repository.EmployeeEducationDao;
-import com.skapp.community.peopleplanner.repository.EmployeeFamilyDao;
 import com.skapp.community.peopleplanner.repository.EmployeeManagerDao;
 import com.skapp.community.peopleplanner.repository.EmployeePeriodDao;
-import com.skapp.community.peopleplanner.repository.EmployeeProgressionDao;
 import com.skapp.community.peopleplanner.repository.EmployeeTeamDao;
-import com.skapp.community.peopleplanner.repository.EmployeeVisaDao;
 import com.skapp.community.peopleplanner.repository.JobFamilyDao;
 import com.skapp.community.peopleplanner.repository.JobTitleDao;
 import com.skapp.community.peopleplanner.repository.TeamDao;
+import com.skapp.community.peopleplanner.service.EmployeeValidationService;
 import com.skapp.community.peopleplanner.service.PeopleEmailService;
 import com.skapp.community.peopleplanner.service.PeopleService;
 import com.skapp.community.peopleplanner.service.RolesService;
 import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.BulkItemStatus;
-import com.skapp.community.peopleplanner.type.EmployeeType;
+import com.skapp.community.peopleplanner.type.EmploymentType;
 import com.skapp.community.peopleplanner.util.Validations;
-import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -129,11 +130,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -169,17 +171,9 @@ public class PeopleServiceImpl implements PeopleService {
 
 	private final JobFamilyDao jobFamilyDao;
 
-	private final EmployeeProgressionDao employeeProgressionDao;
-
 	private final JobTitleDao jobTitleDao;
 
 	private final EmployeePeriodDao employeePeriodDao;
-
-	private final EmployeeVisaDao employeeVisaDao;
-
-	private final EmployeeEducationDao employeeEducationDao;
-
-	private final EmployeeFamilyDao employeeFamilyDao;
 
 	private final EmployeeTeamDao employeeTeamDao;
 
@@ -207,257 +201,596 @@ public class PeopleServiceImpl implements PeopleService {
 
 	private final UserVersionService userVersionService;
 
+	private final EmployeeValidationService employeeValidationService;
+
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
 
-	private static final String START_DATE = "startDate";
-
-	private static final String END_DATE = "endDate";
-
 	@Override
-	@Transactional(propagation = Propagation.REQUIRED)
-	public ResponseEntityDto addNewEmployee(EmployeeDetailsDto employeeDetailsDto) {
-		log.info("addNewEmployee: execution started");
-
+	@Transactional
+	public ResponseEntityDto createEmployee(CreateEmployeeRequestDto requestDto) {
 		if (checkUserCountExceeded()) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_LIMIT_EXCEEDED);
 		}
 
-		Optional<User> existingUser = userDao.findByEmail(employeeDetailsDto.getWorkEmail());
-		if (existingUser.isPresent()) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_USER_EMAIL_ALREADY_EXIST);
-		}
-
-		rolesService.validateRoles(employeeDetailsDto.getUserRoles());
-
-		Validations.validateEmployeeDetails(employeeDetailsDto);
-
-		Employee finalEmployee = peopleMapper.employeeDetailsDtoToEmployee(employeeDetailsDto);
-
-		processEmploymentDetails(employeeDetailsDto, finalEmployee);
-		processEmployeeProgressions(employeeDetailsDto, finalEmployee);
-		processEmployeeEmergencyContacts(employeeDetailsDto, finalEmployee);
-		processEmployeePersonalInfo(employeeDetailsDto, finalEmployee);
-		processEmployeeVisas(employeeDetailsDto, finalEmployee);
-		processEmployeeFamilies(employeeDetailsDto, finalEmployee);
-		processEmployeeEducations(employeeDetailsDto, finalEmployee);
-
-		finalEmployee.setAccountStatus(AccountStatus.PENDING);
-
 		User user = new User();
-		user.setEmail(employeeDetailsDto.getWorkEmail());
-		user.setIsActive(true);
-		UserSettings userSettings = createNotificationSettings(employeeDetailsDto.getUserRoles(), user);
-		user.setSettings(userSettings);
+		Employee employee = new Employee();
 
-		String tempPassword = CommonModuleUtils.generateSecureRandomPassword();
-		Optional<User> firstUser = userDao.findById(1L);
-		LoginMethod loginMethod = firstUser.isPresent() ? firstUser.get().getLoginMethod() : LoginMethod.CREDENTIALS;
+		employeeValidationService.validateCreateEmployeeRequestRequiredFields(requestDto, user);
+		employeeValidationService.validateCreateEmployeeRequestPersonalDetails(requestDto.getPersonal(), user);
+		employeeValidationService.validateCreateEmployeeRequestEmploymentDetails(requestDto.getEmployment(), user);
+		rolesService.validateRoles(requestDto.getSystemPermissions(), user);
 
-		user.setLoginMethod(loginMethod);
+		employee.setUser(createUserEntity(user, requestDto));
+		user.setEmployee(createEmployeeEntity(employee, requestDto));
 
-		if (loginMethod.equals(LoginMethod.GOOGLE)) {
-			user.setIsPasswordChangedForTheFirstTime(true);
-		}
-		else {
-			user.setTempPassword(encryptionDecryptionService.encrypt(tempPassword, encryptSecret));
-			user.setPassword(passwordEncoder.encode(tempPassword));
-			user.setIsPasswordChangedForTheFirstTime(false);
-		}
-
-		user.setEmployee(finalEmployee);
-		finalEmployee.setUser(user);
 		userDao.save(user);
+
 		applicationEventPublisher.publishEvent(new UserCreatedEvent(this, user));
-
-		List<EmployeeProgressionsDto> progressions = employeeDetailsDto.getEmployeeProgressions();
-		if (progressions != null && !progressions.isEmpty()) {
-			for (EmployeeProgressionsDto progression : progressions) {
-				if (Boolean.TRUE.equals(progression.getIsCurrent())) {
-					JobFamily jobFamily = jobFamilyDao.getJobFamilyById(progression.getJobFamilyId());
-					JobTitle jobTitle = jobTitleDao.getJobTitleById(progression.getJobTitleId());
-
-					finalEmployee.setJobFamily(jobFamily);
-					finalEmployee.setJobTitle(jobTitle);
-
-					employeeDao.save(finalEmployee);
-				}
-			}
-		}
-
-		Set<EmployeeManager> managers = addNewManagers(employeeDetailsDto, finalEmployee);
-		finalEmployee.setManagers(managers);
-
-		employeeDao.save(finalEmployee);
-
-		rolesService.assignRolesToEmployee(employeeDetailsDto.getUserRoles(), finalEmployee);
-
-		EmployeeDetailedResponseDto employeeResponseDto = peopleMapper
-			.employeeToEmployeeDetailedResponseDto(finalEmployee);
-		if (employeeDetailsDto.getProbationPeriod() != null) {
-			employeeResponseDto.setPeriodResponseDto(peopleMapper.employeePeriodToEmployeePeriodResponseDto(
-					saveEmployeePeriod(finalEmployee, employeeDetailsDto.getProbationPeriod())));
-		}
-
-		EmployeeCredentialsResponseDto employeeCredentials = new EmployeeCredentialsResponseDto();
-		employeeCredentials.setEmail(finalEmployee.getUser().getEmail());
-
-		if (loginMethod.equals(LoginMethod.CREDENTIALS)) {
-			employeeCredentials.setTempPassword(tempPassword);
-			employeeResponseDto.setEmployeeCredentials(employeeCredentials);
-		}
-
 		peopleEmailService.sendUserInvitationEmail(user);
-
-		addNewEmployeeTimeLineRecords(finalEmployee, employeeDetailsDto);
+		addNewEmployeeTimeLineRecords(employee, requestDto);
 		updateSubscriptionQuantity(1L, true);
 
-		return new ResponseEntityDto(false, employeeResponseDto);
+		return new ResponseEntityDto(false, processCreateEmployeeResponse(user));
 	}
 
 	@Override
-	@Transactional(propagation = Propagation.REQUIRED)
 	public ResponseEntityDto quickAddEmployee(EmployeeQuickAddDto employeeQuickAddDto) {
-		User currentUser = userService.getCurrentUser();
-		log.info("quickAddEmployee: execution started by user: {}", currentUser.getUserId());
-
 		if (checkUserCountExceeded()) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_LIMIT_EXCEEDED);
 		}
 
-		Optional<User> existingUser = userDao.findByEmail(employeeQuickAddDto.getWorkEmail());
-		if (existingUser.isPresent()) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_USER_EMAIL_ALREADY_EXIST);
-		}
-
-		Validations.validateQuickAddEmployeeDetails(employeeQuickAddDto);
-
-		rolesService.validateRoles(employeeQuickAddDto.getUserRoles());
-
-		Employee finalEmployee = peopleMapper.employeeQuickAddDtoToEmployee(employeeQuickAddDto);
-		finalEmployee.setAccountStatus(AccountStatus.PENDING);
 		User user = new User();
-		user.setEmail(employeeQuickAddDto.getWorkEmail());
-		user.setIsActive(true);
-		String tempPassword = CommonModuleUtils.generateSecureRandomPassword();
+		Employee employee = new Employee();
 
-		user.setTempPassword(encryptionDecryptionService.encrypt(tempPassword, encryptSecret));
-		user.setPassword(passwordEncoder.encode(tempPassword));
+		CreateEmployeeRequestDto createEmployeeRequestDto = createEmployeeRequest(employeeQuickAddDto);
+		employeeValidationService.validateCreateEmployeeRequestRequiredFields(createEmployeeRequestDto, user);
+		rolesService.validateRoles(employeeQuickAddDto.getUserRoles(), user);
 
-		User firstUser = userDao.findById(1L)
-			.orElseThrow(() -> new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND));
-		LoginMethod loginMethod = firstUser.getLoginMethod();
-
-		if (loginMethod.equals(LoginMethod.GOOGLE)) {
-			user.setIsPasswordChangedForTheFirstTime(true);
-			user.setLoginMethod(LoginMethod.GOOGLE);
-		}
-		else {
-			user.setIsPasswordChangedForTheFirstTime(false);
-			user.setLoginMethod(LoginMethod.CREDENTIALS);
-		}
-
-		finalEmployee.setUser(user);
-		user.setEmployee(finalEmployee);
-		UserSettings userSettings = createNotificationSettings(employeeQuickAddDto.getUserRoles(), user);
-		user.setSettings(userSettings);
+		user.setEmployee(createEmployeeEntity(employee, createEmployeeRequestDto));
+		employee.setUser(createUserEntity(user, createEmployeeRequestDto));
 
 		userDao.save(user);
-		employeeDao.save(finalEmployee);
+
 		applicationEventPublisher.publishEvent(new UserCreatedEvent(this, user));
-
-		rolesService.assignRolesToEmployee(employeeQuickAddDto.getUserRoles(), finalEmployee);
-
-		peopleEmailService.sendUserInvitationEmail(finalEmployee.getUser());
-
-		EmployeeDetailedResponseDto employeeResponseDto = peopleMapper
-			.employeeToEmployeeDetailedResponseDto(finalEmployee);
-
-		EmployeeCredentialsResponseDto employeeCredentials = new EmployeeCredentialsResponseDto();
-		employeeCredentials.setEmail(finalEmployee.getUser().getEmail());
-		employeeCredentials.setTempPassword(tempPassword);
-
-		employeeResponseDto.setEmployeeCredentials(employeeCredentials);
-
-		addNewQuickUploadedEmployeeTimeLineRecords(finalEmployee, employeeQuickAddDto);
+		peopleEmailService.sendUserInvitationEmail(user);
+		addNewQuickUploadedEmployeeTimeLineRecords(employee, employeeQuickAddDto);
 		updateSubscriptionQuantity(1L, true);
 
-		log.info("quickAddEmployee: execution ended by user: {}", currentUser.getUserId());
-		return new ResponseEntityDto(false, employeeResponseDto);
+		return new ResponseEntityDto(false, processCreateEmployeeResponse(user));
 	}
 
 	@Override
 	@Transactional
-	public ResponseEntityDto updateEmployee(Long employeeId, EmployeeUpdateDto employeeUpdateDto) {
-		log.info("updateEmployee: execution started");
-
-		Optional<Employee> optionalEmployee = employeeDao.findById(employeeId);
-
-		if (optionalEmployee.isEmpty()) {
-			log.info("updateEmployee: employee with ID {} not found", employeeId);
-			throw new EntityNotFoundException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND);
+	public ResponseEntityDto updateEmployee(Long employeeId, CreateEmployeeRequestDto requestDto) {
+		Optional<User> optionalUser = userDao.findById(employeeId);
+		if (optionalUser.isEmpty()) {
+			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
 		}
 
-		CurrentEmployeeDto currentEmployeeDto = getEmployeeDeepCopy(optionalEmployee.get());
+		User user = optionalUser.get();
+		Employee employee = user.getEmployee();
 
-		Employee employee = optionalEmployee.get();
+		employeeValidationService.validateCreateEmployeeRequestRequiredFields(requestDto, user);
+		employeeValidationService.validateCreateEmployeeRequestEmploymentDetails(requestDto.getEmployment(), user);
+		employeeValidationService.validateCreateEmployeeRequestPersonalDetails(requestDto.getPersonal(), user);
+		rolesService.validateRoles(requestDto.getSystemPermissions(), user);
 
-		if (employee.getAccountStatus().equals(AccountStatus.TERMINATED)) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_TERMINATED);
+		employee.setUser(createUserEntity(user, requestDto));
+		user.setEmployee(createEmployeeEntity(employee, requestDto));
+
+		userDao.save(user);
+
+		return new ResponseEntityDto(false, requestDto);
+	}
+
+	private CreateEmployeeRequestDto createEmployeeRequest(EmployeeQuickAddDto dto) {
+		CreateEmployeeRequestDto requestDto = new CreateEmployeeRequestDto();
+
+		EmployeePersonalDetailsDto personalDetails = new EmployeePersonalDetailsDto();
+		EmployeePersonalGeneralDetailsDto generalDetails = new EmployeePersonalGeneralDetailsDto();
+		generalDetails.setFirstName(dto.getFirstName());
+		generalDetails.setLastName(dto.getLastName());
+		personalDetails.setGeneral(generalDetails);
+		requestDto.setPersonal(personalDetails);
+
+		EmployeeEmploymentDetailsDto employmentDetails = new EmployeeEmploymentDetailsDto();
+		EmployeeEmploymentBasicDetailsDto basicDetails = new EmployeeEmploymentBasicDetailsDto();
+		basicDetails.setEmail(dto.getEmail());
+		employmentDetails.setEmploymentDetails(basicDetails);
+		requestDto.setEmployment(employmentDetails);
+
+		requestDto.setSystemPermissions(dto.getUserRoles());
+
+		return requestDto;
+	}
+
+	private Employee createEmployeeEntity(Employee employee, CreateEmployeeRequestDto requestDto) {
+		// Personal General Information
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getGeneral().getFirstName(),
+				employee::setFirstName);
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getGeneral().getMiddleName(),
+				employee::setMiddleName);
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getGeneral().getLastName(), employee::setLastName);
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getGeneral().getGender(), employee::setGender);
+
+		// Personal Contact Information
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getContact().getPersonalEmail(),
+				employee::setPersonalEmail);
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getContact().getContactNo(), employee::setPhone);
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getContact().getAddressLine1(),
+				employee::setAddressLine1);
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getContact().getAddressLine2(),
+				employee::setAddressLine2);
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getContact().getCountry(), employee::setCountry);
+
+		// Employment Details
+		CommonModuleUtils.setIfExists(() -> requestDto.getEmployment().getEmploymentDetails().getEmployeeNumber(),
+				employee::setIdentificationNo);
+		CommonModuleUtils.setIfExists(() -> requestDto.getEmployment().getEmploymentDetails().getEmploymentAllocation(),
+				employee::setEmploymentAllocation);
+		CommonModuleUtils.setIfExists(() -> requestDto.getEmployment().getEmploymentDetails().getJoinedDate(),
+				employee::setJoinDate);
+		CommonModuleUtils.setIfExists(() -> requestDto.getEmployment().getEmploymentDetails().getWorkTimeZone(),
+				employee::setTimeZone);
+
+		// Identification and Diversity Details
+		CommonModuleUtils.setIfExists(
+				() -> requestDto.getEmployment().getIdentificationAndDiversityDetails().getEeoJobCategory(),
+				employee::setEeo);
+
+		// Common Information
+		CommonModuleUtils.setIfExists(() -> requestDto.getCommon().getAuthPic(), employee::setAuthPic);
+
+		CommonModuleUtils.setIfRequestValid(requestDto, () -> processEmployeePersonalInfo(requestDto, employee),
+				employee::setPersonalInfo);
+
+		CommonModuleUtils.setIfRequestValid(requestDto, () -> processEmergencyContacts(requestDto, employee),
+				employee::setEmployeeEmergencies);
+
+		CommonModuleUtils.setIfRequestValid(requestDto, () -> processEmployeeProbationPeriod(requestDto, employee),
+				employee::setEmployeePeriods);
+
+		CommonModuleUtils.setIfRequestValid(requestDto, () -> processCareerProgressions(requestDto, employee),
+				employee::setEmployeeProgressions);
+
+		CommonModuleUtils.setIfRequestValid(requestDto, () -> processEmployeeVisas(requestDto, employee),
+				employee::setEmployeeVisas);
+
+		CommonModuleUtils.setIfRequestValid(requestDto.getPersonal(),
+				() -> processEmployeeFamilies(requestDto.getPersonal(), employee), employee::setEmployeeFamilies);
+
+		CommonModuleUtils.setIfRequestValid(requestDto, () -> processEmployeeEducations(requestDto, employee),
+				employee::setEmployeeEducations);
+
+		CommonModuleUtils.setIfRequestValid(requestDto.getEmployment(),
+				() -> processEmployeeTeams(requestDto.getEmployment(), employee), employee::setEmployeeTeams);
+
+		CommonModuleUtils.setIfRequestValid(requestDto.getEmployment(),
+				() -> processEmployeeManagers(requestDto.getEmployment(), employee), employee::setEmployeeManagers);
+
+		CommonModuleUtils.setIfRequestValid(requestDto.getSystemPermissions(),
+				() -> rolesService.assignRolesToEmployee(requestDto.getSystemPermissions(), employee),
+				employee::setEmployeeRole);
+
+		if (employee.getAccountStatus() == null) {
+			employee.setAccountStatus(AccountStatus.PENDING);
 		}
 
-		if (employee.getAccountStatus().equals(AccountStatus.PENDING) && employeeUpdateDto.getEmail() != null
-				&& !Objects.equals(employee.getUser().getEmail(), employeeUpdateDto.getEmail())) {
-			if (userDao.findByEmail(employeeUpdateDto.getEmail()).isPresent()) {
-				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_USER_EMAIL_ALREADY_EXIST);
+		return employee;
+	}
+
+	private User createUserEntity(User user, CreateEmployeeRequestDto requestDto) {
+		CommonModuleUtils.setIfExists(() -> requestDto.getEmployment().getEmploymentDetails().getEmail(),
+				user::setEmail);
+
+		LoginMethod loginMethod = userDao.findById(1L).map(User::getLoginMethod).orElse(LoginMethod.CREDENTIALS);
+
+		if (loginMethod == LoginMethod.CREDENTIALS) {
+			String tempPassword = CommonModuleUtils.generateSecureRandomPassword();
+			CommonModuleUtils.setIfExists(() -> encryptionDecryptionService.encrypt(tempPassword, encryptSecret),
+					user::setTempPassword);
+			CommonModuleUtils.setIfExists(() -> passwordEncoder.encode(tempPassword), user::setPassword);
+			user.setIsPasswordChangedForTheFirstTime(false);
+		}
+		else if (loginMethod == LoginMethod.GOOGLE) {
+			user.setIsPasswordChangedForTheFirstTime(true);
+		}
+
+		CommonModuleUtils.setIfExists(() -> createNotificationSettings(requestDto.getSystemPermissions(), user),
+				user::setSettings);
+		user.setLoginMethod(loginMethod);
+		user.setIsActive(true);
+
+		return user;
+	}
+
+	private EmployeePersonalInfo processEmployeePersonalInfo(CreateEmployeeRequestDto requestDto, Employee employee) {
+		EmployeePersonalInfo personalInfo = employee.getPersonalInfo();
+		if (personalInfo == null) {
+			personalInfo = new EmployeePersonalInfo();
+		}
+
+		// General information
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getGeneral().getDateOfBirth(),
+				personalInfo::setBirthDate);
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getGeneral().getNationality(),
+				personalInfo::setNationality);
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getGeneral().getNin(), personalInfo::setNin);
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getGeneral().getPassportNumber(),
+				personalInfo::setPassportNo);
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getGeneral().getMaritalStatus(),
+				personalInfo::setMaritalStatus);
+
+		// Contact information
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getContact().getCity(), personalInfo::setCity);
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getContact().getState(), personalInfo::setState);
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getContact().getPostalCode(),
+				personalInfo::setPostalCode);
+
+		// Health information
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getHealthAndOther().getBloodGroup(),
+				personalInfo::setBloodGroup);
+
+		// Identification and diversity
+		CommonModuleUtils.setIfExists(() -> requestDto.getEmployment().getIdentificationAndDiversityDetails().getSsn(),
+				personalInfo::setSsn);
+		CommonModuleUtils.setIfExists(
+				() -> requestDto.getEmployment().getIdentificationAndDiversityDetails().getEthnicity(),
+				personalInfo::setEthnicity);
+
+		// Social media details
+		EmployeePersonalSocialMediaDetailsDto socialMedia = CommonModuleUtils
+			.safeGet(() -> requestDto.getPersonal().getSocialMedia());
+		if (socialMedia == null) {
+			socialMedia = new EmployeePersonalSocialMediaDetailsDto();
+		}
+		personalInfo.setSocialMediaDetails(mapper.valueToTree(socialMedia));
+
+		// Extra info
+		EmployeeExtraInfoDto extraInfo = new EmployeeExtraInfoDto();
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getHealthAndOther().getAllergies(),
+				extraInfo::setAllergies);
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getHealthAndOther().getTShirtSize(),
+				extraInfo::setTShirtSize);
+		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getHealthAndOther().getDietaryRestrictions(),
+				extraInfo::setDietaryRestrictions);
+		personalInfo.setExtraInfo(mapper.valueToTree(extraInfo));
+
+		// Previous employment
+		CommonModuleUtils.setIfExists(() -> mapper.valueToTree(requestDto.getEmployment().getPreviousEmployment()),
+				personalInfo::setPreviousEmploymentDetails);
+
+		personalInfo.setEmployee(employee);
+		return personalInfo;
+	}
+
+	private List<EmployeeFamily> processEmployeeFamilies(EmployeePersonalDetailsDto personal, Employee employee) {
+		if (personal == null || employee == null || personal.getFamily() == null) {
+			return new ArrayList<>();
+		}
+
+		List<EmployeeFamily> existingFamilies = employee.getEmployeeFamilies() != null
+				? new ArrayList<>(employee.getEmployeeFamilies()) : new ArrayList<>();
+
+		Map<Long, EmployeeFamily> existingFamilyMap = existingFamilies.stream()
+			.filter(family -> family.getFamilyId() != null)
+			.collect(Collectors.toMap(EmployeeFamily::getFamilyId, family -> family));
+
+		List<EmployeeFamily> result = new ArrayList<>();
+
+		for (EmployeePersonalFamilyDetailsDto dto : personal.getFamily()) {
+			EmployeeFamily family = existingFamilyMap.containsKey(dto.getFamilyId())
+					? existingFamilyMap.remove(dto.getFamilyId()) : new EmployeeFamily();
+
+			family.setEmployee(employee);
+
+			CommonModuleUtils.setIfNotNull(dto.getFirstName(), family::setFirstName);
+			CommonModuleUtils.setIfNotNull(dto.getLastName(), family::setLastName);
+			CommonModuleUtils.setIfNotNull(dto.getGender(), family::setGender);
+			CommonModuleUtils.setIfNotNull(dto.getRelationship(), family::setFamilyRelationship);
+			CommonModuleUtils.setIfNotNull(dto.getDateOfBirth(), family::setBirthDate);
+			CommonModuleUtils.setIfNotNull(dto.getParentName(), family::setParentName);
+
+			result.add(family);
+		}
+
+		result.addAll(existingFamilyMap.values());
+		return result;
+	}
+
+	private List<EmployeeEducation> processEmployeeEducations(CreateEmployeeRequestDto requestDto, Employee employee) {
+		List<EmployeePersonalEducationalDetailsDto> educationalDtos = CommonModuleUtils
+			.safeGet(() -> requestDto.getPersonal().getEducational());
+
+		if (educationalDtos == null || employee == null) {
+			return new ArrayList<>();
+		}
+
+		List<EmployeeEducation> existingEducations = employee.getEmployeeEducations() != null
+				? new ArrayList<>(employee.getEmployeeEducations()) : new ArrayList<>();
+
+		Map<Long, EmployeeEducation> existingEducationMap = existingEducations.stream()
+			.filter(education -> education.getEducationId() != null)
+			.collect(Collectors.toMap(EmployeeEducation::getEducationId, education -> education));
+
+		List<EmployeeEducation> result = new ArrayList<>();
+
+		for (EmployeePersonalEducationalDetailsDto dto : educationalDtos) {
+			EmployeeEducation education = existingEducationMap.containsKey(dto.getEducationId())
+					? existingEducationMap.remove(dto.getEducationId()) : new EmployeeEducation();
+			education.setEmployee(employee);
+
+			CommonModuleUtils.setIfExists(dto::getInstitutionName, education::setInstitution);
+			CommonModuleUtils.setIfExists(dto::getDegree, education::setDegree);
+			CommonModuleUtils.setIfExists(dto::getMajor, education::setSpecialization);
+			CommonModuleUtils.setIfExists(dto::getStartDate, education::setStartDate);
+			CommonModuleUtils.setIfExists(dto::getEndDate, education::setEndDate);
+
+			result.add(education);
+		}
+
+		result.addAll(existingEducationMap.values());
+		return result;
+	}
+
+	private Set<EmployeeTeam> processEmployeeTeams(EmployeeEmploymentDetailsDto requestDto, Employee employee) {
+		if (requestDto == null || requestDto.getEmploymentDetails() == null || employee == null) {
+			return new HashSet<>();
+		}
+
+		Long[] teamIds = requestDto.getEmploymentDetails().getTeamIds();
+		if (teamIds == null || teamIds.length == 0) {
+			return new HashSet<>();
+		}
+
+		Set<EmployeeTeam> existingTeams = employee.getEmployeeTeams() != null ? employee.getEmployeeTeams()
+				: new HashSet<>();
+
+		Set<Long> existingTeamIds = existingTeams.stream()
+			.map(employeeTeam -> employeeTeam.getTeam() != null ? employeeTeam.getTeam().getTeamId() : null)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toSet());
+
+		Set<EmployeeTeam> result = Arrays.stream(teamIds).map(teamId -> {
+			Team team = teamDao.findByTeamId(teamId);
+			EmployeeTeam employeeTeam = existingTeamIds.contains(teamId) ? existingTeams.stream()
+				.filter(et -> et.getTeam() != null && et.getTeam().getTeamId().equals(teamId))
+				.findFirst()
+				.orElse(new EmployeeTeam()) : new EmployeeTeam();
+
+			CommonModuleUtils.setIfExists(() -> team, employeeTeam::setTeam);
+			CommonModuleUtils.setIfExists(() -> false, employeeTeam::setIsSupervisor);
+			CommonModuleUtils.setIfExists(() -> employee, employeeTeam::setEmployee);
+
+			return employeeTeam;
+		}).collect(Collectors.toSet());
+
+		Set<Long> requestTeamIds = Arrays.stream(teamIds).collect(Collectors.toSet());
+
+		existingTeams.stream()
+			.filter(et -> et.getTeam() != null && !requestTeamIds.contains(et.getTeam().getTeamId()))
+			.forEach(result::add);
+
+		return result;
+	}
+
+	private Set<EmployeeManager> processEmployeeManagers(EmployeeEmploymentDetailsDto requestDto, Employee employee) {
+		if (requestDto == null || requestDto.getEmploymentDetails() == null || employee == null) {
+			return new HashSet<>();
+		}
+
+		EmployeeEmploymentBasicDetailsManagerDetailsDto primarySupervisor = requestDto.getEmploymentDetails()
+			.getPrimarySupervisor();
+		EmployeeEmploymentBasicDetailsManagerDetailsDto secondarySupervisor = requestDto.getEmploymentDetails()
+			.getSecondarySupervisor();
+
+		Set<EmployeeManager> existingManagers = employee.getEmployeeManagers() != null
+				? new HashSet<>(employee.getEmployeeManagers()) : new HashSet<>();
+		Set<EmployeeManager> result = new HashSet<>();
+
+		if (primarySupervisor != null && primarySupervisor.getEmployeeId() != null) {
+			Employee manager = employeeDao.findEmployeeByEmployeeId(primarySupervisor.getEmployeeId());
+			if (manager != null) {
+				EmployeeManager primary = existingManagers.stream()
+					.filter(em -> em.getManager() != null
+							&& em.getManager().getEmployeeId().equals(primarySupervisor.getEmployeeId())
+							&& em.getManagerType() == ManagerType.PRIMARY)
+					.findFirst()
+					.orElse(new EmployeeManager());
+
+				CommonModuleUtils.setIfExists(() -> manager, primary::setManager);
+				CommonModuleUtils.setIfExists(() -> employee, primary::setEmployee);
+				CommonModuleUtils.setIfExists(() -> ManagerType.PRIMARY, primary::setManagerType);
+				CommonModuleUtils.setIfExists(() -> true, primary::setIsPrimaryManager);
+				result.add(primary);
 			}
-			updateEmailAndSendReInvitation(employee, employeeUpdateDto.getEmail());
 		}
 
-		User currentUser = userService.getCurrentUser();
-		boolean isSuperAdmin = currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin();
-		boolean isPeopleAdmin = Role.PEOPLE_ADMIN.equals(currentUser.getEmployee().getEmployeeRole().getPeopleRole());
-
-		if (!isSuperAdmin && !isPeopleAdmin && (!Objects.equals(currentUser.getEmployee().getEmployeeId(), employeeId)
-				|| !Objects.equals(currentUser.getEmail(), employeeUpdateDto.getEmail()))) {
-			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_UNAUTHORIZED_ACCESS);
-		}
-
-		rolesService.validateRoles(employeeUpdateDto.getUserRoles());
-
-		rolesService.updateEmployeeRoles(employeeUpdateDto.getUserRoles(), employee);
-
-		processAndUpdateEmployeeDetails(employeeUpdateDto, employee);
-
-		updateManagers(employeeUpdateDto, employee);
-
-		List<EmployeeProgressionsDto> progressions = employeeUpdateDto.getEmployeeProgressions();
-		if (progressions != null && !progressions.isEmpty()) {
-			for (EmployeeProgressionsDto progression : progressions) {
-				if (Boolean.TRUE.equals(progression.getIsCurrent())) {
-					JobFamily jobFamily = jobFamilyDao.getJobFamilyById(progression.getJobFamilyId());
-					JobTitle jobTitle = jobTitleDao.getJobTitleById(progression.getJobTitleId());
-					employee.setJobFamily(jobFamily);
-					employee.setJobTitle(jobTitle);
-				}
+		if (secondarySupervisor != null && secondarySupervisor.getEmployeeId() != null && (primarySupervisor == null
+				|| !secondarySupervisor.getEmployeeId().equals(primarySupervisor.getEmployeeId()))) {
+			Employee manager = employeeDao.findEmployeeByEmployeeId(secondarySupervisor.getEmployeeId());
+			if (manager != null) {
+				EmployeeManager secondary = existingManagers.stream()
+					.filter(em -> em.getManager() != null
+							&& em.getManager().getEmployeeId().equals(secondarySupervisor.getEmployeeId())
+							&& em.getManagerType() == ManagerType.SECONDARY)
+					.findFirst()
+					.orElse(new EmployeeManager());
+				CommonModuleUtils.setIfExists(() -> manager, secondary::setManager);
+				CommonModuleUtils.setIfExists(() -> employee, secondary::setEmployee);
+				CommonModuleUtils.setIfExists(() -> ManagerType.SECONDARY, secondary::setManagerType);
+				CommonModuleUtils.setIfExists(() -> false, secondary::setIsPrimaryManager);
+				result.add(secondary);
 			}
 		}
 
-		employee = employeeDao.save(employee);
-		EmployeeDetailedResponseDto responseDto = peopleMapper.employeeToEmployeeDetailedResponseDto(employee);
-		setEmployeePeriodDto(responseDto);
+		existingManagers.stream().filter(em -> !result.contains(em)).forEach(result::add);
 
-		addUpdatedEmployeeTimeLineRecords(currentEmployeeDto, employeeUpdateDto);
+		return result;
+	}
 
-		log.info("updateEmployee: execution ended");
+	private List<EmployeeEmergency> processEmergencyContacts(CreateEmployeeRequestDto requestDto, Employee employee) {
+		if (requestDto == null || requestDto.getEmergency() == null || employee == null) {
+			return new ArrayList<>();
+		}
+
+		List<EmployeeEmergency> existingContacts = employee.getEmployeeEmergencies() != null
+				? employee.getEmployeeEmergencies() : new ArrayList<>();
+
+		List<EmployeeEmergency> result = new ArrayList<>();
+
+		if (requestDto.getEmergency().getPrimaryEmergencyContact() != null) {
+			result.add(processSingleEmergencyContact(requestDto.getEmergency().getPrimaryEmergencyContact(), true,
+					employee, existingContacts));
+		}
+
+		if (requestDto.getEmergency().getSecondaryEmergencyContact() != null) {
+			result.add(processSingleEmergencyContact(requestDto.getEmergency().getSecondaryEmergencyContact(), false,
+					employee, existingContacts));
+		}
+
+		existingContacts.stream().filter(existing -> !result.contains(existing)).forEach(result::add);
+
+		return result;
+	}
+
+	private EmployeeEmergency processSingleEmergencyContact(EmployeeEmergencyContactDetailsDto emergencyDto,
+			boolean isPrimary, Employee employee, List<EmployeeEmergency> existingContacts) {
+		EmployeeEmergency existingContact = existingContacts.stream()
+			.filter(contact -> contact.getIsPrimary() == isPrimary)
+			.findFirst()
+			.orElse(new EmployeeEmergency());
+
+		existingContact.setEmployee(employee);
+		existingContact.setIsPrimary(isPrimary);
+		CommonModuleUtils.setIfExists(emergencyDto::getName, existingContact::setName);
+		CommonModuleUtils.setIfExists(emergencyDto::getRelationship, existingContact::setEmergencyRelationship);
+		if (emergencyDto.getContactNo() != null && emergencyDto.getCountryCode() != null) {
+			existingContact.setContactNo(emergencyDto.getCountryCode() + emergencyDto.getContactNo());
+		}
+
+		return existingContact;
+	}
+
+	private List<EmployeeVisa> processEmployeeVisas(CreateEmployeeRequestDto requestDto, Employee employee) {
+		if (requestDto == null || requestDto.getEmployment() == null
+				|| requestDto.getEmployment().getVisaDetails() == null || employee == null) {
+			return new ArrayList<>();
+		}
+
+		List<EmployeeVisa> existingVisas = employee.getEmployeeVisas() != null ? employee.getEmployeeVisas()
+				: new ArrayList<>();
+
+		Map<Long, EmployeeVisa> existingVisaMap = existingVisas.stream()
+			.filter(visa -> visa.getVisaId() != null)
+			.collect(Collectors.toMap(EmployeeVisa::getVisaId, visa -> visa));
+
+		List<EmployeeVisa> result = requestDto.getEmployment().getVisaDetails().stream().map(dto -> {
+			EmployeeVisa visa = existingVisaMap.containsKey(dto.getVisaId()) ? existingVisaMap.remove(dto.getVisaId())
+					: new EmployeeVisa();
+			visa.setEmployee(employee);
+
+			CommonModuleUtils.setIfExists(dto::getVisaType, visa::setVisaType);
+			CommonModuleUtils.setIfExists(dto::getIssuingCountry, visa::setIssuingCountry);
+			CommonModuleUtils.setIfExists(dto::getIssuedDate, visa::setIssuedDate);
+			CommonModuleUtils.setIfExists(dto::getExpiryDate, visa::setExpirationDate);
+
+			return visa;
+		}).collect(Collectors.toList());
+
+		result.addAll(existingVisaMap.values());
+		return result;
+	}
+
+	private Set<EmployeePeriod> processEmployeeProbationPeriod(CreateEmployeeRequestDto requestDto, Employee employee) {
+		Set<EmployeePeriod> existingPeriods = employee.getEmployeePeriods() != null ? employee.getEmployeePeriods()
+				: new HashSet<>();
+
+		Set<EmployeePeriod> result = new HashSet<>();
+
+		if (requestDto == null || requestDto.getEmployment() == null
+				|| requestDto.getEmployment().getEmploymentDetails() == null) {
+			return existingPeriods.stream().filter(EmployeePeriod::getIsActive).collect(Collectors.toSet());
+		}
+
+		EmployeeEmploymentBasicDetailsDto employmentDetails = requestDto.getEmployment().getEmploymentDetails();
+
+		EmployeePeriod period = existingPeriods.stream()
+			.filter(p -> p.getStartDate() != null && p.getEndDate() != null)
+			.findFirst()
+			.orElse(new EmployeePeriod());
+
+		CommonModuleUtils.setIfExists(employmentDetails::getProbationStartDate, period::setStartDate);
+		CommonModuleUtils.setIfExists(employmentDetails::getProbationEndDate, period::setEndDate);
+		CommonModuleUtils.setIfExists(() -> true, period::setIsActive);
+		CommonModuleUtils.setIfExists(() -> employee, period::setEmployee);
+
+		result.add(period);
+		existingPeriods.stream().filter(existing -> !result.contains(existing)).forEach(result::add);
+
+		return result;
+	}
+
+	private List<EmployeeProgression> processCareerProgressions(CreateEmployeeRequestDto requestDto,
+			Employee employee) {
+		if (requestDto == null || requestDto.getEmployment() == null
+				|| requestDto.getEmployment().getCareerProgression() == null || employee == null) {
+			return new ArrayList<>();
+		}
+
+		List<EmployeeProgression> existingProgressions = employee.getEmployeeProgressions() != null
+				? employee.getEmployeeProgressions() : new ArrayList<>();
+
+		Map<Long, EmployeeProgression> existingProgressionMap = existingProgressions.stream()
+			.filter(progression -> progression.getProgressionId() != null)
+			.collect(Collectors.toMap(EmployeeProgression::getProgressionId, progression -> progression));
+
+		List<EmployeeProgression> result = requestDto.getEmployment().getCareerProgression().stream().map(dto -> {
+			EmployeeProgression progression = existingProgressionMap.containsKey(dto.getProgressionId())
+					? existingProgressionMap.remove(dto.getProgressionId()) : new EmployeeProgression();
+			progression.setEmployee(employee);
+
+			CommonModuleUtils.setIfExists(dto::getEmploymentType, progression::setEmploymentType);
+			CommonModuleUtils.setIfExists(dto::getJobFamilyId, progression::setJobFamilyId);
+			CommonModuleUtils.setIfExists(dto::getJobTitleId, progression::setJobTitleId);
+			CommonModuleUtils.setIfExists(dto::getStartDate, progression::setStartDate);
+			CommonModuleUtils.setIfExists(dto::getEndDate, progression::setEndDate);
+			CommonModuleUtils.setIfExists(dto::getIsCurrentEmployment, progression::setIsCurrent);
+
+			if (Boolean.TRUE.equals(dto.getIsCurrentEmployment())) {
+				CommonModuleUtils.setIfExists(dto::getEmploymentType, employee::setEmploymentType);
+				CommonModuleUtils.setIfExists(() -> jobFamilyDao.getJobFamilyById(dto.getJobFamilyId()),
+						employee::setJobFamily);
+				CommonModuleUtils.setIfExists(() -> jobTitleDao.getJobTitleById(dto.getJobTitleId()),
+						employee::setJobTitle);
+			}
+
+			return progression;
+		}).collect(Collectors.toList());
+
+		result.addAll(existingProgressionMap.values());
+		return result;
+	}
+
+	private ResponseEntityDto processCreateEmployeeResponse(User user) {
+		Employee employee = user.getEmployee();
+		CreateEmployeeResponseDto responseDto = peopleMapper.employeeToCreateEmployeeResponseDto(employee);
+
+		if (user.getLoginMethod() == LoginMethod.CREDENTIALS) {
+			EmployeeCredentialsResponseDto credentials = new EmployeeCredentialsResponseDto();
+			credentials.setEmail(employee.getUser() != null ? employee.getUser().getEmail() : null);
+			credentials.setTempPassword(encryptionDecryptionService.decrypt(user.getTempPassword(), encryptSecret));
+			responseDto.setEmployeeCredentials(credentials);
+		}
+
 		return new ResponseEntityDto(false, responseDto);
 	}
 
 	@Override
 	@Transactional
 	public ResponseEntityDto getEmployees(EmployeeFilterDto employeeFilterDto) {
-		User currentUser = userService.getCurrentUser();
-		log.info("getEmployees: execution started by user: {}", currentUser.getUserId());
+		log.info("getEmployees: execution started");
 		int pageSize = employeeFilterDto.getSize();
 
 		boolean isExport = employeeFilterDto.getIsExport();
@@ -473,10 +806,11 @@ public class PeopleServiceImpl implements PeopleService {
 
 		List<Long> employeeIds = employees.stream().map(Employee::getEmployeeId).toList();
 		List<EmployeeTeamDto> teamList = employeeDao.findTeamsByEmployees(employeeIds);
+
 		if (!isExport) {
 			pageDto.setItems(fetchEmployeeSearchData(employees));
-			log.info("getEmployees: Successfully finished returning {} employees",
-					((List<?>) pageDto.getItems()).size());
+
+			log.info("getEmployees: Successfully executed");
 			return new ResponseEntityDto(false, pageDto);
 		}
 		else {
@@ -504,168 +838,244 @@ public class PeopleServiceImpl implements PeopleService {
 		return new ResponseEntityDto(false, responseDtos);
 	}
 
-	public List<EmployeeAllDataExportResponseDto> exportAllEmployeeData(List<Employee> employees,
-			List<EmployeeTeamDto> teamList, List<Long> employeeIds) {
-		List<EmployeeManagerDto> employeeManagerDtos = employeeDao.findManagersByEmployeeIds(employeeIds);
-		List<EmployeeAllDataExportResponseDto> responseDtos = new ArrayList<>();
-
-		for (Employee employee : employees) {
-			EmployeeAllDataExportResponseDto responseDto = peopleMapper
-				.employeeToEmployeeAllDataExportResponseDto(employee);
-			responseDto.setJobFamily(peopleMapper.jobFamilyToJobFamilyDto(employee.getJobFamily()));
-			responseDto.setJobTitle(peopleMapper.jobTitleToJobTitleDto(employee.getJobTitle()));
-			responseDto.setEmployeePersonalInfoDto(
-					peopleMapper.employeePersonalInfoToEmployeePersonalInfoDto(employee.getPersonalInfo()));
-			responseDto.setEmployeeEmergencyDto(
-					peopleMapper.employeeEmergencyToemployeeEmergencyDTo(employee.getEmployeeEmergencies()));
-
-			List<Team> teams = teamList.stream()
-				.filter(e -> Objects.equals(e.getEmployeeId(), employee.getEmployeeId()))
-				.map(EmployeeTeamDto::getTeam)
-				.toList();
-			responseDto.setTeamResponseDto(peopleMapper.teamListToTeamResponseDtoList(teams));
-
-			List<Employee> managers = employeeManagerDtos.stream()
-				.filter(e -> Objects.equals(e.getEmployeeId(), employee.getEmployeeId()))
-				.map(EmployeeManagerDto::getManagers)
-				.toList();
-			responseDto.setManagers(peopleMapper.employeeListToEmployeeResponseDtoList(managers));
-
-			Optional<EmployeePeriod> period = employeePeriodDao
-				.findEmployeePeriodByEmployee_EmployeeIdAndIsActiveTrue(employee.getEmployeeId());
-			period.ifPresent(employeePeriod -> responseDto
-				.setEmployeePeriod(peopleMapper.employeePeriodToEmployeePeriodResponseDto(employeePeriod)));
-
-			responseDtos.add(responseDto);
-		}
-		return responseDtos;
+	@Override
+	@Transactional(readOnly = true)
+	public ResponseEntityDto getEmployeeById(Long employeeId) {
+		return new ResponseEntityDto(false, mapEmployeeToDto(employeeDao.findById(employeeId)
+			.orElseThrow(() -> new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND))));
 	}
 
-	@Override
-	@Transactional
-	public ResponseEntityDto getEmployeeById(Long employeeId) {
-		User currentUser = userService.getCurrentUser();
+	private CreateEmployeeRequestDto mapEmployeeToDto(Employee employee) {
+		CreateEmployeeRequestDto dto = new CreateEmployeeRequestDto();
+		dto.setPersonal(mapPersonalDetails(employee));
+		dto.setEmergency(mapEmergencyDetails(employee));
+		dto.setEmployment(mapEmploymentDetails(employee));
+		dto.setSystemPermissions(mapSystemPermissions(employee));
+		dto.setCommon(mapCommonDetails(employee));
+		return dto;
+	}
 
-		Boolean isPeopleOrSuperAdmin = currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin()
-				|| currentUser.getEmployee().getEmployeeRole().getPeopleRole().equals(Role.PEOPLE_ADMIN)
-				|| currentUser.getEmployee().getEmployeeRole().getPeopleRole().equals(Role.PEOPLE_MANAGER);
+	private EmployeePersonalDetailsDto mapPersonalDetails(Employee employee) {
+		EmployeePersonalDetailsDto dto = new EmployeePersonalDetailsDto();
+		dto.setGeneral(mapPersonalGeneralDetails(employee));
+		dto.setContact(mapPersonalContactDetails(employee));
 
-		Boolean isAttendanceAdminOrManager = (!currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin()
-				&& !currentUser.getEmployee().getEmployeeRole().getPeopleRole().equals(Role.PEOPLE_ADMIN))
-				&& (currentUser.getEmployee().getEmployeeRole().getAttendanceRole().equals(Role.ATTENDANCE_MANAGER)
-						|| currentUser.getEmployee()
-							.getEmployeeRole()
-							.getAttendanceRole()
-							.equals(Role.ATTENDANCE_ADMIN));
+		Optional.ofNullable(employee.getEmployeeFamilies())
+			.ifPresent(families -> dto
+				.setFamily(families.stream().map(peopleMapper::employeeFamilyToFamilyDetailsDto).toList()));
 
-		Boolean isLeaveAdminOrManager = (!currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin()
-				&& !currentUser.getEmployee().getEmployeeRole().getPeopleRole().equals(Role.PEOPLE_ADMIN))
-				&& (currentUser.getEmployee().getEmployeeRole().getAttendanceRole().equals(Role.LEAVE_MANAGER)
-						|| currentUser.getEmployee().getEmployeeRole().getAttendanceRole().equals(Role.LEAVE_ADMIN));
+		Optional.ofNullable(employee.getEmployeeEducations())
+			.ifPresent(educations -> dto.setEducational(
+					educations.stream().map(peopleMapper::employeeEducationToEducationalDetailsDto).toList()));
 
-		log.info("getEmployeeById: execution started by user: {}", currentUser.getUserId());
-		Optional<Employee> employeeOptional = employeeDao.findById(employeeId);
-		if (employeeOptional.isEmpty()) {
-			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
+		dto.setSocialMedia(mapPersonalSocialMediaDetails(employee));
+		dto.setHealthAndOther(mapPersonalHealthAndOtherDetails(employee));
+		return dto;
+	}
+
+	private EmployeePersonalGeneralDetailsDto mapPersonalGeneralDetails(Employee employee) {
+		EmployeePersonalGeneralDetailsDto dto = new EmployeePersonalGeneralDetailsDto();
+		dto.setFirstName(employee.getFirstName());
+		dto.setMiddleName(employee.getMiddleName());
+		dto.setLastName(employee.getLastName());
+		dto.setGender(employee.getGender());
+		dto.setNin(employee.getIdentificationNo());
+
+		Optional.ofNullable(employee.getPersonalInfo()).ifPresent(personalInfo -> {
+			dto.setDateOfBirth(personalInfo.getBirthDate());
+			dto.setNationality(personalInfo.getNationality());
+			dto.setPassportNumber(personalInfo.getPassportNo());
+			dto.setMaritalStatus(personalInfo.getMaritalStatus());
+		});
+
+		return dto;
+	}
+
+	private EmployeePersonalContactDetailsDto mapPersonalContactDetails(Employee employee) {
+		EmployeePersonalContactDetailsDto dto = new EmployeePersonalContactDetailsDto();
+		dto.setPersonalEmail(employee.getPersonalEmail());
+		dto.setContactNo(employee.getPhone());
+		dto.setAddressLine1(employee.getAddressLine1());
+		dto.setAddressLine2(employee.getAddressLine2());
+		dto.setCountry(employee.getCountry());
+
+		Optional.ofNullable(employee.getPersonalInfo()).ifPresent(personalInfo -> {
+			dto.setCity(personalInfo.getCity());
+			dto.setState(personalInfo.getState());
+			dto.setPostalCode(personalInfo.getPostalCode());
+		});
+
+		return dto;
+	}
+
+	private EmployeePersonalSocialMediaDetailsDto mapPersonalSocialMediaDetails(Employee employee) {
+		if (employee.getPersonalInfo() != null && employee.getPersonalInfo().getSocialMediaDetails() != null) {
+			try {
+				return mapper.treeToValue(employee.getPersonalInfo().getSocialMediaDetails(),
+						EmployeePersonalSocialMediaDetailsDto.class);
+			}
+			catch (JsonProcessingException e) {
+				log.error("Error converting social media details JSON to DTO", e);
+			}
 		}
-		Employee employee = employeeOptional.get();
+		return new EmployeePersonalSocialMediaDetailsDto();
+	}
 
-		if (Boolean.TRUE.equals(isPeopleOrSuperAdmin)) {
-			ManagerEmployeeDto managerEmployeeDto = peopleMapper.employeeToManagerEmployeeDto(employee);
-			Optional<EmployeePeriod> period = employeePeriodDao
-				.findEmployeePeriodByEmployee_EmployeeId(employee.getEmployeeId());
+	private EmployeePersonalHealthAndOtherDetailsDto mapPersonalHealthAndOtherDetails(Employee employee) {
+		EmployeePersonalHealthAndOtherDetailsDto dto = new EmployeePersonalHealthAndOtherDetailsDto();
 
-			List<EmployeeProgressionResponseDto> progressionResponseDtos = employee.getEmployeeProgressions()
+		if (employee.getPersonalInfo() != null) {
+			EmployeePersonalInfo personalInfo = employee.getPersonalInfo();
+			dto.setBloodGroup(personalInfo.getBloodGroup());
+
+			if (personalInfo.getExtraInfo() != null) {
+				try {
+					EmployeeExtraInfoDto extraInfo = mapper.treeToValue(personalInfo.getExtraInfo(),
+							EmployeeExtraInfoDto.class);
+					dto.setAllergies(extraInfo.getAllergies());
+					dto.setDietaryRestrictions(extraInfo.getDietaryRestrictions());
+					dto.setTShirtSize(extraInfo.getTShirtSize());
+				}
+				catch (JsonProcessingException e) {
+					log.error("Error converting extra info JSON to DTO", e);
+				}
+			}
+		}
+
+		return dto;
+	}
+
+	private EmployeeEmergencyDetailsDto mapEmergencyDetails(Employee employee) {
+		EmployeeEmergencyDetailsDto dto = new EmployeeEmergencyDetailsDto();
+
+		if (employee.getEmployeeEmergencies() != null && !employee.getEmployeeEmergencies().isEmpty()) {
+			List<EmployeeEmergency> emergencies = new ArrayList<>(employee.getEmployeeEmergencies());
+
+			emergencies.stream()
+				.filter(EmployeeEmergency::getIsPrimary)
+				.findFirst()
+				.or(() -> emergencies.isEmpty() ? Optional.empty() : Optional.of(emergencies.getFirst()))
+				.ifPresent(e -> dto.setPrimaryEmergencyContact(peopleMapper.employeeEmergencyToEmergencyContactDto(e)));
+
+			emergencies.stream()
+				.filter(e -> !e.getIsPrimary())
+				.findFirst()
+				.ifPresent(
+						e -> dto.setSecondaryEmergencyContact(peopleMapper.employeeEmergencyToEmergencyContactDto(e)));
+		}
+
+		return dto;
+	}
+
+	private EmployeeEmploymentDetailsDto mapEmploymentDetails(Employee employee) {
+		EmployeeEmploymentDetailsDto dto = new EmployeeEmploymentDetailsDto();
+		dto.setEmploymentDetails(mapEmploymentBasicDetails(employee));
+
+		Optional.ofNullable(employee.getEmployeeProgressions())
+			.ifPresent(progressions -> dto.setCareerProgression(progressions.stream()
+				.map(peopleMapper::employeeProgressionToCareerProgressionDto)
+				.collect(Collectors.toList())));
+
+		dto.setIdentificationAndDiversityDetails(mapIdentificationAndDiversityDetails(employee));
+		dto.setPreviousEmployment(mapPreviousEmploymentDetails(employee));
+
+		Optional.ofNullable(employee.getEmployeeVisas())
+			.ifPresent(visas -> dto
+				.setVisaDetails(visas.stream().map(peopleMapper::employeeVisaToVisaDetailsDto).toList()));
+
+		return dto;
+	}
+
+	private EmployeeEmploymentIdentificationAndDiversityDetailsDto mapIdentificationAndDiversityDetails(
+			Employee employee) {
+		EmployeeEmploymentIdentificationAndDiversityDetailsDto dto = new EmployeeEmploymentIdentificationAndDiversityDetailsDto();
+
+		Optional.ofNullable(employee.getPersonalInfo()).ifPresent(personalInfo -> {
+			dto.setSsn(personalInfo.getSsn());
+			dto.setEthnicity(personalInfo.getEthnicity());
+		});
+
+		dto.setEeoJobCategory(employee.getEeo());
+
+		return dto;
+	}
+
+	private List<EmployeeEmploymentPreviousEmploymentDetailsDto> mapPreviousEmploymentDetails(Employee employee) {
+		if (employee.getPersonalInfo() != null && employee.getPersonalInfo().getPreviousEmploymentDetails() != null) {
+			try {
+				return mapper.treeToValue(employee.getPersonalInfo().getPreviousEmploymentDetails(),
+						new TypeReference<>() {
+						});
+			}
+			catch (JsonProcessingException e) {
+				log.error("Error converting previous employment details JSON to DTO", e);
+			}
+		}
+		return null;
+	}
+
+	private EmployeeEmploymentBasicDetailsDto mapEmploymentBasicDetails(Employee employee) {
+		EmployeeEmploymentBasicDetailsDto dto = new EmployeeEmploymentBasicDetailsDto();
+		dto.setJoinedDate(employee.getJoinDate());
+		dto.setWorkTimeZone(employee.getTimeZone());
+		dto.setEmploymentAllocation(employee.getEmploymentAllocation());
+
+		Optional.ofNullable(employee.getUser()).ifPresent(user -> {
+			dto.setEmployeeNumber(employee.getIdentificationNo());
+			dto.setEmail(user.getEmail());
+		});
+
+		Optional.ofNullable(employee.getEmployeeTeams())
+			.ifPresent(teams -> dto
+				.setTeamIds(teams.stream().map(team -> team.getTeam().getTeamId()).toArray(Long[]::new)));
+
+		if (employee.getEmployeeManagers() != null) {
+			dto.setPrimarySupervisor(employee.getEmployeeManagers()
 				.stream()
-				.map(this::mapToEmployeeProgressionResponseDto)
-				.toList();
+				.filter(EmployeeManager::getIsPrimaryManager)
+				.findFirst()
+				.map(peopleMapper::employeeManagerToManagerDetailsDto)
+				.orElse(null));
 
-			managerEmployeeDto.setEmployeeProgressions(progressionResponseDtos);
+			dto.setSecondarySupervisor(employee.getEmployeeManagers()
+				.stream()
+				.filter(m -> !m.getIsPrimaryManager())
+				.findFirst()
+				.map(peopleMapper::employeeManagerToManagerDetailsDto)
+				.orElse(null));
+		}
 
-			List<ManagingEmployeesResponseDto> managers = new ArrayList<>();
-
-			employee.getManagers().forEach(employeeManager -> {
-				ManagingEmployeesResponseDto emp = new ManagingEmployeesResponseDto();
-				emp.setEmployee(peopleMapper.employeeToManagerCoreDetailsDto(employeeManager.getEmployee()));
-				emp.setManagerType(employeeManager.getManagerType());
-				emp.setIsPrimaryManager(employeeManager.isPrimaryManager());
-
-				managers.add(emp);
+		Optional.ofNullable(employee.getEmployeePeriods())
+			.flatMap(periods -> periods.stream().findFirst())
+			.ifPresent(probation -> {
+				dto.setProbationStartDate(probation.getStartDate());
+				dto.setProbationEndDate(probation.getEndDate());
 			});
 
-			managerEmployeeDto.setManagers(managers);
-
-			List<TeamEmployeeResponseDto> teams = new ArrayList<>();
-
-			setEmployeeTeams(teams, employee);
-			managerEmployeeDto.setTeams(teams);
-			managerEmployeeDto
-				.setUserRoles(peopleMapper.employeeRoleToEmployeeRoleResponseDto(employee.getEmployeeRole()));
-			if (period.isPresent()) {
-				EmployeePeriodResponseDto periodResponseDto = peopleMapper
-					.employeePeriodToEmployeePeriodResponseDto(period.get());
-				managerEmployeeDto.setPeriodResponseDto(periodResponseDto);
-			}
-
-			log.info("getEmployeeById: Successfully finished returning employee data");
-			return new ResponseEntityDto(false, managerEmployeeDto);
-		}
-		else if (Boolean.TRUE.equals(isAttendanceAdminOrManager) || Boolean.TRUE.equals(isLeaveAdminOrManager)) {
-			SummarizedManagerEmployeeDto summarizedManagerEmployeeDto = peopleMapper
-				.employeeToSummarizedManagerEmployeeDto(employee);
-			List<TeamEmployeeResponseDto> teams = new ArrayList<>();
-			setEmployeeTeams(teams, employee);
-			summarizedManagerEmployeeDto.setTeams(teams);
-
-			log.info("getEmployeeById: Successfully finished returning employee data for managers");
-			return new ResponseEntityDto(false, summarizedManagerEmployeeDto);
-		}
-		else {
-
-			SummarizedEmployeeDtoForEmployees summarizedEmployeeDtoForEmployees = peopleMapper
-				.employeeToSummarizedEmployeeDtoForEmployees(employee);
-			List<TeamEmployeeResponseDto> teams = new ArrayList<>();
-			setEmployeeTeams(teams, employee);
-			summarizedEmployeeDtoForEmployees.setTeams(teams);
-
-			log.info("getEmployeeById: Successfully finished returning employee data for employee");
-			return new ResponseEntityDto(false, summarizedEmployeeDtoForEmployees);
-		}
+		return dto;
 	}
 
-	private EmployeeProgressionResponseDto mapToEmployeeProgressionResponseDto(EmployeeProgression progression) {
-		EmployeeProgressionResponseDto responseDto = new EmployeeProgressionResponseDto();
+	private EmployeeSystemPermissionsDto mapSystemPermissions(Employee employee) {
+		EmployeeSystemPermissionsDto dto = new EmployeeSystemPermissionsDto();
 
-		responseDto.setProgressionId(progression.getProgressionId());
-		responseDto.setEmployeeType(progression.getEmployeeType());
-		responseDto.setStartDate(progression.getStartDate());
-		responseDto.setEndDate(progression.getEndDate());
-
-		if (progression.getJobFamilyId() != null) {
-			JobFamily jobFamily = jobFamilyDao.getJobFamilyById(progression.getJobFamilyId());
-			EmployeeJobFamilyDto jobFamilyDto = peopleMapper.jobFamilyToEmployeeJobFamilyDto(jobFamily);
-			responseDto.setJobFamily(jobFamilyDto);
-		}
-
-		if (progression.getJobTitleId() != null) {
-			JobTitle jobTitle = jobTitleDao.getJobTitleById(progression.getJobTitleId());
-			JobTitleDto jobTitleDto = peopleMapper.jobTitleToJobTitleDto(jobTitle);
-			responseDto.setJobTitle(jobTitleDto);
-		}
-
-		return responseDto;
-	}
-
-	public void setEmployeeTeams(List<TeamEmployeeResponseDto> teams, Employee employee) {
-		employee.getTeams().forEach(employeeTeam -> {
-			TeamEmployeeResponseDto teamEmployeeResponseDto = new TeamEmployeeResponseDto();
-			TeamDetailResponseDto team = new TeamDetailResponseDto();
-			team.setIsSupervisor(employeeTeam.getIsSupervisor());
-			team.setTeamName(employeeTeam.getTeam().getTeamName());
-			team.setTeamId(employeeTeam.getTeam().getTeamId());
-			teamEmployeeResponseDto.setTeam(team);
-			teams.add(teamEmployeeResponseDto);
+		Optional.ofNullable(employee.getEmployeeRole()).ifPresent(role -> {
+			dto.setIsSuperAdmin(role.getIsSuperAdmin());
+			dto.setPeopleRole(role.getPeopleRole());
+			dto.setLeaveRole(role.getLeaveRole());
+			dto.setAttendanceRole(role.getAttendanceRole());
+			dto.setEsignRole(role.getEsignRole());
 		});
+
+		return dto;
+	}
+
+	private EmployeeCommonDetailsDto mapCommonDetails(Employee employee) {
+		EmployeeCommonDetailsDto dto = new EmployeeCommonDetailsDto();
+		dto.setAccountStatus(employee.getAccountStatus());
+		dto.setAuthPic(employee.getAuthPic());
+		dto.setEmployeeId(employee.getEmployeeId());
+		dto.setJobTitle(employee.getJobTitle() != null ? employee.getJobTitle().getName() : null);
+		return dto;
 	}
 
 	@Override
@@ -676,6 +1086,7 @@ public class PeopleServiceImpl implements PeopleService {
 		if (employee.isEmpty()) {
 			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
 		}
+
 		EmployeeDetailedResponseDto employeeDetailedResponseDto = peopleMapper
 			.employeeToEmployeeDetailedResponseDto(employee.get());
 		Optional<EmployeePeriod> period = employeePeriodDao
@@ -685,14 +1096,13 @@ public class PeopleServiceImpl implements PeopleService {
 			employeeDetailedResponseDto
 				.setEmployeeRole(peopleMapper.employeeRoleToEmployeeRoleResponseDto(employee.get().getEmployeeRole()));
 		}
+
 		if (period.isPresent()) {
 			EmployeePeriodResponseDto periodResponseDto = peopleMapper
 				.employeePeriodToEmployeePeriodResponseDto(period.get());
 			employeeDetailedResponseDto.setPeriodResponseDto(periodResponseDto);
 		}
-		else {
-			log.info("No employee period found");
-		}
+
 		return new ResponseEntityDto(false, employeeDetailedResponseDto);
 	}
 
@@ -736,6 +1146,7 @@ public class PeopleServiceImpl implements PeopleService {
 		if (employeeCount == null) {
 			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_LOGIN_PENDING_EMPLOYEES_NOT_FOUND);
 		}
+
 		return new ResponseEntityDto(false, employeeCount);
 	}
 
@@ -757,8 +1168,10 @@ public class PeopleServiceImpl implements PeopleService {
 	@Transactional
 	public ResponseEntityDto searchEmployeesByEmail(String email) {
 		log.info("searchEmployeesByEmail: execution started");
+
 		Validations.validateEmail(email);
 		Boolean isValidEmail = (employeeDao.findEmployeeByEmail(email) != null);
+
 		log.info("searchEmployeesByEmail: execution ended");
 		return new ResponseEntityDto(false, isValidEmail);
 	}
@@ -766,8 +1179,7 @@ public class PeopleServiceImpl implements PeopleService {
 	@Override
 	@Transactional
 	public ResponseEntityDto getEmployeeByIdOrEmail(EmployeeDataValidationDto employeeDataValidationDto) {
-		User currentUser = userService.getCurrentUser();
-		log.info("getEmployeeByIdOrEmail: execution started by user: {}", currentUser.getUserId());
+		log.info("getEmployeeByIdOrEmail: execution started");
 
 		String workEmailCheck = employeeDataValidationDto.getWorkEmail();
 		String identificationNoCheck = employeeDataValidationDto.getIdentificationNo();
@@ -781,55 +1193,18 @@ public class PeopleServiceImpl implements PeopleService {
 		if (!newEmployees.isEmpty()) {
 			employeeDataValidationResponseDto.setIsIdentificationNoExists(true);
 		}
+
+		log.info("getEmployeeByIdOrEmail: execution ended");
 		return new ResponseEntityDto(false, employeeDataValidationResponseDto);
-	}
-
-	@Override
-	@Transactional
-	public ResponseEntityDto updateLoggedInUser(Long employeeId, EmployeeUpdateDto employeeUpdateDto) {
-		User currentUser = userService.getCurrentUser();
-		if (!currentUser.getEmployee().getEmployeeId().equals(employeeId)) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_USER_ID_DOES_NOT_MATCH);
-		}
-		else {
-			log.info("updateLoggedInUser: execution started by user: {}", currentUser.getUserId());
-			Optional<Employee> employeeResult = employeeDao.findById(employeeId);
-			if (employeeResult.isEmpty()) {
-				log.info("updateLoggedInUser: employee with ID {} not found", employeeId);
-				throw new EntityNotFoundException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND);
-			}
-
-			CurrentEmployeeDto currentEmployeeDto = getEmployeeDeepCopy(employeeResult.get());
-
-			Employee employee = employeeResult.get();
-
-			if (employeeUpdateDto.getIdentificationNo() != null) {
-				if (Validations.isValidIdentificationNo(employeeUpdateDto.getIdentificationNo())) {
-					employee.setIdentificationNo(employeeUpdateDto.getIdentificationNo());
-				}
-				else {
-					throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_IDENTIFICATION_NUMBER);
-				}
-			}
-
-			updateLoggedInUserGeneralDetails(employeeUpdateDto, employee);
-			updateManagers(employeeUpdateDto, employee);
-			processAndUpdateEmployeeDetails(employeeUpdateDto, employee);
-
-			employee = employeeDao.save(employee);
-			EmployeeResponseDto responseDto = peopleMapper.employeeToEmployeeResponseDto(employee);
-
-			addUpdatedEmployeeTimeLineRecords(currentEmployeeDto, employeeUpdateDto);
-
-			return new ResponseEntityDto(false, responseDto);
-		}
 	}
 
 	@Override
 	@Transactional
 	public ResponseEntityDto terminateUser(Long userId) {
 		log.info("terminateUser: execution started");
+
 		updateUserStatus(userId, AccountStatus.TERMINATED, false);
+
 		log.info("terminateUser: execution ended");
 		return new ResponseEntityDto(messageUtil.getMessage(PeopleMessageConstant.PEOPLE_SUCCESS_EMPLOYEE_TERMINATED),
 				false);
@@ -839,59 +1214,12 @@ public class PeopleServiceImpl implements PeopleService {
 	@Transactional
 	public ResponseEntityDto deleteUser(Long userId) {
 		log.info("deleteUser: execution started");
+
 		updateUserStatus(userId, AccountStatus.DELETED, true);
 		log.info("deleteUser: execution ended");
+
 		return new ResponseEntityDto(messageUtil.getMessage(PeopleMessageConstant.PEOPLE_SUCCESS_EMPLOYEE_DELETED),
 				false);
-	}
-
-	private void updateUserStatus(Long userId, AccountStatus status, boolean isDelete) {
-		log.info("updateUserStatus: execution started");
-
-		if (userService.getCurrentUser().getUserId().equals(userId)) {
-			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_CANNOT_TERMINATE_OR_DELETE_YOUR_SELF);
-		}
-
-		User user = userDao.findById(userId)
-			.orElseThrow(() -> new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND));
-
-		if (!Boolean.TRUE.equals(user.getIsActive())) {
-			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_ACCOUNT_DEACTIVATED);
-		}
-
-		if (!teamDao.findTeamsManagedByUser(user.getUserId(), true).isEmpty()) {
-			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_TEAM_EMPLOYEE_SUPERVISING_TEAMS);
-		}
-
-		if (employeeDao.countEmployeesByManagerId(user.getUserId()) > 0) {
-			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EMPLOYEE_SUPERVISING_EMPLOYEES);
-		}
-
-		Employee employee = user.getEmployee();
-		employee.setJobTitle(null);
-		employee.setJobFamily(null);
-
-		List<EmployeeTeam> employeeTeams = employeeTeamDao.findEmployeeTeamsByEmployee(employee);
-		employeeTeamDao.deleteAll(employeeTeams);
-		employee.setTeams(null);
-
-		user.setIsActive(false);
-		employee.setAccountStatus(status);
-		employee.setTerminationDate(DateTimeUtils.getCurrentUtcDate());
-
-		if (isDelete) {
-			user.setEmail(PeopleConstants.DELETED_PREFIX + user.getEmail());
-		}
-		else {
-			peopleEmailService.sendUserTerminationEmail(user);
-		}
-
-		userDao.save(user);
-		employeeDao.save(employee);
-		applicationEventPublisher.publishEvent(new UserDeactivatedEvent(this, user));
-
-		updateSubscriptionQuantity(1L, false);
-		userVersionService.upgradeUserVersion(user.getUserId(), VersionType.MAJOR);
 	}
 
 	@Override
@@ -909,7 +1237,7 @@ public class PeopleServiceImpl implements PeopleService {
 			responseDto.setLastName(manager.getLastName());
 			responseDto.setMiddleName(manager.getMiddleName());
 			responseDto.setAuthPic(manager.getAuthPic());
-			responseDto.setIsPrimaryManager(employeeManager.isPrimaryManager());
+			responseDto.setIsPrimaryManager(employeeManager.getIsPrimaryManager());
 			responseDto.setManagerType(employeeManager.getManagerType());
 
 			return responseDto;
@@ -1090,373 +1418,41 @@ public class PeopleServiceImpl implements PeopleService {
 		return new ResponseEntityDto(false, primarySecondaryOrTeamSupervisor);
 	}
 
-	protected List<EmployeeBulkDto> getValidEmployeeBulkDtoList(List<EmployeeBulkDto> employeeBulkDtoList) {
-		return employeeBulkDtoList;
-	}
+	public List<EmployeeAllDataExportResponseDto> exportAllEmployeeData(List<Employee> employees,
+			List<EmployeeTeamDto> teamList, List<Long> employeeIds) {
+		List<EmployeeManagerDto> employeeManagerDtos = employeeDao.findManagersByEmployeeIds(employeeIds);
+		List<EmployeeAllDataExportResponseDto> responseDtos = new ArrayList<>();
 
-	private List<EmployeeBulkDto> getOverFlowedEmployeeBulkDtoList(List<EmployeeBulkDto> employeeBulkDtoList,
-			List<EmployeeBulkDto> validList) {
-		return employeeBulkDtoList.stream().filter(e -> !validList.contains(e)).toList();
-	}
+		for (Employee employee : employees) {
+			EmployeeAllDataExportResponseDto responseDto = peopleMapper
+				.employeeToEmployeeAllDataExportResponseDto(employee);
+			responseDto.setJobFamily(peopleMapper.jobFamilyToJobFamilyDto(employee.getJobFamily()));
+			responseDto.setJobTitle(peopleMapper.jobTitleToJobTitleDto(employee.getJobTitle()));
+			responseDto.setEmployeePersonalInfoDto(
+					peopleMapper.employeePersonalInfoToEmployeePersonalInfoDto(employee.getPersonalInfo()));
+			responseDto.setEmployeeEmergencyDto(
+					peopleMapper.employeeEmergencyToemployeeEmergencyDTo(employee.getEmployeeEmergencies()));
 
-	protected List<EmployeeBulkResponseDto> getTotalResultList(List<EmployeeBulkResponseDto> results,
-			List<EmployeeBulkDto> overflowedEmployeeBulkDtoList) {
-		if (!overflowedEmployeeBulkDtoList.isEmpty())
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_BULK_LIMIT_EXCEEDED);
+			List<Team> teams = teamList.stream()
+				.filter(e -> Objects.equals(e.getEmployeeId(), employee.getEmployeeId()))
+				.map(EmployeeTeamDto::getTeam)
+				.toList();
+			responseDto.setTeamResponseDto(peopleMapper.teamListToTeamResponseDtoList(teams));
 
-		return results;
-	}
+			List<Employee> managers = employeeManagerDtos.stream()
+				.filter(e -> Objects.equals(e.getEmployeeId(), employee.getEmployeeId()))
+				.map(EmployeeManagerDto::getManagers)
+				.toList();
+			responseDto.setManagers(peopleMapper.employeeListToEmployeeResponseDtoList(managers));
 
-	private void updateLoggedInUserGeneralDetails(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employeeUpdateDto.getAuthPic() != null) {
-			employee.setAuthPic(employeeUpdateDto.getAuthPic());
+			Optional<EmployeePeriod> period = employeePeriodDao
+				.findEmployeePeriodByEmployee_EmployeeIdAndIsActiveTrue(employee.getEmployeeId());
+			period.ifPresent(employeePeriod -> responseDto
+				.setEmployeePeriod(peopleMapper.employeePeriodToEmployeePeriodResponseDto(employeePeriod)));
+
+			responseDtos.add(responseDto);
 		}
-		if (employeeUpdateDto.getFirstName() != null
-				&& Validations.isEmployeeNameValid(employeeUpdateDto.getFirstName())
-				&& !employeeUpdateDto.getFirstName().isBlank()) {
-			employee.setFirstName(employeeUpdateDto.getFirstName());
-		}
-		if (employeeUpdateDto.getLastName() != null && Validations.isEmployeeNameValid(employeeUpdateDto.getLastName())
-				&& !employeeUpdateDto.getLastName().isBlank()) {
-			employee.setLastName(employeeUpdateDto.getLastName());
-		}
-		if (employeeUpdateDto.getMiddleName() != null && !employeeUpdateDto.getMiddleName().isBlank()
-				&& Validations.isEmployeeNameValid(employeeUpdateDto.getMiddleName())) {
-			employee.setMiddleName(employeeUpdateDto.getMiddleName());
-		}
-		else if (employeeUpdateDto.getMiddleName() != null && !employeeUpdateDto.getMiddleName().isBlank()) {
-			employee.setMiddleName(null);
-		}
-		if (employeeUpdateDto.getAddress() != null && !employeeUpdateDto.getAddress().isBlank()) {
-			employee.setAddress(employeeUpdateDto.getAddress());
-		}
-		if (employeeUpdateDto.getAddressLine2() != null && !employeeUpdateDto.getAddressLine2().isBlank()) {
-			employee.setAddressLine2(employeeUpdateDto.getAddressLine2());
-		}
-		if (employeeUpdateDto.getPersonalEmail() != null && !employeeUpdateDto.getPersonalEmail().isBlank()) {
-			employee.setPersonalEmail(employeeUpdateDto.getPersonalEmail());
-		}
-		if (employeeUpdateDto.getGender() != null) {
-			employee.setGender(employeeUpdateDto.getGender());
-		}
-		if (employeeUpdateDto.getPhone() != null && !employeeUpdateDto.getPhone().isBlank()) {
-			employee.setPhone(employeeUpdateDto.getPhone());
-		}
-		if (employeeUpdateDto.getCountry() != null && !employeeUpdateDto.getCountry().isBlank()) {
-			employee.setCountry(employeeUpdateDto.getCountry());
-		}
-		if (employeeUpdateDto.getEeo() != null) {
-			employee.setEeo(employeeUpdateDto.getEeo());
-		}
-		if (employeeUpdateDto.getTimeZone() != null && !employeeUpdateDto.getTimeZone().isBlank()) {
-			employee.setTimeZone(employeeUpdateDto.getTimeZone());
-		}
-	}
-
-	protected void updateSubscriptionQuantity(long quantity, boolean isIncrement) {
-		log.info("updateSubscriptionQuantity: PRO feature {}, {}", quantity, isIncrement);
-	}
-
-	private List<CompletableFuture<Void>> createEmployeeTasks(List<EmployeeBulkDto> employeeBulkDtoList,
-			ExecutorService executorService, List<EmployeeBulkResponseDto> results) {
-		List<CompletableFuture<Void>> tasks = new ArrayList<>();
-		List<List<EmployeeBulkDto>> chunkedEmployeeBulkData = CommonModuleUtils.chunkData(employeeBulkDtoList);
-		TransactionTemplate transactionTemplate = getTransactionManagerTemplate();
-
-		String tenant = bulkContextService.getContext();
-
-		for (List<EmployeeBulkDto> employeeBulkChunkDtoList : chunkedEmployeeBulkData) {
-			for (EmployeeBulkDto employeeBulkDto : employeeBulkChunkDtoList) {
-				tasks.add(createEmployeeTask(employeeBulkDto, transactionTemplate, results, executorService, tenant));
-			}
-		}
-
-		return tasks;
-	}
-
-	private CompletableFuture<Void> createEmployeeTask(EmployeeBulkDto employeeBulkDto,
-			TransactionTemplate transactionTemplate, List<EmployeeBulkResponseDto> results,
-			ExecutorService executorService, String tenant) {
-		return CompletableFuture.runAsync(() -> {
-			try {
-				bulkContextService.setContext(tenant);
-				saveEmployeeInTransaction(employeeBulkDto, transactionTemplate);
-				handleSuccessResponse(employeeBulkDto,
-						messageUtil.getMessage(PeopleMessageConstant.PEOPLE_SUCCESS_EMPLOYEE_ADDED), results);
-			}
-			catch (DataIntegrityViolationException e) {
-				handleDataIntegrityException(employeeBulkDto, e, results);
-			}
-			catch (Exception e) {
-				handleGeneralException(employeeBulkDto, e, results);
-			}
-		}, executorService);
-	}
-
-	private void saveEmployeeInTransaction(EmployeeBulkDto employeeBulkDto, TransactionTemplate transactionTemplate) {
-		transactionTemplate.execute(new TransactionCallbackWithoutResult() {
-			@Override
-			protected void doInTransactionWithoutResult(@NonNull TransactionStatus status) {
-				createNewEmployeeFromBulk(employeeBulkDto);
-			}
-		});
-	}
-
-	private void handleSuccessResponse(EmployeeBulkDto employeeBulkDto, String message,
-			List<EmployeeBulkResponseDto> results) {
-		log.warn("bulk employee added successfully : {}", employeeBulkDto.getWorkEmail());
-		EmployeeBulkResponseDto bulkResponseDto = createSuccessResponse(employeeBulkDto, message);
-		results.add(bulkResponseDto);
-	}
-
-	private void handleDataIntegrityException(EmployeeBulkDto employeeBulkDto, DataIntegrityViolationException e,
-			List<EmployeeBulkResponseDto> results) {
-		log.warn("addEmployeeBulk: data integrity violation exception occurred when saving : {}", e.getMessage());
-		EmployeeBulkResponseDto bulkResponseDto = createErrorResponse(employeeBulkDto, e.getMessage());
-		bulkResponseDto.setMessage(e.getMessage().contains("unique")
-				? messageUtil.getMessage(PeopleMessageConstant.PEOPLE_ERROR_DUPLICATE_IDENTIFICATION_NO)
-				: e.getMessage());
-		results.add(bulkResponseDto);
-	}
-
-	private void handleGeneralException(EmployeeBulkDto employeeBulkDto, Exception e,
-			List<EmployeeBulkResponseDto> results) {
-		log.warn("addEmployeeBulk: exception occurred when saving : {}", e.getMessage());
-		EmployeeBulkResponseDto bulkResponseDto = createErrorResponse(employeeBulkDto, e.getMessage());
-		results.add(bulkResponseDto);
-	}
-
-	protected EmployeeBulkResponseDto createErrorResponse(EmployeeBulkDto employeeBulkDto, String message) {
-		EmployeeBulkResponseDto bulkResponseDto = new EmployeeBulkResponseDto();
-		bulkResponseDto.setEmail(employeeBulkDto.getWorkEmail() != null ? employeeBulkDto.getWorkEmail()
-				: employeeBulkDto.getPersonalEmail());
-		bulkResponseDto.setStatus(BulkItemStatus.ERROR);
-		bulkResponseDto.setMessage(message);
-		return bulkResponseDto;
-	}
-
-	private EmployeeBulkResponseDto createSuccessResponse(EmployeeBulkDto employeeBulkDto, String message) {
-		EmployeeBulkResponseDto bulkResponseDto = new EmployeeBulkResponseDto();
-		bulkResponseDto.setEmail(employeeBulkDto.getWorkEmail() != null ? employeeBulkDto.getWorkEmail()
-				: employeeBulkDto.getPersonalEmail());
-		bulkResponseDto.setStatus(BulkItemStatus.SUCCESS);
-		bulkResponseDto.setMessage(message);
-		return bulkResponseDto;
-	}
-
-	private void waitForTaskCompletion(List<CompletableFuture<Void>> tasks, ExecutorService executorService) {
-		CompletableFuture<Void> allTasks = CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0]));
-		allTasks.thenRun(executorService::shutdown);
-		allTasks.join();
-
-		try {
-			if (!executorService.awaitTermination(5, TimeUnit.MINUTES)) {
-				log.error("addEmployeeBulk: ExecutorService Failed to terminate after 5 minutes");
-				log.error("addEmployeeBulk: Forcefully shutting down ExecutorService");
-				List<Runnable> pendingTasks = executorService.shutdownNow();
-				log.error("addEmployeeBulk: Found {} pending tasks while forcefully shutting down",
-						pendingTasks.size());
-			}
-		}
-		catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			log.error("addEmployeeBulk: Interrupted while waiting to terminate the ExecutorService", e);
-		}
-		catch (Exception e) {
-			log.error("addEmployeeBulk: Error occurred while waiting to terminate the ExecutorService: {}",
-					e.getMessage());
-		}
-
-		log.info("addEmployeeBulk: is executor shut down success : {}", executorService.isShutdown());
-		log.info("addEmployeeBulk: all the tasks termination success after executor shut down : {}",
-				executorService.isTerminated());
-	}
-
-	private int generateBulkErrorResponse(AtomicReference<ResponseEntityDto> outValues, int totalSize,
-			List<EmployeeBulkResponseDto> results) {
-		EmployeeBulkErrorResponseDto errorResponseDto = new EmployeeBulkErrorResponseDto();
-
-		List<EmployeeBulkResponseDto> errorResults = results.stream()
-			.filter(responseDto -> responseDto.getStatus() == BulkItemStatus.ERROR)
-			.toList();
-
-		int successCount = totalSize - errorResults.size();
-		errorResponseDto.setBulkStatusSummary(new BulkStatusSummary(successCount, errorResults.size()));
-		errorResponseDto.setBulkRecordErrorLogs(errorResults);
-		outValues.set(new ResponseEntityDto(false, errorResponseDto));
-
-		return successCount;
-	}
-
-	private void createNewEmployeeFromBulk(EmployeeBulkDto employeeBulkDto) {
-		List<String> validationErrors = validateEmployeeBulkDto(employeeBulkDto);
-		if (!validationErrors.isEmpty()) {
-			throw new ValidationException(
-					PeopleMessageConstant.PEOPLE_ERROR_USER_ENTITLEMENT_BULK_UPLOAD_VALIDATION_FAILED,
-					validationErrors);
-		}
-
-		if (employeeBulkDto.getIdentificationNo() != null)
-			employeeBulkDto.setIdentificationNo(employeeBulkDto.getIdentificationNo().toUpperCase());
-		Validations.isEmployeeNameValid(employeeBulkDto.getFirstName().concat(employeeBulkDto.getLastName()));
-
-		Employee employee = peopleMapper.employeeBulkDtoToEmployee(employeeBulkDto);
-		EmployeeDetailsDto employeeDetailsDto = peopleMapper.employeeBulkDtoToEmployeeDetailsDto(employeeBulkDto);
-
-		User user = employee.getUser();
-		user.setEmail(employeeBulkDto.getWorkEmail());
-		user.setIsActive(true);
-
-		User firstUser = userDao.findById(1L)
-			.orElseThrow(() -> new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND));
-		LoginMethod loginMethod = firstUser.getLoginMethod();
-
-		if (loginMethod.equals(LoginMethod.GOOGLE)) {
-			user.setIsPasswordChangedForTheFirstTime(true);
-			user.setLoginMethod(LoginMethod.GOOGLE);
-		}
-		else {
-			String tempPassword = CommonModuleUtils.generateSecureRandomPassword();
-
-			user.setTempPassword(encryptionDecryptionService.encrypt(tempPassword, encryptSecret));
-			user.setPassword(passwordEncoder.encode(tempPassword));
-			user.setIsPasswordChangedForTheFirstTime(false);
-
-			user.setIsPasswordChangedForTheFirstTime(false);
-			user.setLoginMethod(LoginMethod.CREDENTIALS);
-		}
-
-		setBulkEmployeeProgression(employeeBulkDto, employee);
-		setBulkManagers(employeeBulkDto, employeeDetailsDto);
-
-		Set<EmployeeManager> managers = addNewManagers(employeeDetailsDto, employee);
-		employee.setManagers(managers);
-
-		if (employeeBulkDto.getEmployeeEmergency() != null && (employeeBulkDto.getEmployeeEmergency().getName() != null
-				|| employeeBulkDto.getEmployeeEmergency().getContactNo() != null)) {
-			EmployeeEmergency employeeEmergency = peopleMapper
-				.employeeEmergencyDtoToEmployeeEmergency(employeeBulkDto.getEmployeeEmergency());
-			employeeEmergency.setEmployee(employee);
-			employee.setEmployeeEmergencies(List.of(employeeEmergency));
-		}
-
-		if (employeeDetailsDto.getEmployeePersonalInfo() != null) {
-			EmployeePersonalInfo employeePersonalInfo = peopleMapper
-				.employeePersonalInfoDtoToEmployeePersonalInfo(employeeDetailsDto.getEmployeePersonalInfo());
-			employeePersonalInfo.setEmployee(employee);
-			employee.setPersonalInfo(employeePersonalInfo);
-		}
-
-		employee.setAccountStatus(employeeBulkDto.getAccountStatus());
-		employee.setEmploymentAllocation(employeeBulkDto.getEmploymentAllocation());
-
-		UserSettings userSettings = createNotificationSettingsForBulkUser(user);
-		user.setSettings(userSettings);
-
-		userDao.save(user);
-		applicationEventPublisher.publishEvent(new UserCreatedEvent(this, user));
-
-		rolesService.saveEmployeeRoles(employee);
-		saveEmployeeProgression(employee, employeeBulkDto);
-
-		if (employeeBulkDto.getTeams() != null && !employeeBulkDto.getTeams().isEmpty()) {
-			saveEmployeeTeams(employee, employeeBulkDto);
-		}
-
-		if (employeeBulkDto.getEmployeePeriod() != null) {
-			saveEmployeePeriod(employee, employeeBulkDto.getEmployeePeriod());
-		}
-	}
-
-	private void saveEmployeeTeams(Employee employee, EmployeeBulkDto employeeBulkDto) {
-		if (employeeBulkDto.getTeams() != null) {
-			Set<EmployeeTeam> employeeTeams = getEmployeeTeamsByName(employeeBulkDto.getTeams(), employee);
-			employeeTeamDao.saveAll(employeeTeams);
-		}
-	}
-
-	private void saveEmployeeProgression(Employee employee, EmployeeBulkDto employeeBulkDto) {
-		if (employeeBulkDto.getJobFamily() != null || employeeBulkDto.getJobTitle() != null
-				|| employeeBulkDto.getEmployeeType() != null) {
-			List<EmployeeProgression> employeeProgressions = new ArrayList<>();
-			EmployeeProgression employeeProgression = new EmployeeProgression();
-
-			if (employeeBulkDto.getJobFamily() != null && !employeeBulkDto.getJobFamily().isEmpty()) {
-				JobFamily jobFamily = jobFamilyDao.getJobFamilyByName(employeeBulkDto.getJobFamily());
-
-				if (jobFamily != null) {
-					employee.setJobFamily(jobFamily);
-					employeeProgression.setJobFamilyId(jobFamily.getJobFamilyId());
-				}
-			}
-
-			if (employeeBulkDto.getJobTitle() != null && !employeeBulkDto.getJobTitle().isEmpty()) {
-				JobTitle jobTitle = jobTitleDao.getJobTitleByName(employeeBulkDto.getJobTitle());
-
-				if (jobTitle != null) {
-					employee.setJobTitle(jobTitle);
-					employeeProgression.setJobTitleId(jobTitle.getJobTitleId());
-				}
-			}
-
-			if (employeeBulkDto.getEmployeeType() != null && !employeeBulkDto.getEmployeeType().isEmpty()) {
-				employeeProgression.setEmployeeType(EmployeeType.valueOf(employeeBulkDto.getEmployeeType()));
-			}
-
-			employeeProgression.setEmployee(employee);
-			employeeProgressions.add(employeeProgression);
-			employee.setEmployeeProgressions(employeeProgressions);
-
-			employeeDao.save(employee);
-		}
-	}
-
-	private UserSettings createNotificationSettingsForBulkUser(User user) {
-		log.info("createNotificationSettingsForBulkUser: execution started");
-		UserSettings userSettings = new UserSettings();
-
-		EmployeeRole employeeRole = rolesService.setupBulkEmployeeRoles(user.getEmployee());
-		ObjectNode notificationsObjectNode = mapper.createObjectNode();
-
-		boolean isLeaveRequestNotificationsEnabled = true;
-		boolean isTimeEntryNotificationsEnabled = true;
-		boolean isNudgeNotificationsEnabled = employeeRole.getIsSuperAdmin()
-				|| employeeRole.getLeaveRole() == Role.LEAVE_MANAGER || employeeRole.getLeaveRole() == Role.LEAVE_ADMIN;
-
-		notificationsObjectNode.put(NotificationSettingsType.LEAVE_REQUEST.getKey(),
-				isLeaveRequestNotificationsEnabled);
-		notificationsObjectNode.put(NotificationSettingsType.TIME_ENTRY.getKey(), isTimeEntryNotificationsEnabled);
-		notificationsObjectNode.put(NotificationSettingsType.LEAVE_REQUEST_NUDGE.getKey(), isNudgeNotificationsEnabled);
-
-		userSettings.setNotifications(notificationsObjectNode);
-		userSettings.setUser(user);
-
-		log.info("createNotificationSettingsForBulkUser: execution ended");
-		return userSettings;
-	}
-
-	private UserSettings createNotificationSettings(RoleRequestDto roleRequestDto, User user) {
-		log.info("createNotificationSettings: execution started");
-		UserSettings userSettings = new UserSettings();
-
-		ObjectNode notificationsObjectNode = mapper.createObjectNode();
-
-		boolean isLeaveRequestNotificationsEnabled = true;
-		boolean isTimeEntryNotificationsEnabled = true;
-		boolean isNudgeNotificationsEnabled = roleRequestDto.getIsSuperAdmin()
-				|| roleRequestDto.getLeaveRole() == Role.LEAVE_MANAGER
-				|| roleRequestDto.getLeaveRole() == Role.LEAVE_ADMIN;
-
-		notificationsObjectNode.put(NotificationSettingsType.LEAVE_REQUEST.getKey(),
-				isLeaveRequestNotificationsEnabled);
-		notificationsObjectNode.put(NotificationSettingsType.TIME_ENTRY.getKey(), isTimeEntryNotificationsEnabled);
-		notificationsObjectNode.put(NotificationSettingsType.LEAVE_REQUEST_NUDGE.getKey(), isNudgeNotificationsEnabled);
-
-		userSettings.setNotifications(notificationsObjectNode);
-		userSettings.setUser(user);
-
-		log.info("createNotificationSettings: execution ended");
-		return userSettings;
+		return responseDtos;
 	}
 
 	public void setBulkManagers(EmployeeBulkDto employeeBulkDto, EmployeeDetailsDto employeeDetailsDto) {
@@ -1481,8 +1477,8 @@ public class PeopleServiceImpl implements PeopleService {
 		if (employeeBulkDto.getEmployeeProgression() != null) {
 			EmployeeProgression employeeProgression = peopleMapper
 				.employeeProgressionDtoToEmployeeProgression(employeeBulkDto.getEmployeeProgression());
-			if (employeeBulkDto.getEmployeeProgression().getEmployeeType() != null) {
-				employee.setEmployeeType(employeeBulkDto.getEmployeeProgression().getEmployeeType());
+			if (employeeBulkDto.getEmployeeProgression().getEmploymentType() != null) {
+				employee.setEmploymentType(employeeBulkDto.getEmployeeProgression().getEmploymentType());
 			}
 
 			if (employeeBulkDto.getEmployeeProgression().getJobFamilyId() != null) {
@@ -1514,51 +1510,6 @@ public class PeopleServiceImpl implements PeopleService {
 			responseDtos.add(responseDto);
 		}
 		return responseDtos;
-	}
-
-	private List<String> validateEmployeeBulkDto(EmployeeBulkDto employeeBulkDto) {
-		List<String> errors = new ArrayList<>();
-
-		validateMandatoryFields(employeeBulkDto);
-
-		if (employeeBulkDto.getTimeZone() != null && !employeeBulkDto.getTimeZone().isBlank()
-				&& !DateTimeUtils.isValidTimeZone(employeeBulkDto.getTimeZone())) {
-			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_TIMEZONE);
-		}
-
-		if (employeeBulkDto.getIdentificationNo() != null)
-			validateIdentificationNo(employeeBulkDto.getIdentificationNo(), errors);
-
-		validateFirstName(employeeBulkDto.getFirstName(), errors);
-		validateLastName(employeeBulkDto.getLastName(), errors);
-		validateUserEmail(employeeBulkDto.getWorkEmail(), errors);
-		validateUserSupervisor(employeeBulkDto.getPrimaryManager(), errors);
-		validateUserSupervisor(employeeBulkDto.getSecondaryManager(), errors);
-		validateCareerProgressionInBulk(employeeBulkDto.getEmployeeProgression(), errors);
-		validateStateInBulk(employeeBulkDto.getEmployeePersonalInfo().getState(), errors);
-
-		if (employeeBulkDto.getEmployeeEmergency() != null) {
-			validateEmergencyContactName(employeeBulkDto.getEmployeeEmergency().getName(), errors);
-			validatePhoneNumberInBulk(employeeBulkDto.getEmployeeEmergency().getContactNo(), errors);
-		}
-		if (employeeBulkDto.getPhone() != null)
-			validatePhoneNumberInBulk(employeeBulkDto.getPhone(), errors);
-		if (employeeBulkDto.getEmployeeEmergency() != null
-				&& employeeBulkDto.getEmployeeEmergency().getContactNo() != null)
-			validateEmergencyContactNumberInBulk(employeeBulkDto.getEmployeeEmergency().getContactNo(), errors);
-		if (employeeBulkDto.getEmployeePersonalInfo().getNin() != null)
-			validateNIN(employeeBulkDto.getEmployeePersonalInfo().getNin(), errors);
-		if (employeeBulkDto.getAddress() != null)
-			validateAddressInBulk(employeeBulkDto.getAddress(), errors);
-		if (employeeBulkDto.getAddressLine2() != null)
-			validateAddressInBulk(employeeBulkDto.getAddressLine2(), errors);
-		validateStateInBulk(employeeBulkDto.getEmployeePersonalInfo().getCity(), errors);
-		validatePassportNumber(employeeBulkDto.getEmployeePersonalInfo().getPassportNo(), errors);
-		if (employeeBulkDto.getEmployeePersonalInfo().getSsn() != null) {
-			validateSocialSecurityNumber(employeeBulkDto.getEmployeePersonalInfo().getSsn(), errors);
-		}
-
-		return errors;
 	}
 
 	public void validateNIN(String nin, List<String> errors) {
@@ -1669,6 +1620,274 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 	}
 
+	protected EmployeeBulkResponseDto createErrorResponse(EmployeeBulkDto employeeBulkDto, String message) {
+		EmployeeBulkResponseDto bulkResponseDto = new EmployeeBulkResponseDto();
+		bulkResponseDto.setEmail(employeeBulkDto.getWorkEmail() != null ? employeeBulkDto.getWorkEmail()
+				: employeeBulkDto.getPersonalEmail());
+		bulkResponseDto.setStatus(BulkItemStatus.ERROR);
+		bulkResponseDto.setMessage(message);
+		return bulkResponseDto;
+	}
+
+	protected List<EmployeeBulkDto> getValidEmployeeBulkDtoList(List<EmployeeBulkDto> employeeBulkDtoList) {
+		return employeeBulkDtoList;
+	}
+
+	protected List<EmployeeBulkResponseDto> getTotalResultList(List<EmployeeBulkResponseDto> results,
+			List<EmployeeBulkDto> overflowedEmployeeBulkDtoList) {
+		if (!overflowedEmployeeBulkDtoList.isEmpty())
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_BULK_LIMIT_EXCEEDED);
+
+		return results;
+	}
+
+	protected void updateSubscriptionQuantity(long quantity, boolean isIncrement) {
+		log.info("updateSubscriptionQuantity: PRO feature {}, {}", quantity, isIncrement);
+	}
+
+	/**
+	 * Validate the current user count with user limit. This method is only available for
+	 * Pro tenants.
+	 * @return eligibility for a new user upload.
+	 */
+	protected boolean checkUserCountExceeded() {
+		return false;
+	}
+
+	/**
+	 * Retrieves a deep copy of the given employee. This method is only available for Pro
+	 * tenants.
+	 * @param currentEmployee The employee to create a deep copy from.
+	 * @return A deep copy of the given employee as a CurrentEmployeeDto.
+	 */
+	protected CurrentEmployeeDto getEmployeeDeepCopy(Employee currentEmployee) {
+		return null;
+	}
+
+	/**
+	 * Adds a new timeline record when a new employee is created. This feature is
+	 * available only for Pro tenants.
+	 * @param savedEmployee The newly saved employee entity.
+	 * @param employeeDetailsDto The details of the newly created employee.
+	 */
+	protected void addNewEmployeeTimeLineRecords(Employee savedEmployee, CreateEmployeeRequestDto employeeDetailsDto) {
+		// This feature is available only for Pro tenants.
+	}
+
+	/**
+	 * Adds a new timeline record for employees who are added via quick upload. This
+	 * feature is available only for Pro tenants.
+	 * @param savedEmployee The employee added through quick upload.
+	 * @param employeeQuickAddDto The quick-add details of the employee.
+	 */
+	protected void addNewQuickUploadedEmployeeTimeLineRecords(Employee savedEmployee,
+			EmployeeQuickAddDto employeeQuickAddDto) {
+		// This feature is available only for Pro tenants.
+	}
+
+	/**
+	 * Adds new timeline records for employees who are added via bulk upload. This feature
+	 * is available only for Pro tenants.
+	 * @param results The employees added through bulk upload.
+	 */
+	protected void addNewBulkUploadedEmployeeTimeLineRecords(List<EmployeeBulkResponseDto> results) {
+		// This feature is available only for Pro tenants.
+	}
+
+	/**
+	 * Adds a new timeline record when an existing employee's details are updated. This
+	 * feature is available only for Pro tenants.
+	 * @param currentEmployee The current state of the employee before the update.
+	 * @param employeeUpdateDto The updated details of the employee.
+	 */
+	protected void addUpdatedEmployeeTimeLineRecords(CurrentEmployeeDto currentEmployee,
+			EmployeeUpdateDto employeeUpdateDto) {
+		// This feature is available only for Pro tenants.
+	}
+
+	private void handleGeneralException(EmployeeBulkDto employeeBulkDto, Exception e,
+			List<EmployeeBulkResponseDto> results) {
+		log.warn("addEmployeeBulk: exception occurred when saving : {}", e.getMessage());
+		EmployeeBulkResponseDto bulkResponseDto = createErrorResponse(employeeBulkDto, e.getMessage());
+		results.add(bulkResponseDto);
+	}
+
+	private EmployeeBulkResponseDto createSuccessResponse(EmployeeBulkDto employeeBulkDto, String message) {
+		EmployeeBulkResponseDto bulkResponseDto = new EmployeeBulkResponseDto();
+		bulkResponseDto.setEmail(employeeBulkDto.getWorkEmail() != null ? employeeBulkDto.getWorkEmail()
+				: employeeBulkDto.getPersonalEmail());
+		bulkResponseDto.setStatus(BulkItemStatus.SUCCESS);
+		bulkResponseDto.setMessage(message);
+		return bulkResponseDto;
+	}
+
+	private void waitForTaskCompletion(List<CompletableFuture<Void>> tasks, ExecutorService executorService) {
+		CompletableFuture<Void> allTasks = CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0]));
+		allTasks.thenRun(executorService::shutdown);
+		allTasks.join();
+
+		try {
+			if (!executorService.awaitTermination(5, TimeUnit.MINUTES)) {
+				log.error("addEmployeeBulk: ExecutorService Failed to terminate after 5 minutes");
+				log.error("addEmployeeBulk: Forcefully shutting down ExecutorService");
+				List<Runnable> pendingTasks = executorService.shutdownNow();
+				log.error("addEmployeeBulk: Found {} pending tasks while forcefully shutting down",
+						pendingTasks.size());
+			}
+		}
+		catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			log.error("addEmployeeBulk: Interrupted while waiting to terminate the ExecutorService", e);
+		}
+		catch (Exception e) {
+			log.error("addEmployeeBulk: Error occurred while waiting to terminate the ExecutorService: {}",
+					e.getMessage());
+		}
+
+		log.info("addEmployeeBulk: is executor shut down success : {}", executorService.isShutdown());
+		log.info("addEmployeeBulk: all the tasks termination success after executor shut down : {}",
+				executorService.isTerminated());
+	}
+
+	private int generateBulkErrorResponse(AtomicReference<ResponseEntityDto> outValues, int totalSize,
+			List<EmployeeBulkResponseDto> results) {
+		EmployeeBulkErrorResponseDto errorResponseDto = new EmployeeBulkErrorResponseDto();
+
+		List<EmployeeBulkResponseDto> errorResults = results.stream()
+			.filter(responseDto -> responseDto.getStatus() == BulkItemStatus.ERROR)
+			.toList();
+
+		int successCount = totalSize - errorResults.size();
+		errorResponseDto.setBulkStatusSummary(new BulkStatusSummary(successCount, errorResults.size()));
+		errorResponseDto.setBulkRecordErrorLogs(errorResults);
+		outValues.set(new ResponseEntityDto(false, errorResponseDto));
+
+		return successCount;
+	}
+
+	private void createNewEmployeeFromBulk(EmployeeBulkDto employeeBulkDto) {
+		List<String> validationErrors = validateEmployeeBulkDto(employeeBulkDto);
+		if (!validationErrors.isEmpty()) {
+			throw new ValidationException(
+					PeopleMessageConstant.PEOPLE_ERROR_USER_ENTITLEMENT_BULK_UPLOAD_VALIDATION_FAILED,
+					validationErrors);
+		}
+
+		if (employeeBulkDto.getIdentificationNo() != null)
+			employeeBulkDto.setIdentificationNo(employeeBulkDto.getIdentificationNo().toUpperCase());
+		Validations.isEmployeeNameValid(employeeBulkDto.getFirstName().concat(employeeBulkDto.getLastName()));
+
+		Employee employee = peopleMapper.employeeBulkDtoToEmployee(employeeBulkDto);
+		EmployeeDetailsDto employeeDetailsDto = peopleMapper.employeeBulkDtoToEmployeeDetailsDto(employeeBulkDto);
+
+		User user = employee.getUser();
+		user.setEmail(employeeBulkDto.getWorkEmail());
+		user.setIsActive(true);
+
+		User firstUser = userDao.findById(1L)
+			.orElseThrow(() -> new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND));
+		LoginMethod loginMethod = firstUser.getLoginMethod();
+
+		if (loginMethod.equals(LoginMethod.GOOGLE)) {
+			user.setIsPasswordChangedForTheFirstTime(true);
+			user.setLoginMethod(LoginMethod.GOOGLE);
+		}
+		else {
+			String tempPassword = CommonModuleUtils.generateSecureRandomPassword();
+
+			user.setTempPassword(encryptionDecryptionService.encrypt(tempPassword, encryptSecret));
+			user.setPassword(passwordEncoder.encode(tempPassword));
+			user.setIsPasswordChangedForTheFirstTime(false);
+
+			user.setIsPasswordChangedForTheFirstTime(false);
+			user.setLoginMethod(LoginMethod.CREDENTIALS);
+		}
+
+		setBulkEmployeeProgression(employeeBulkDto, employee);
+		setBulkManagers(employeeBulkDto, employeeDetailsDto);
+
+		Set<EmployeeManager> managers = addNewManagers(employeeDetailsDto, employee);
+		employee.setEmployeeManagers(managers);
+
+		if (employeeBulkDto.getEmployeeEmergency() != null && (employeeBulkDto.getEmployeeEmergency().getName() != null
+				|| employeeBulkDto.getEmployeeEmergency().getContactNo() != null)) {
+			EmployeeEmergency employeeEmergency = peopleMapper
+				.employeeEmergencyDtoToEmployeeEmergency(employeeBulkDto.getEmployeeEmergency());
+			employeeEmergency.setEmployee(employee);
+			employee.setEmployeeEmergencies(List.of(employeeEmergency));
+		}
+
+		if (employeeDetailsDto.getEmployeePersonalInfo() != null) {
+			EmployeePersonalInfo employeePersonalInfo = peopleMapper
+				.employeePersonalInfoDtoToEmployeePersonalInfo(employeeDetailsDto.getEmployeePersonalInfo());
+			employeePersonalInfo.setEmployee(employee);
+			employee.setPersonalInfo(employeePersonalInfo);
+		}
+
+		employee.setAccountStatus(employeeBulkDto.getAccountStatus());
+		employee.setEmploymentAllocation(employeeBulkDto.getEmploymentAllocation());
+
+		UserSettings userSettings = createNotificationSettingsForBulkUser(user);
+		user.setSettings(userSettings);
+
+		userDao.save(user);
+		applicationEventPublisher.publishEvent(new UserCreatedEvent(this, user));
+
+		rolesService.saveEmployeeRoles(employee);
+		saveEmployeeProgression(employee, employeeBulkDto);
+
+		if (employeeBulkDto.getTeams() != null && !employeeBulkDto.getTeams().isEmpty()) {
+			saveEmployeeTeams(employee, employeeBulkDto);
+		}
+
+		if (employeeBulkDto.getEmployeePeriod() != null) {
+			saveEmployeePeriod(employee, employeeBulkDto.getEmployeePeriod());
+		}
+	}
+
+	private void saveEmployeeTeams(Employee employee, EmployeeBulkDto employeeBulkDto) {
+		if (employeeBulkDto.getTeams() != null) {
+			Set<EmployeeTeam> employeeTeams = getEmployeeTeamsByName(employeeBulkDto.getTeams(), employee);
+			employeeTeamDao.saveAll(employeeTeams);
+		}
+	}
+
+	private void saveEmployeeProgression(Employee employee, EmployeeBulkDto employeeBulkDto) {
+		if (employeeBulkDto.getJobFamily() != null || employeeBulkDto.getJobTitle() != null
+				|| employeeBulkDto.getEmployeeType() != null) {
+			List<EmployeeProgression> employeeProgressions = new ArrayList<>();
+			EmployeeProgression employeeProgression = new EmployeeProgression();
+
+			if (employeeBulkDto.getJobFamily() != null && !employeeBulkDto.getJobFamily().isEmpty()) {
+				JobFamily jobFamily = jobFamilyDao.getJobFamilyByName(employeeBulkDto.getJobFamily());
+
+				if (jobFamily != null) {
+					employee.setJobFamily(jobFamily);
+					employeeProgression.setJobFamilyId(jobFamily.getJobFamilyId());
+				}
+			}
+
+			if (employeeBulkDto.getJobTitle() != null && !employeeBulkDto.getJobTitle().isEmpty()) {
+				JobTitle jobTitle = jobTitleDao.getJobTitleByName(employeeBulkDto.getJobTitle());
+
+				if (jobTitle != null) {
+					employee.setJobTitle(jobTitle);
+					employeeProgression.setJobTitleId(jobTitle.getJobTitleId());
+				}
+			}
+
+			if (employeeBulkDto.getEmployeeType() != null && !employeeBulkDto.getEmployeeType().isEmpty()) {
+				employeeProgression.setEmploymentType(EmploymentType.valueOf(employeeBulkDto.getEmployeeType()));
+			}
+
+			employeeProgression.setEmployee(employee);
+			employeeProgressions.add(employeeProgression);
+			employee.setEmployeeProgressions(employeeProgressions);
+
+			employeeDao.save(employee);
+		}
+	}
+
 	private void validateMandatoryFields(EmployeeBulkDto employeeBulkDto) {
 		List<String> missedFields = new ArrayList<>();
 
@@ -1724,6 +1943,57 @@ public class PeopleServiceImpl implements PeopleService {
 		transactionTemplate.setPropagationBehavior(Propagation.REQUIRED.value());
 		transactionTemplate.setIsolationLevel(Isolation.DEFAULT.value());
 		return transactionTemplate;
+	}
+
+	private UserSettings createNotificationSettingsForBulkUser(User user) {
+		log.info("createNotificationSettingsForBulkUser: execution started");
+		UserSettings userSettings = new UserSettings();
+
+		EmployeeRole employeeRole = rolesService.setupBulkEmployeeRoles(user.getEmployee());
+		ObjectNode notificationsObjectNode = mapper.createObjectNode();
+
+		boolean isLeaveRequestNotificationsEnabled = true;
+		boolean isTimeEntryNotificationsEnabled = true;
+		boolean isNudgeNotificationsEnabled = employeeRole.getIsSuperAdmin()
+				|| employeeRole.getLeaveRole() == Role.LEAVE_MANAGER || employeeRole.getLeaveRole() == Role.LEAVE_ADMIN;
+
+		notificationsObjectNode.put(NotificationSettingsType.LEAVE_REQUEST.getKey(),
+				isLeaveRequestNotificationsEnabled);
+		notificationsObjectNode.put(NotificationSettingsType.TIME_ENTRY.getKey(), isTimeEntryNotificationsEnabled);
+		notificationsObjectNode.put(NotificationSettingsType.LEAVE_REQUEST_NUDGE.getKey(), isNudgeNotificationsEnabled);
+
+		userSettings.setNotifications(notificationsObjectNode);
+		userSettings.setUser(user);
+
+		log.info("createNotificationSettingsForBulkUser: execution ended");
+		return userSettings;
+	}
+
+	private UserSettings createNotificationSettings(EmployeeSystemPermissionsDto roleRequestDto, User user) {
+		log.info("createNotificationSettings: execution started");
+		UserSettings userSettings = user.getSettings();
+		if (userSettings == null) {
+			userSettings = new UserSettings();
+		}
+
+		ObjectNode notificationsObjectNode = mapper.createObjectNode();
+
+		boolean isLeaveRequestNotificationsEnabled = true;
+		boolean isTimeEntryNotificationsEnabled = true;
+		boolean isNudgeNotificationsEnabled = roleRequestDto.getIsSuperAdmin()
+				|| roleRequestDto.getLeaveRole() == Role.LEAVE_MANAGER
+				|| roleRequestDto.getLeaveRole() == Role.LEAVE_ADMIN;
+
+		notificationsObjectNode.put(NotificationSettingsType.LEAVE_REQUEST.getKey(),
+				isLeaveRequestNotificationsEnabled);
+		notificationsObjectNode.put(NotificationSettingsType.TIME_ENTRY.getKey(), isTimeEntryNotificationsEnabled);
+		notificationsObjectNode.put(NotificationSettingsType.LEAVE_REQUEST_NUDGE.getKey(), isNudgeNotificationsEnabled);
+
+		userSettings.setNotifications(notificationsObjectNode);
+		userSettings.setUser(user);
+
+		log.info("createNotificationSettings: execution ended");
+		return userSettings;
 	}
 
 	private void validateUserEmail(String workEmail, List<String> errors) {
@@ -1785,286 +2055,6 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 	}
 
-	private void validatePhoneNumber(String phoneNumber) {
-		if (phoneNumber != null && !phoneNumber.isEmpty() && !Validations.isValidPhoneNumber(phoneNumber)) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_PHONE_NUMBER);
-		}
-	}
-
-	private void processEmploymentDetails(EmployeeDetailsDto employeeDetailsDto, Employee finalEmployee) {
-		if (finalEmployee.getIdentificationNo() != null)
-			finalEmployee.setIdentificationNo(finalEmployee.getIdentificationNo().toUpperCase());
-
-		if (employeeDetailsDto.getEeo() != null)
-			finalEmployee.setEeo(employeeDetailsDto.getEeo());
-
-		if (employeeDetailsDto.getEmploymentAllocation() != null)
-			finalEmployee.setEmploymentAllocation(employeeDetailsDto.getEmploymentAllocation());
-
-		Set<Long> teamIds = employeeDetailsDto.getTeams();
-		if (teamIds != null && !teamIds.isEmpty()) {
-			Set<EmployeeTeam> employeeTeams = getEmployeeTeams(teamIds, finalEmployee);
-			finalEmployee.setTeams(employeeTeams);
-		}
-	}
-
-	private void processAndUpdateEmployeeDetails(EmployeeUpdateDto updateDto, Employee employee) {
-		if (updateDto.getIdentificationNo() != null) {
-			updateDto.setIdentificationNo(updateDto.getIdentificationNo().toUpperCase());
-
-			if (Validations.isValidIdentificationNo(updateDto.getIdentificationNo())) {
-				employee.setIdentificationNo(updateDto.getIdentificationNo());
-			}
-			else {
-				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_IDENTIFICATION_NUMBER);
-			}
-		}
-		validateAndUpdateEmployeeGeneralInfo(updateDto, employee);
-		if (updateDto.getEmployeeEmergency() != null && !updateDto.getEmployeeEmergency().isEmpty()) {
-			updateEmployeeEmergencies(updateDto, employee);
-		}
-
-		if (updateDto.getEmployeePersonalInfo() != null) {
-			updatePersonInfo(updateDto, employee);
-		}
-
-		if (updateDto.getEmployeeVisas() != null) {
-			updateEmployeeVisas(updateDto, employee);
-		}
-
-		if (updateDto.getEmployeeEducations() != null) {
-			updateEmployeeEducations(updateDto, employee);
-		}
-
-		if (updateDto.getEmployeeProgressions() != null) {
-			updateEmployeeProgression(updateDto, employee);
-		}
-
-		if (updateDto.getTeams() != null) {
-			updateEmployeeTeam(updateDto.getTeams(), employee);
-		}
-
-		if (updateDto.getEmployeeFamilies() != null) {
-			updateEmployeeFamilies(updateDto, employee);
-		}
-		validateAndUpdateEmploymentData(updateDto, employee);
-
-	}
-
-	private void validateAndUpdateEmploymentData(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employeeUpdateDto.getEmploymentAllocation() != null) {
-			employee.setEmploymentAllocation(employeeUpdateDto.getEmploymentAllocation());
-		}
-		if (employeeUpdateDto.getAccountStatus() != null) {
-			employee.setAccountStatus(employeeUpdateDto.getAccountStatus());
-			if (employeeUpdateDto.getAccountStatus() == AccountStatus.TERMINATED
-					|| employeeUpdateDto.getAccountStatus() == AccountStatus.DELETED) {
-				employee.getUser().setIsActive(false);
-			}
-			else if (employeeUpdateDto.getAccountStatus() == AccountStatus.ACTIVE) {
-				employee.getUser().setIsActive(true);
-			}
-		}
-
-		if (employeeUpdateDto.getJoinDate() != null) {
-			employee.setJoinDate(employeeUpdateDto.getJoinDate());
-		}
-
-		updateEmployeePeriod(employeeUpdateDto, employee);
-	}
-
-	private void updateEmployeePeriod(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employeeUpdateDto.getEmployeePeriod() == null) {
-			return;
-		}
-
-		Optional<EmployeePeriod> employeePeriodOpt = employeePeriodDao
-			.findEmployeePeriodByEmployee_EmployeeId(employee.getEmployeeId());
-
-		if (employeePeriodOpt.isPresent()) {
-			EmployeePeriod employeePeriod = employeePeriodOpt.get();
-			updateExistingEmployeePeriod(employeeUpdateDto, employeePeriod);
-		}
-		else {
-			saveEmployeePeriod(employee, employeeUpdateDto.getEmployeePeriod());
-		}
-	}
-
-	private void updateExistingEmployeePeriod(EmployeeUpdateDto employeeUpdateDto, EmployeePeriod employeePeriod) {
-		updateStartDate(employeeUpdateDto, employeePeriod);
-		updateEndDate(employeeUpdateDto, employeePeriod);
-		employeePeriod.setActive(false);
-	}
-
-	private void updateStartDate(EmployeeUpdateDto employeeUpdateDto, EmployeePeriod employeePeriod) {
-		LocalDate newStartDate = employeeUpdateDto.getEmployeePeriod().getStartDate();
-		employeePeriod.setStartDate(newStartDate);
-	}
-
-	private void updateEndDate(EmployeeUpdateDto employeeUpdateDto, EmployeePeriod employeePeriod) {
-		LocalDate newEndDate = employeeUpdateDto.getEmployeePeriod().getEndDate();
-		employeePeriod.setEndDate(newEndDate);
-	}
-
-	private void processEmployeeProgressions(EmployeeDetailsDto employeeDetailsDto, Employee finalEmployee) {
-		if (employeeDetailsDto.getEmployeeProgressions() != null
-				&& !employeeDetailsDto.getEmployeeProgressions().isEmpty()) {
-			saveCareerProgression(finalEmployee, employeeDetailsDto.getEmployeeProgressions());
-		}
-	}
-
-	private void processEmployeeEmergencyContacts(EmployeeDetailsDto employeeDetailsDto, Employee finalEmployee) {
-		if (employeeDetailsDto.getEmployeeEmergency() != null && !employeeDetailsDto.getEmployeeEmergency().isEmpty()) {
-			for (EmployeeEmergencyDto emergencyContact : employeeDetailsDto.getEmployeeEmergency()) {
-				if (emergencyContact != null) {
-					String contactNo = emergencyContact.getContactNo();
-					if (Validations.isValidPhoneNumber(contactNo)) {
-						List<EmployeeEmergency> employeeEmergency = peopleMapper
-							.employeeEmergencyDtoListToEmployeeEmergencyList(employeeDetailsDto.getEmployeeEmergency());
-						finalEmployee.setEmployeeEmergencies(employeeEmergency);
-						employeeEmergency.forEach(em -> em.setEmployee(finalEmployee));
-					}
-					else {
-						throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_PHONE_NUMBER);
-					}
-				}
-			}
-		}
-	}
-
-	private void processEmployeeVisas(EmployeeDetailsDto employeeDetailsDto, Employee finalEmployee) {
-		if (employeeDetailsDto.getEmployeeVisas() != null && !employeeDetailsDto.getEmployeeVisas().isEmpty()) {
-			setEmploymentVisa(finalEmployee, employeeDetailsDto.getEmployeeVisas());
-		}
-	}
-
-	private void processEmployeeFamilies(EmployeeDetailsDto employeeDetailsDto, Employee finalEmployee) {
-		if (employeeDetailsDto.getEmployeeFamilies() != null && !employeeDetailsDto.getEmployeeFamilies().isEmpty()) {
-			setEmployeeFamilies(finalEmployee, employeeDetailsDto.getEmployeeFamilies());
-		}
-	}
-
-	private void processEmployeeEducations(EmployeeDetailsDto employeeDetailsDto, Employee finalEmployee) {
-		if (employeeDetailsDto.getEmployeeEducations() != null
-				&& !employeeDetailsDto.getEmployeeEducations().isEmpty()) {
-			setEmployeeEducations(finalEmployee, employeeDetailsDto.getEmployeeEducations());
-		}
-	}
-
-	private void processEmployeePersonalInfo(EmployeeDetailsDto employeeDetailsDto, Employee finalEmployee) {
-		if (employeeDetailsDto.getEmployeePersonalInfo() != null) {
-			JsonNode previousEmploymentDetails = employeeDetailsDto.getEmployeePersonalInfo()
-				.getPreviousEmploymentDetails();
-			if (previousEmploymentDetails != null && !previousEmploymentDetails.isEmpty()
-					&& previousEmploymentDetails.isArray()) {
-				validateEmploymentDates(previousEmploymentDetails);
-			}
-			EmployeePersonalInfo employeePersonalInfo = peopleMapper
-				.employeePersonalInfoDtoToEmployeePersonalInfo(employeeDetailsDto.getEmployeePersonalInfo());
-			employeePersonalInfo.setEmployee(finalEmployee);
-			finalEmployee.setPersonalInfo(employeePersonalInfo);
-		}
-	}
-
-	private void validateAndUpdateEmployeeGeneralInfo(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employeeUpdateDto.getAuthPic() != null) {
-			employee.setAuthPic(employeeUpdateDto.getAuthPic());
-		}
-		if (employeeUpdateDto.getAddress() != null) {
-			employee.setAddress(employeeUpdateDto.getAddress());
-		}
-		if (employeeUpdateDto.getAddressLine2() != null) {
-			employee.setAddressLine2(employeeUpdateDto.getAddressLine2());
-		}
-		if (employeeUpdateDto.getPersonalEmail() != null) {
-			employee.setPersonalEmail(employeeUpdateDto.getPersonalEmail());
-		}
-		if (employeeUpdateDto.getGender() != null) {
-			employee.setGender(employeeUpdateDto.getGender());
-		}
-		validateAndUpdateEmployeeName(employeeUpdateDto, employee);
-		validatePhoneNumber(employeeUpdateDto.getPhone());
-		if (employeeUpdateDto.getCountry() != null) {
-			employee.setCountry(employeeUpdateDto.getCountry());
-		}
-		if (employeeUpdateDto.getTimeZone() != null) {
-			employee.setTimeZone(employeeUpdateDto.getTimeZone());
-		}
-		if (employeeUpdateDto.getEeo() != null) {
-			employee.setEeo(employeeUpdateDto.getEeo());
-		}
-		if (employeeUpdateDto.getPhone() != null) {
-			employee.setPhone(employeeUpdateDto.getPhone());
-		}
-	}
-
-	private void validateAndUpdateEmployeeName(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employeeUpdateDto.getFirstName() != null
-				&& Validations.isEmployeeNameValid(employeeUpdateDto.getFirstName())) {
-			employee.setFirstName(employeeUpdateDto.getFirstName());
-		}
-		if (employeeUpdateDto.getMiddleName() != null && !employeeUpdateDto.getMiddleName().isBlank()
-				&& Validations.isEmployeeNameValid(employeeUpdateDto.getMiddleName())) {
-			employee.setMiddleName(employeeUpdateDto.getMiddleName());
-		}
-		else if (employeeUpdateDto.getMiddleName() != null && employeeUpdateDto.getMiddleName().isBlank()) {
-			employee.setMiddleName(null);
-		}
-		if (employeeUpdateDto.getLastName() != null
-				&& Validations.isEmployeeNameValid(employeeUpdateDto.getLastName())) {
-			employee.setLastName(employeeUpdateDto.getLastName());
-		}
-	}
-
-	private void validateCareerProgressionData(List<EmployeeProgressionsDto> employeeProgressionsDtos) {
-		employeeProgressionsDtos.forEach(employeeProgressionsDto -> {
-			if (employeeProgressionsDto.getJobFamilyId() != null) {
-				boolean jobFamilyExists = jobFamilyDao
-					.existsByJobFamilyIdAndIsActive(employeeProgressionsDto.getJobFamilyId(), true);
-				if (!jobFamilyExists) {
-					throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_JOB_FAMILY_NOT_FOUND);
-				}
-			}
-
-			if (employeeProgressionsDto.getJobTitleId() != null) {
-				boolean jobTitleExists = jobTitleDao
-					.existsByJobTitleIdAndIsActive(employeeProgressionsDto.getJobTitleId(), true);
-				if (!jobTitleExists) {
-					throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_JOB_TITLE_NOT_FOUND);
-				}
-			}
-
-			if (Validation.isInvalidStartAndEndDate(employeeProgressionsDto.getStartDate(),
-					employeeProgressionsDto.getEndDate())) {
-				throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_START_END_DATE);
-			}
-		});
-	}
-
-	private Set<EmployeeTeam> getEmployeeTeams(Set<Long> teamIds, Employee finalEmployee) {
-		List<Team> teams = teamDao.findAllById(teamIds);
-
-		if (teamIds.size() != teams.size()) {
-			log.info("getEmployeeTeams: Team ID(s) are not valid");
-		}
-
-		Set<EmployeeTeam> employeeTeams = new HashSet<>();
-		if (!teams.isEmpty()) {
-			for (Team team : teams) {
-				EmployeeTeam employeeTeam = new EmployeeTeam();
-				employeeTeam.setTeam(team);
-				employeeTeam.setEmployee(finalEmployee);
-				employeeTeam.setIsSupervisor(false);
-				employeeTeams.add(employeeTeam);
-				employeeTeam.setIsSupervisor(false);
-			}
-		}
-		else {
-			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_TEAM_NOT_FOUND);
-		}
-		return employeeTeams;
-	}
-
 	private Set<EmployeeManager> addNewManagers(EmployeeDetailsDto employeeDetailsDto, Employee finalEmployee) {
 		Set<EmployeeManager> employeeManagers = new HashSet<>();
 
@@ -2102,682 +2092,18 @@ public class PeopleServiceImpl implements PeopleService {
 		EmployeeManager employeeManager = new EmployeeManager();
 		employeeManager.setManager(manager);
 		employeeManager.setEmployee(employee);
-		employeeManager.setPrimaryManager(directManager);
+		employeeManager.setIsPrimaryManager(directManager);
 		employeeManager.setManagerType(directManager ? ManagerType.PRIMARY : ManagerType.SECONDARY);
 		return employeeManager;
 	}
 
-	private void saveCareerProgression(Employee finalEmployee, List<EmployeeProgressionsDto> employeeProgressions) {
-		List<EmployeeProgression> employeeProgressionList = new ArrayList<>();
-		List<Long> updatingIdList = new ArrayList<>();
-
-		employeeProgressions.forEach(employeeProgressionsDto -> {
-			EmployeeProgression employeeProgression;
-			Optional<EmployeeProgression> employeeProgressionOpt = Optional.empty();
-			if (finalEmployee.getEmployeeProgressions() != null)
-				employeeProgressionOpt = finalEmployee.getEmployeeProgressions()
-					.stream()
-					.filter(progression -> employeeProgressionsDto.getProgressionId() != null
-							&& progression.getProgressionId().equals(employeeProgressionsDto.getProgressionId()))
-					.findFirst();
-
-			if (employeeProgressionOpt.isPresent()) {
-				employeeProgression = employeeProgressionOpt.get();
-				employeeProgression.setIsCurrent(employeeProgressionsDto.getIsCurrent() != null
-						? employeeProgressionsDto.getIsCurrent() : employeeProgression.getIsCurrent());
-				employeeProgression.setEmployeeType(employeeProgressionsDto.getEmployeeType() != null
-						? employeeProgressionsDto.getEmployeeType() : employeeProgression.getEmployeeType());
-				employeeProgression.setStartDate(employeeProgressionsDto.getStartDate() != null
-						? employeeProgressionsDto.getStartDate() : employeeProgression.getStartDate());
-				employeeProgression.setEndDate(employeeProgressionsDto.getEndDate() != null
-						? employeeProgressionsDto.getEndDate() : employeeProgression.getEndDate());
-				updatingIdList.add(employeeProgression.getProgressionId());
-			}
-			else {
-				employeeProgression = peopleMapper.employeeProgressionDtoToEmployeeProgression(employeeProgressionsDto);
-				employeeProgression.setEmployee(finalEmployee);
-			}
-
-			if (employeeProgressionsDto.getJobFamilyId() != null) {
-				employeeProgression.setJobFamilyId(employeeProgressionsDto.getJobFamilyId());
-
-				if (Boolean.TRUE.equals(employeeProgressionsDto.getIsCurrent())) {
-					finalEmployee.setEmployeeType(employeeProgressionsDto.getEmployeeType());
-				}
-			}
-
-			if (employeeProgressionsDto.getJobTitleId() != null) {
-				employeeProgression.setJobTitleId(employeeProgressionsDto.getJobTitleId());
-
-				if (Boolean.TRUE.equals(employeeProgressionsDto.getIsCurrent())) {
-					finalEmployee.setEmployeeType(employeeProgressionsDto.getEmployeeType());
-				}
-			}
-
-			if (employeeProgressionOpt.isEmpty()) {
-				employeeProgressionList.add(employeeProgression);
-			}
-		});
-
-		if (finalEmployee.getEmployeeProgressions() != null && !finalEmployee.getEmployeeProgressions().isEmpty()) {
-			if (finalEmployee.getEmployeeProgressions().size() <= updatingIdList.size()) {
-				finalEmployee.getEmployeeProgressions().addAll(employeeProgressionList);
-			}
-			else {
-				List<Long> currentIdList = finalEmployee.getEmployeeProgressions()
-					.stream()
-					.map(EmployeeProgression::getProgressionId)
-					.toList();
-				currentIdList.forEach(item -> {
-					if (!updatingIdList.contains(item)) {
-						Optional<EmployeeProgression> progressionOptional = employeeProgressionDao
-							.findByProgressionId(item);
-						if (progressionOptional.isPresent()) {
-							employeeProgressionDao.deleteById(progressionOptional.get().getProgressionId());
-							finalEmployee.getEmployeeProgressions().remove(progressionOptional.get());
-						}
-					}
-				});
-
-				finalEmployee.getEmployeeProgressions().addAll(employeeProgressionList);
-
-			}
-		}
-		else {
-			finalEmployee.setEmployeeProgressions(employeeProgressionList);
-		}
-	}
-
-	private EmployeePeriod saveEmployeePeriod(Employee finalEmployee, ProbationPeriodDto probationPeriodDto) {
+	private void saveEmployeePeriod(Employee finalEmployee, ProbationPeriodDto probationPeriodDto) {
 		EmployeePeriod employeePeriod = new EmployeePeriod();
 		employeePeriod.setEmployee(finalEmployee);
 		employeePeriod.setStartDate(probationPeriodDto.getStartDate());
 		employeePeriod.setEndDate(probationPeriodDto.getEndDate());
-		employeePeriod.setActive(false);
-		return employeePeriodDao.save(employeePeriod);
-	}
-
-	private void setEmploymentVisa(Employee finalEmployee, List<EmploymentVisaDto> employmentVisas) {
-		List<EmployeeVisa> employeeVisaFinal = peopleMapper.employeeVisaDtoListToEmployeeVisaList(employmentVisas);
-		employeeVisaFinal.forEach(employeeVisa -> employeeVisa.setEmployee(finalEmployee));
-		finalEmployee.setEmployeeVisas(employeeVisaFinal);
-	}
-
-	private void setEmployeeFamilies(Employee finalEmployee, List<EmployeeFamilyDto> employeeFamilies) {
-		List<EmployeeFamily> employeeFamiliesFinal = peopleMapper
-			.employeeFamilyDtoListToEmployeeFamilyList(employeeFamilies);
-		employeeFamiliesFinal.forEach(employeeFamily -> employeeFamily.setEmployee(finalEmployee));
-		finalEmployee.setEmployeeFamilies(employeeFamiliesFinal);
-	}
-
-	private void setEmployeeEducations(Employee finalEmployee, List<EmployeeEducationDto> employeeEducations) {
-		List<EmployeeEducation> employeeEducationFinal = peopleMapper
-			.employeeEducationDtoListToEmployeeEducationList(employeeEducations);
-		employeeEducationFinal.forEach(employeeEdu -> employeeEdu.setEmployee(finalEmployee));
-		finalEmployee.setEmployeeEducations(employeeEducationFinal);
-	}
-
-	public static void validateEmploymentDates(JsonNode previousEmploymentDetails) {
-		LocalDate currentDate = DateTimeUtils.getCurrentUtcDate();
-		for (JsonNode employmentDetail : previousEmploymentDetails) {
-			if (!employmentDetail.has(START_DATE) || !employmentDetail.has(END_DATE)
-					|| employmentDetail.get(START_DATE).isNull() || employmentDetail.get(START_DATE).asText().isEmpty()
-					|| employmentDetail.get(END_DATE).isNull() || employmentDetail.get(END_DATE).asText().isEmpty()) {
-				throw new ModuleException(
-						PeopleMessageConstant.PEOPLE_ERROR_MISSING_PREVIOUS_EMPLOYMENT_START_AND_END_DATES);
-			}
-
-			LocalDate startDate = LocalDate.parse(employmentDetail.get(START_DATE).asText());
-			LocalDate endDate = LocalDate.parse(employmentDetail.get(END_DATE).asText());
-			if (startDate.isAfter(currentDate)) {
-				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_PREVIOUS_EMPLOYMENT_START_DATE_INVALID);
-			}
-			if (endDate.isAfter(currentDate)) {
-				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_PREVIOUS_EMPLOYMENT_END_DATE_INVALID);
-			}
-		}
-	}
-
-	private void updateEmployeeEmergencies(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		Optional<EmployeeEmergency> primaryEmergencyContact = findEmergencyContact(employee, true);
-		Optional<EmployeeEmergency> secondaryEmergencyContact = findEmergencyContact(employee, false);
-
-		for (EmployeeEmergencyDto dto : employeeUpdateDto.getEmployeeEmergency()) {
-			if (dto.getEmergencyId() == null) {
-				addNewEmergencyContact(employee, dto);
-			}
-			else if (Boolean.TRUE.equals(dto.getIsPrimary())) {
-				updateEmergencyContact(primaryEmergencyContact, dto);
-			}
-			else {
-				updateEmergencyContact(secondaryEmergencyContact, dto);
-			}
-		}
-	}
-
-	private Optional<EmployeeEmergency> findEmergencyContact(Employee employee, boolean isPrimary) {
-		return employee.getEmployeeEmergencies()
-			.stream()
-			.filter(contact -> contact.getIsPrimary() == isPrimary)
-			.findFirst();
-	}
-
-	private void updateEmergencyContact(Optional<EmployeeEmergency> emergencyContact, EmployeeEmergencyDto dto) {
-		if (emergencyContact.isPresent()
-				&& Objects.equals(emergencyContact.get().getEmergencyId(), dto.getEmergencyId())) {
-			emergencyContact.get().setName(dto.getName());
-			emergencyContact.get().setEmergencyRelationship(dto.getEmergencyRelationship());
-			updateEmergencyContactNumber(emergencyContact.get(), dto.getContactNo());
-		}
-	}
-
-	private void updateEmergencyContactNumber(EmployeeEmergency contact, String contactNo) {
-		if (Validations.isValidPhoneNumber(contactNo)) {
-			contact.setContactNo(contactNo);
-		}
-		else {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_PHONE_NUMBER);
-		}
-	}
-
-	private void addNewEmergencyContact(Employee employee, EmployeeEmergencyDto dto) {
-		EmployeeEmergency newEmergency = new EmployeeEmergency();
-		newEmergency.setName(dto.getName());
-		newEmergency.setEmergencyRelationship(dto.getEmergencyRelationship());
-		newEmergency.setIsPrimary(dto.getIsPrimary());
-		updateEmergencyContactNumber(newEmergency, dto.getContactNo());
-		newEmergency.setEmployee(employee);
-		employee.getEmployeeEmergencies().add(newEmergency);
-	}
-
-	private void updateEmployeeVisas(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employeeUpdateDto.getEmployeeVisas().isEmpty()) {
-			clearEmployeeVisas(employee);
-			return;
-		}
-
-		if (employee.getEmployeeVisas() == null || employee.getEmployeeVisas().isEmpty()) {
-			setEmploymentVisa(employee, employeeUpdateDto.getEmployeeVisas());
-			return;
-		}
-
-		Validations.validateVisaDates(employeeUpdateDto.getEmployeeVisas());
-		List<Long> currentIdList = employee.getEmployeeVisas().stream().map(EmployeeVisa::getVisaId).toList();
-		List<Long> updatingIdList = new ArrayList<>();
-
-		updateExistingVisas(employeeUpdateDto, employee, updatingIdList);
-		removeObsoleteVisas(employee, currentIdList, updatingIdList);
-	}
-
-	private void clearEmployeeVisas(Employee employee) {
-		employee.getEmployeeVisas().forEach(employeeVisa -> employeeVisaDao.deleteById(employeeVisa.getVisaId()));
-		employee.getEmployeeVisas().clear();
-	}
-
-	private void updateExistingVisas(EmployeeUpdateDto employeeUpdateDto, Employee employee,
-			List<Long> updatingIdList) {
-		employeeUpdateDto.getEmployeeVisas().forEach(visa -> {
-			Optional<EmployeeVisa> visaOpt = employee.getEmployeeVisas()
-				.stream()
-				.filter(vs -> visa.getVisaId() != null && vs.getVisaId().equals(visa.getVisaId()))
-				.findFirst();
-			if (visaOpt.isPresent()) {
-				EmployeeVisa vs = updateVisaInfo(visa, visaOpt);
-				updatingIdList.add(vs.getVisaId());
-			}
-			else {
-				EmployeeVisa newEmployeeVisa = peopleMapper.employeeVisaDtoToEmployeeVisa(visa);
-				newEmployeeVisa.setEmployee(employee);
-				employee.getEmployeeVisas().add(newEmployeeVisa);
-			}
-		});
-	}
-
-	private void removeObsoleteVisas(Employee employee, List<Long> currentIdList, List<Long> updatingIdList) {
-		currentIdList.forEach(item -> {
-			if (!updatingIdList.contains(item)) {
-				Optional<EmployeeVisa> visaOptional = employeeVisaDao.findByVisaId(item);
-				visaOptional.ifPresent(visa -> {
-					employeeVisaDao.deleteById(visa.getVisaId());
-					employee.getEmployeeVisas().remove(visa);
-				});
-			}
-		});
-	}
-
-	@NotNull
-	private EmployeeVisa updateVisaInfo(EmploymentVisaDto visa, Optional<EmployeeVisa> visaOpt) {
-		if (visaOpt.isEmpty()) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_VISA_DETAILS_NOT_FOUND);
-		}
-
-		EmployeeVisa vs = visaOpt.get();
-		vs.setVisaType(visa.getVisaType() != null ? visa.getVisaType() : vs.getVisaType());
-		vs.setIssuedDate(visa.getIssuedDate() != null ? visa.getIssuedDate() : vs.getIssuedDate());
-		vs.setExpirationDate(visa.getExpirationDate() != null ? visa.getExpirationDate() : vs.getExpirationDate());
-		vs.setIssuingCountry(visa.getIssuingCountry() != null ? visa.getIssuingCountry() : vs.getIssuingCountry());
-		return vs;
-	}
-
-	private void updateEmployeeEducations(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employeeUpdateDto.getEmployeeEducations().isEmpty()) {
-			clearEmployeeEducations(employee);
-			return;
-		}
-
-		if (employee.getEmployeeEducations() == null || employee.getEmployeeEducations().isEmpty()) {
-			setEmployeeEducations(employee, employeeUpdateDto.getEmployeeEducations());
-			return;
-		}
-
-		List<Long> currentIdList = employee.getEmployeeEducations()
-			.stream()
-			.map(EmployeeEducation::getEducationId)
-			.toList();
-		List<Long> updatingIdList = new ArrayList<>();
-
-		updateOrAddEducations(employeeUpdateDto, employee, updatingIdList);
-		removeObsoleteEducations(employee, currentIdList, updatingIdList);
-	}
-
-	private void clearEmployeeEducations(Employee employee) {
-		employee.getEmployeeEducations()
-			.forEach(education -> employeeEducationDao.deleteById(education.getEducationId()));
-		employee.getEmployeeEducations().clear();
-	}
-
-	private void updateOrAddEducations(EmployeeUpdateDto employeeUpdateDto, Employee employee,
-			List<Long> updatingIdList) {
-		employeeUpdateDto.getEmployeeEducations().forEach(employeeEducationDto -> {
-			Optional<EmployeeEducation> eduOpt = employee.getEmployeeEducations()
-				.stream()
-				.filter(edu -> employeeEducationDto.getEducationId() != null
-						&& edu.getEducationId().equals(employeeEducationDto.getEducationId()))
-				.findFirst();
-			if (eduOpt.isPresent()) {
-				EmployeeEducation ed = updateEducationInfo(employeeEducationDto, eduOpt);
-				updatingIdList.add(ed.getEducationId());
-			}
-			else {
-				addNewEmployeeEducation(employee, employeeEducationDto);
-			}
-		});
-	}
-
-	private void addNewEmployeeEducation(Employee employee, EmployeeEducationDto employeeEducationDto) {
-		EmployeeEducation newEducation = peopleMapper.employeeEducationToEmployeeEducation(employeeEducationDto);
-		newEducation.setEmployee(employee);
-		employee.getEmployeeEducations().add(newEducation);
-	}
-
-	private void removeObsoleteEducations(Employee employee, List<Long> currentIdList, List<Long> updatingIdList) {
-		currentIdList.forEach(item -> {
-			if (!updatingIdList.contains(item)) {
-				Optional<EmployeeEducation> eduOptional = employeeEducationDao.findByEducationId(item);
-				eduOptional.ifPresent(education -> {
-					employeeEducationDao.deleteById(education.getEducationId());
-					employee.getEmployeeEducations().remove(education);
-				});
-			}
-		});
-	}
-
-	@NotNull
-	private EmployeeEducation updateEducationInfo(EmployeeEducationDto employeeEducationDto,
-			Optional<EmployeeEducation> optionalEmployeeEducation) {
-		if (optionalEmployeeEducation.isEmpty()) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_EDUCATION_NOT_FOUND);
-		}
-
-		EmployeeEducation ed = optionalEmployeeEducation.get();
-		ed.setDegree(employeeEducationDto.getDegree() != null ? employeeEducationDto.getDegree() : ed.getDegree());
-		ed.setStartDate(
-				employeeEducationDto.getStartDate() != null ? employeeEducationDto.getStartDate() : ed.getStartDate());
-		ed.setEndDate(employeeEducationDto.getEndDate() != null ? employeeEducationDto.getEndDate() : ed.getEndDate());
-		ed.setInstitution(employeeEducationDto.getInstitution() != null ? employeeEducationDto.getInstitution()
-				: ed.getInstitution());
-		ed.setSpecialization(employeeEducationDto.getSpecialization() != null ? employeeEducationDto.getSpecialization()
-				: ed.getSpecialization());
-		return ed;
-	}
-
-	private void updatePersonInfo(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employee.getPersonalInfo() != null) {
-			updateBasicInfo(employeeUpdateDto, employee);
-			updateAddressInfo(employeeUpdateDto, employee);
-			updateIdentificationInfo(employeeUpdateDto, employee);
-			updateSocialMediaAndEmploymentInfo(employeeUpdateDto, employee);
-		}
-		else {
-			createPersonalInfo(employeeUpdateDto, employee);
-		}
-	}
-
-	private void updateBasicInfo(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		EmployeePersonalInfoDto personalInfoDto = employeeUpdateDto.getEmployeePersonalInfo();
-		if (personalInfoDto.getBirthDate() != null) {
-			employee.getPersonalInfo().setBirthDate(personalInfoDto.getBirthDate());
-		}
-
-		if (personalInfoDto.getCity() != null) {
-			employee.getPersonalInfo().setCity(personalInfoDto.getCity());
-		}
-
-		if (personalInfoDto.getEthnicity() != null) {
-			employee.getPersonalInfo().setEthnicity(personalInfoDto.getEthnicity());
-		}
-
-		if (personalInfoDto.getBloodGroup() != null) {
-			employee.getPersonalInfo().setBloodGroup(personalInfoDto.getBloodGroup());
-		}
-
-		if (personalInfoDto.getMaritalStatus() != null) {
-			employee.getPersonalInfo().setMaritalStatus(personalInfoDto.getMaritalStatus());
-		}
-
-		if (personalInfoDto.getNationality() != null) {
-			employee.getPersonalInfo().setNationality(personalInfoDto.getNationality());
-		}
-	}
-
-	private void updateAddressInfo(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		EmployeePersonalInfoDto personalInfoDto = employeeUpdateDto.getEmployeePersonalInfo();
-
-		if (personalInfoDto.getPostalCode() != null && !personalInfoDto.getPostalCode().isBlank()) {
-			employee.getPersonalInfo().setPostalCode(personalInfoDto.getPostalCode());
-		}
-		else if (personalInfoDto.getPostalCode() != null) {
-			employee.getPersonalInfo().setPostalCode(null);
-		}
-
-		if (personalInfoDto.getState() != null) {
-			employee.getPersonalInfo().setState(personalInfoDto.getState());
-		}
-	}
-
-	private void updateIdentificationInfo(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		EmployeePersonalInfoDto personalInfoDto = employeeUpdateDto.getEmployeePersonalInfo();
-
-		if (personalInfoDto.getNin() != null) {
-			employee.getPersonalInfo().setNin(personalInfoDto.getNin());
-		}
-
-		if (personalInfoDto.getPassportNo() != null && !personalInfoDto.getPassportNo().isBlank()) {
-			employee.getPersonalInfo().setPassportNo(personalInfoDto.getPassportNo());
-		}
-		else if (personalInfoDto.getPassportNo() != null) {
-			employee.getPersonalInfo().setPassportNo(null);
-		}
-
-		if (personalInfoDto.getSsn() != null && !personalInfoDto.getSsn().isBlank()) {
-			employee.getPersonalInfo().setSsn(personalInfoDto.getSsn());
-		}
-		else if (personalInfoDto.getSsn() != null) {
-			employee.getPersonalInfo().setSsn(null);
-		}
-	}
-
-	private void updateSocialMediaAndEmploymentInfo(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		EmployeePersonalInfoDto personalInfoDto = employeeUpdateDto.getEmployeePersonalInfo();
-
-		if (personalInfoDto.getSocialMediaDetails() != null) {
-			employee.getPersonalInfo().setSocialMediaDetails(personalInfoDto.getSocialMediaDetails());
-		}
-
-		if (personalInfoDto.getPreviousEmploymentDetails() != null) {
-			validateEmploymentDates(personalInfoDto.getPreviousEmploymentDetails());
-			employee.getPersonalInfo().setPreviousEmploymentDetails(personalInfoDto.getPreviousEmploymentDetails());
-		}
-
-		if (personalInfoDto.getExtraInfo() != null) {
-			employee.getPersonalInfo().setExtraInfo(personalInfoDto.getExtraInfo());
-		}
-	}
-
-	private void createPersonalInfo(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		EmployeePersonalInfo employeePersonalInfo = peopleMapper
-			.employeePersonalInfoDtoToEmployeePersonalInfo(employeeUpdateDto.getEmployeePersonalInfo());
-		employeePersonalInfo.setEmployee(employee);
-		employee.setPersonalInfo(employeePersonalInfo);
-	}
-
-	private void updateEmployeeFamilies(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employeeUpdateDto.getEmployeeFamilies().isEmpty()) {
-			clearEmployeeFamilies(employee);
-			return;
-		}
-
-		if (employee.getEmployeeFamilies() == null || employee.getEmployeeFamilies().isEmpty()) {
-			setEmployeeFamilies(employee, employeeUpdateDto.getEmployeeFamilies());
-		}
-		else {
-			processEmployeeFamilies(employeeUpdateDto, employee);
-		}
-	}
-
-	private void processEmployeeFamilies(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		List<Long> currentIdList = getCurrentFamilyIds(employee);
-		List<Long> updatingIdList = new ArrayList<>();
-
-		employeeUpdateDto.getEmployeeFamilies()
-			.forEach(employeeFamilyDto -> updateOrAddFamily(employeeFamilyDto, employee, updatingIdList));
-
-		removeUnupdatedFamilies(employee, currentIdList, updatingIdList);
-	}
-
-	private List<Long> getCurrentFamilyIds(Employee employee) {
-		return employee.getEmployeeFamilies().stream().map(EmployeeFamily::getFamilyId).toList();
-	}
-
-	private void updateOrAddFamily(EmployeeFamilyDto employeeFamilyDto, Employee employee, List<Long> updatingIdList) {
-		Optional<EmployeeFamily> familyOpt = findMatchingFamily(employeeFamilyDto, employee);
-
-		if (familyOpt.isPresent()) {
-			EmployeeFamily updatedFamily = updateFamilyInfo(employeeFamilyDto, familyOpt);
-			updatingIdList.add(updatedFamily.getFamilyId());
-		}
-		else {
-			addNewFamily(employeeFamilyDto, employee);
-		}
-	}
-
-	private Optional<EmployeeFamily> findMatchingFamily(EmployeeFamilyDto employeeFamilyDto, Employee employee) {
-		return employee.getEmployeeFamilies()
-			.stream()
-			.filter(fam -> employeeFamilyDto.getFamilyId() != null
-					&& fam.getFamilyId().equals(employeeFamilyDto.getFamilyId()))
-			.findFirst();
-	}
-
-	private void addNewFamily(EmployeeFamilyDto employeeFamilyDto, Employee employee) {
-		EmployeeFamily newFamily = peopleMapper.employeeFamilyDtoToEmployeeFamily(employeeFamilyDto);
-		newFamily.setEmployee(employee);
-		employee.getEmployeeFamilies().add(newFamily);
-	}
-
-	private void removeUnupdatedFamilies(Employee employee, List<Long> currentIdList, List<Long> updatingIdList) {
-		currentIdList.stream()
-			.filter(item -> !updatingIdList.contains(item))
-			.forEach(item -> removeFamilyById(employee, item));
-	}
-
-	private void removeFamilyById(Employee employee, Long familyId) {
-		Optional<EmployeeFamily> famOptional = employeeFamilyDao.findByFamilyId(familyId);
-		famOptional.ifPresent(family -> {
-			employeeFamilyDao.deleteById(family.getFamilyId());
-			employee.getEmployeeFamilies().remove(family);
-		});
-	}
-
-	private void clearEmployeeFamilies(Employee employee) {
-		employee.getEmployeeFamilies().forEach(family -> employeeFamilyDao.deleteById(family.getFamilyId()));
-		employee.getEmployeeFamilies().clear();
-	}
-
-	@NotNull
-	private EmployeeFamily updateFamilyInfo(EmployeeFamilyDto employeeFamilyDto,
-			Optional<EmployeeFamily> optionalEmployeeFamily) {
-		if (optionalEmployeeFamily.isEmpty()) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_FAMILY_DETAILS_NOT_FOUND);
-		}
-
-		EmployeeFamily famDetail = optionalEmployeeFamily.get();
-		famDetail.setBirthDate(
-				employeeFamilyDto.getBirthDate() != null ? employeeFamilyDto.getBirthDate() : famDetail.getBirthDate());
-		famDetail.setFamilyRelationship(employeeFamilyDto.getFamilyRelationship() != null
-				? employeeFamilyDto.getFamilyRelationship() : famDetail.getFamilyRelationship());
-		famDetail
-			.setGender(employeeFamilyDto.getGender() != null ? employeeFamilyDto.getGender() : famDetail.getGender());
-		famDetail.setFirstName(
-				employeeFamilyDto.getFirstName() != null ? employeeFamilyDto.getFirstName() : famDetail.getFirstName());
-		famDetail.setLastName(
-				employeeFamilyDto.getLastName() != null ? employeeFamilyDto.getLastName() : famDetail.getLastName());
-		famDetail.setParentName(employeeFamilyDto.getParentName() != null ? employeeFamilyDto.getParentName()
-				: famDetail.getParentName());
-		return famDetail;
-	}
-
-	private void updateEmployeeTeam(Set<Long> teamIds, Employee employee) {
-		List<Team> teams = teamDao.findAllById(teamIds);
-
-		Set<EmployeeTeam> currentEmployeeTeams = employee.getTeams();
-
-		List<Team> currentTeams = currentEmployeeTeams.stream().map(EmployeeTeam::getTeam).toList();
-		List<Team> teamsToAdd = new ArrayList<>(teams);
-		teamsToAdd.removeIf(currentTeams::contains);
-
-		List<Team> teamsToRemove = new ArrayList<>(currentTeams);
-		teamsToRemove.removeIf(teams::contains);
-		List<EmployeeTeam> employeeTeamsToRemove = new ArrayList<>();
-		if (!teamsToRemove.isEmpty()) {
-			employeeTeamsToRemove = currentEmployeeTeams.stream()
-				.filter(empTeam -> teamsToRemove.contains(empTeam.getTeam()))
-				.toList();
-			employeeTeamDao.deleteAllInBatch(employeeTeamsToRemove);
-		}
-
-		Set<EmployeeTeam> newEmployeeTeams = new HashSet<>();
-		if (!teamsToAdd.isEmpty()) {
-
-			for (Team team : teamsToAdd) {
-				EmployeeTeam employeeTeam = new EmployeeTeam();
-				employeeTeam.setTeam(team);
-				employeeTeam.setEmployee(employee);
-				newEmployeeTeams.add(employeeTeam);
-				employeeTeam.setIsSupervisor(false);
-			}
-			employeeTeamDao.saveAll(newEmployeeTeams);
-		}
-		else {
-			log.info("updateEmployee: no teams to assign");
-		}
-
-		Set<EmployeeTeam> finalTeams = new HashSet<>();
-		finalTeams.addAll(currentEmployeeTeams);
-		finalTeams.addAll(newEmployeeTeams);
-		finalTeams.removeIf(employeeTeamsToRemove::contains);
-		employee.setTeams(finalTeams);
-	}
-
-	private void updateManagers(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employeeUpdateDto.getPrimaryManager() != null && employeeUpdateDto.getSecondaryManager() != null
-				&& Objects.equals(employeeUpdateDto.getPrimaryManager(), employeeUpdateDto.getSecondaryManager())) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SECONDARY_MANAGER_DUPLICATE);
-		}
-
-		List<EmployeeManager> employeeManagers = employeeManagerDao.findByEmployee(employee);
-
-		Optional<EmployeeManager> employeePrimaryManagers = employeeManagers.stream()
-			.filter(manager -> manager.getManagerType().equals(ManagerType.PRIMARY))
-			.findFirst();
-
-		Optional<EmployeeManager> employeeSecondaryManagers = employeeManagers.stream()
-			.filter(manager -> manager.getManagerType().equals(ManagerType.SECONDARY))
-			.findFirst();
-
-		if ((employeeUpdateDto.getPrimaryManager() == null && employeePrimaryManagers.isEmpty())
-				&& (employeeUpdateDto.getSecondaryManager() == null && employeeSecondaryManagers.isEmpty())) {
-			return;
-		}
-
-		if (employeePrimaryManagers.isPresent() && employeeSecondaryManagers.isPresent()
-				&& employeeUpdateDto.getPrimaryManager() != null && employeeUpdateDto.getSecondaryManager() != null
-				&& Objects.equals(employeePrimaryManagers.get().getManager().getEmployeeId(),
-						employeeUpdateDto.getPrimaryManager())
-				&& Objects.equals(employeeSecondaryManagers.get().getManager().getEmployeeId(),
-						employeeUpdateDto.getSecondaryManager())) {
-			return;
-		}
-
-		if (employeeUpdateDto.getPrimaryManager() == null) {
-			if (employeePrimaryManagers.isPresent()) {
-				employeeManagerDao.deleteByEmployeeAndManagerType(employee, ManagerType.PRIMARY);
-			}
-			employeeUpdateDto.setSecondaryManager(null);
-		}
-
-		if (employeeUpdateDto.getSecondaryManager() == null && employeeSecondaryManagers.isPresent()) {
-			employeeManagerDao.deleteByEmployeeAndManagerType(employee, ManagerType.SECONDARY);
-		}
-
-		if (employeeUpdateDto.getPrimaryManager() != null) {
-			if (employeePrimaryManagers.isPresent()) {
-				employeeManagerDao.deleteByEmployeeAndManagerType(employee, ManagerType.PRIMARY);
-			}
-
-			Employee primaryManager = employeeDao
-				.findEmployeeByEmployeeIdAndUserIsActiveTrue(employeeUpdateDto.getPrimaryManager());
-
-			EmployeeManager newPrimaryManager = new EmployeeManager();
-			newPrimaryManager.setEmployee(employee);
-			newPrimaryManager.setManagerType(ManagerType.PRIMARY);
-			newPrimaryManager.setManager(primaryManager);
-			newPrimaryManager.setPrimaryManager(true);
-			employeeManagerDao.save(newPrimaryManager);
-		}
-
-		if (employeeUpdateDto.getSecondaryManager() != null) {
-			if (employeeSecondaryManagers.isPresent()) {
-				employeeManagerDao.deleteByEmployeeAndManagerType(employee, ManagerType.SECONDARY);
-			}
-
-			Employee secondaryManager = employeeDao
-				.findEmployeeByEmployeeIdAndUserIsActiveTrue(employeeUpdateDto.getSecondaryManager());
-
-			EmployeeManager newSecondaryManager = new EmployeeManager();
-			newSecondaryManager.setEmployee(employee);
-			newSecondaryManager.setManagerType(ManagerType.SECONDARY);
-			newSecondaryManager.setManager(secondaryManager);
-			newSecondaryManager.setPrimaryManager(false);
-			employeeManagerDao.save(newSecondaryManager);
-		}
-	}
-
-	private void updateEmployeeProgression(EmployeeUpdateDto employeeUpdateDto, Employee employee) {
-		if (employeeUpdateDto.getEmployeeProgressions().isEmpty()) {
-			clearEmployeeProgression(employee);
-			return;
-		}
-		validateCareerProgressionData(employeeUpdateDto.getEmployeeProgressions());
-		saveCareerProgression(employee, employeeUpdateDto.getEmployeeProgressions());
-	}
-
-	private void clearEmployeeProgression(Employee employee) {
-		List<Long> currentIdList = employee.getEmployeeProgressions()
-			.stream()
-			.map(EmployeeProgression::getProgressionId)
-			.toList();
-		currentIdList.forEach(item -> {
-			Optional<EmployeeProgression> progressionOptional = employeeProgressionDao.findByProgressionId(item);
-			if (progressionOptional.isPresent()) {
-				employeeProgressionDao.deleteById(progressionOptional.get().getProgressionId());
-				employee.getEmployeeProgressions().remove(progressionOptional.get());
-			}
-		});
-	}
-
-	private void setEmployeePeriodDto(EmployeeDetailedResponseDto employeeResponseDto) {
-		employeeResponseDto.setPeriodResponseDto(employeeResponseDto.getPeriodResponseDto());
+		employeePeriod.setIsActive(true);
+		employeePeriodDao.save(employeePeriod);
 	}
 
 	private Set<EmployeeTeam> getEmployeeTeamsByName(Set<String> teamName, Employee finalEmployee) {
@@ -2803,81 +2129,160 @@ public class PeopleServiceImpl implements PeopleService {
 		return employeeTeams;
 	}
 
-	private void updateEmailAndSendReInvitation(Employee employee, String email) {
-		User user = employee.getUser();
-		user.setEmail(email);
+	private List<String> validateEmployeeBulkDto(EmployeeBulkDto employeeBulkDto) {
+		List<String> errors = new ArrayList<>();
 
-		Optional<User> firstUser = userDao.findById(1L);
-		LoginMethod loginMethod = firstUser.isPresent() ? firstUser.get().getLoginMethod() : LoginMethod.CREDENTIALS;
+		validateMandatoryFields(employeeBulkDto);
 
-		if (loginMethod.equals(LoginMethod.CREDENTIALS)) {
-			String tempPassword = CommonModuleUtils.generateSecureRandomPassword();
-			user.setTempPassword(encryptionDecryptionService.encrypt(tempPassword, encryptSecret));
-			user.setPassword(passwordEncoder.encode(tempPassword));
+		if (employeeBulkDto.getTimeZone() != null && !employeeBulkDto.getTimeZone().isBlank()
+				&& !DateTimeUtils.isValidTimeZone(employeeBulkDto.getTimeZone())) {
+			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_TIMEZONE);
+		}
+
+		if (employeeBulkDto.getIdentificationNo() != null)
+			validateIdentificationNo(employeeBulkDto.getIdentificationNo(), errors);
+
+		validateFirstName(employeeBulkDto.getFirstName(), errors);
+		validateLastName(employeeBulkDto.getLastName(), errors);
+		validateUserEmail(employeeBulkDto.getWorkEmail(), errors);
+		validateUserSupervisor(employeeBulkDto.getPrimaryManager(), errors);
+		validateUserSupervisor(employeeBulkDto.getSecondaryManager(), errors);
+		validateCareerProgressionInBulk(employeeBulkDto.getEmployeeProgression(), errors);
+		validateStateInBulk(employeeBulkDto.getEmployeePersonalInfo().getState(), errors);
+
+		if (employeeBulkDto.getEmployeeEmergency() != null) {
+			validateEmergencyContactName(employeeBulkDto.getEmployeeEmergency().getName(), errors);
+			validatePhoneNumberInBulk(employeeBulkDto.getEmployeeEmergency().getContactNo(), errors);
+		}
+		if (employeeBulkDto.getPhone() != null)
+			validatePhoneNumberInBulk(employeeBulkDto.getPhone(), errors);
+		if (employeeBulkDto.getEmployeeEmergency() != null
+				&& employeeBulkDto.getEmployeeEmergency().getContactNo() != null)
+			validateEmergencyContactNumberInBulk(employeeBulkDto.getEmployeeEmergency().getContactNo(), errors);
+		if (employeeBulkDto.getEmployeePersonalInfo().getNin() != null)
+			validateNIN(employeeBulkDto.getEmployeePersonalInfo().getNin(), errors);
+		if (employeeBulkDto.getAddress() != null)
+			validateAddressInBulk(employeeBulkDto.getAddress(), errors);
+		if (employeeBulkDto.getAddressLine2() != null)
+			validateAddressInBulk(employeeBulkDto.getAddressLine2(), errors);
+		validateStateInBulk(employeeBulkDto.getEmployeePersonalInfo().getCity(), errors);
+		validatePassportNumber(employeeBulkDto.getEmployeePersonalInfo().getPassportNo(), errors);
+		if (employeeBulkDto.getEmployeePersonalInfo().getSsn() != null) {
+			validateSocialSecurityNumber(employeeBulkDto.getEmployeePersonalInfo().getSsn(), errors);
+		}
+
+		return errors;
+	}
+
+	private List<EmployeeBulkDto> getOverFlowedEmployeeBulkDtoList(List<EmployeeBulkDto> employeeBulkDtoList,
+			List<EmployeeBulkDto> validList) {
+		return employeeBulkDtoList.stream().filter(e -> !validList.contains(e)).toList();
+	}
+
+	private List<CompletableFuture<Void>> createEmployeeTasks(List<EmployeeBulkDto> employeeBulkDtoList,
+			ExecutorService executorService, List<EmployeeBulkResponseDto> results) {
+		List<CompletableFuture<Void>> tasks = new ArrayList<>();
+		List<List<EmployeeBulkDto>> chunkedEmployeeBulkData = CommonModuleUtils.chunkData(employeeBulkDtoList);
+		TransactionTemplate transactionTemplate = getTransactionManagerTemplate();
+
+		String tenant = bulkContextService.getContext();
+
+		for (List<EmployeeBulkDto> employeeBulkChunkDtoList : chunkedEmployeeBulkData) {
+			for (EmployeeBulkDto employeeBulkDto : employeeBulkChunkDtoList) {
+				tasks.add(createEmployeeTask(employeeBulkDto, transactionTemplate, results, executorService, tenant));
+			}
+		}
+
+		return tasks;
+	}
+
+	private CompletableFuture<Void> createEmployeeTask(EmployeeBulkDto employeeBulkDto,
+			TransactionTemplate transactionTemplate, List<EmployeeBulkResponseDto> results,
+			ExecutorService executorService, String tenant) {
+		return CompletableFuture.runAsync(() -> {
+			try {
+				bulkContextService.setContext(tenant);
+				saveEmployeeInTransaction(employeeBulkDto, transactionTemplate);
+				handleSuccessResponse(employeeBulkDto,
+						messageUtil.getMessage(PeopleMessageConstant.PEOPLE_SUCCESS_EMPLOYEE_ADDED), results);
+			}
+			catch (DataIntegrityViolationException e) {
+				handleDataIntegrityException(employeeBulkDto, e, results);
+			}
+			catch (Exception e) {
+				handleGeneralException(employeeBulkDto, e, results);
+			}
+		}, executorService);
+	}
+
+	private void saveEmployeeInTransaction(EmployeeBulkDto employeeBulkDto, TransactionTemplate transactionTemplate) {
+		transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+			@Override
+			protected void doInTransactionWithoutResult(@NonNull TransactionStatus status) {
+				createNewEmployeeFromBulk(employeeBulkDto);
+			}
+		});
+	}
+
+	private void handleSuccessResponse(EmployeeBulkDto employeeBulkDto, String message,
+			List<EmployeeBulkResponseDto> results) {
+		log.warn("bulk employee added successfully : {}", employeeBulkDto.getWorkEmail());
+		EmployeeBulkResponseDto bulkResponseDto = createSuccessResponse(employeeBulkDto, message);
+		results.add(bulkResponseDto);
+	}
+
+	private void handleDataIntegrityException(EmployeeBulkDto employeeBulkDto, DataIntegrityViolationException e,
+			List<EmployeeBulkResponseDto> results) {
+		log.warn("addEmployeeBulk: data integrity violation exception occurred when saving : {}", e.getMessage());
+		EmployeeBulkResponseDto bulkResponseDto = createErrorResponse(employeeBulkDto, e.getMessage());
+		bulkResponseDto.setMessage(e.getMessage().contains("unique")
+				? messageUtil.getMessage(PeopleMessageConstant.PEOPLE_ERROR_DUPLICATE_IDENTIFICATION_NO)
+				: e.getMessage());
+		results.add(bulkResponseDto);
+	}
+
+	private void updateUserStatus(Long userId, AccountStatus status, boolean isDelete) {
+		log.info("updateUserStatus: execution started");
+
+		User user = userDao.findById(userId)
+			.orElseThrow(() -> new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND));
+		Employee employee = user.getEmployee();
+
+		if (!Boolean.TRUE.equals(user.getIsActive())) {
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_ACCOUNT_DEACTIVATED);
+		}
+
+		if (!teamDao.findTeamsManagedByUser(user.getUserId(), true).isEmpty()) {
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_TEAM_EMPLOYEE_SUPERVISING_TEAMS);
+		}
+
+		if (employeeDao.countEmployeesByManagerId(user.getUserId()) > 0) {
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EMPLOYEE_SUPERVISING_EMPLOYEES);
+		}
+
+		List<EmployeeTeam> employeeTeams = employeeTeamDao.findEmployeeTeamsByEmployee(employee);
+		employeeTeamDao.deleteAll(employeeTeams);
+		employee.setEmployeeTeams(null);
+
+		employee.setJobTitle(null);
+		employee.setJobFamily(null);
+		employee.setAccountStatus(status);
+		employee.setTerminationDate(DateTimeUtils.getCurrentUtcDate());
+
+		user.setIsActive(false);
+
+		if (isDelete) {
+			user.setEmail(PeopleConstants.DELETED_PREFIX + user.getEmail());
+		}
+		else {
+			peopleEmailService.sendUserTerminationEmail(user);
 		}
 
 		userDao.save(user);
-		peopleEmailService.sendUserInvitationEmail(user);
-	}
+		applicationEventPublisher.publishEvent(new UserDeactivatedEvent(this, user));
 
-	/**
-	 * Validate the current user count with user limit. This method is only available for
-	 * Pro tenants.
-	 * @return eligibility for a new user upload.
-	 */
-	protected boolean checkUserCountExceeded() {
-		return false;
-	}
-
-	/**
-	 * Retrieves a deep copy of the given employee. This method is only available for Pro
-	 * tenants.
-	 * @param currentEmployee The employee to create a deep copy from.
-	 * @return A deep copy of the given employee as a CurrentEmployeeDto.
-	 */
-	protected CurrentEmployeeDto getEmployeeDeepCopy(Employee currentEmployee) {
-		return null;
-	}
-
-	/**
-	 * Adds a new timeline record when a new employee is created. This feature is
-	 * available only for Pro tenants.
-	 * @param savedEmployee The newly saved employee entity.
-	 * @param employeeDetailsDto The details of the newly created employee.
-	 */
-	protected void addNewEmployeeTimeLineRecords(Employee savedEmployee, EmployeeDetailsDto employeeDetailsDto) {
-		// This feature is available only for Pro tenants.
-	}
-
-	/**
-	 * Adds a new timeline record for employees who are added via quick upload. This
-	 * feature is available only for Pro tenants.
-	 * @param savedEmployee The employee added through quick upload.
-	 * @param employeeQuickAddDto The quick-add details of the employee.
-	 */
-	protected void addNewQuickUploadedEmployeeTimeLineRecords(Employee savedEmployee,
-			EmployeeQuickAddDto employeeQuickAddDto) {
-		// This feature is available only for Pro tenants.
-	}
-
-	/**
-	 * Adds new timeline records for employees who are added via bulk upload. This feature
-	 * is available only for Pro tenants.
-	 * @param results The employees added through bulk upload.
-	 */
-	protected void addNewBulkUploadedEmployeeTimeLineRecords(List<EmployeeBulkResponseDto> results) {
-		// This feature is available only for Pro tenants.
-	}
-
-	/**
-	 * Adds a new timeline record when an existing employee's details are updated. This
-	 * feature is available only for Pro tenants.
-	 * @param currentEmployee The current state of the employee before the update.
-	 * @param employeeUpdateDto The updated details of the employee.
-	 */
-	protected void addUpdatedEmployeeTimeLineRecords(CurrentEmployeeDto currentEmployee,
-			EmployeeUpdateDto employeeUpdateDto) {
-		// This feature is available only for Pro tenants.
+		updateSubscriptionQuantity(1L, false);
+		userVersionService.upgradeUserVersion(user.getUserId(), VersionType.MAJOR);
 	}
 
 }

@@ -1,6 +1,6 @@
 package com.skapp.community.peopleplanner.type;
 
-public enum EmployeeType {
+public enum EmploymentType {
 
 	INTERN, CONTRACT, PERMANENT
 

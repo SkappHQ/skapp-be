@@ -74,7 +74,7 @@ public class JobFamilyRepositoryImpl implements JobFamilyRepository {
 		predicates.add(criteriaBuilder.equal(jobFamilyRoot.get(JobFamily_.isActive), true));
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeJoin.join(Employee_.teams, JoinType.LEFT);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeJoin.join(Employee_.employeeTeams, JoinType.LEFT);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 

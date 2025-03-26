@@ -148,7 +148,7 @@ public class TeamRepositoryImpl implements TeamRepository {
 		}
 
 		if (!teamIds.isEmpty() && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -171,7 +171,7 @@ public class TeamRepositoryImpl implements TeamRepository {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
 		Root<Employee> root = criteriaQuery.from(Employee.class);
-		Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+		Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 		Join<Employee, User> user = root.join(Employee_.user);
 
 		List<Predicate> predicates = new ArrayList<>();
@@ -221,7 +221,7 @@ public class TeamRepositoryImpl implements TeamRepository {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
 		Root<Employee> root = criteriaQuery.from(Employee.class);
-		Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+		Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 		Join<Employee, User> user = root.join(Employee_.user);
 
 		List<Predicate> predicates = new ArrayList<>();

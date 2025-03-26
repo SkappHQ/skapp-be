@@ -1,7 +1,7 @@
 package com.skapp.community.peopleplanner.model;
 
-import com.skapp.community.peopleplanner.type.FamilyRelationship;
 import com.skapp.community.peopleplanner.type.Gender;
+import com.skapp.community.peopleplanner.type.RelationshipTypes;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -45,7 +45,7 @@ public class EmployeeFamily {
 
 	@Column(name = "relationship", columnDefinition = "varchar(255)")
 	@Enumerated(EnumType.STRING)
-	private FamilyRelationship familyRelationship;
+	private RelationshipTypes familyRelationship;
 
 	@Column(name = "parent_name")
 	private String parentName;

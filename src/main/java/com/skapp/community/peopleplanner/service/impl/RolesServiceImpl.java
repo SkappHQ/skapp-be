@@ -1,14 +1,14 @@
 package com.skapp.community.peopleplanner.service.impl;
 
 import com.skapp.community.common.exception.ModuleException;
+import com.skapp.community.common.exception.ValidationException;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.service.UserService;
-import com.skapp.community.common.service.UserVersionService;
 import com.skapp.community.common.type.ModuleType;
 import com.skapp.community.common.type.Role;
 import com.skapp.community.common.type.RoleLevel;
-import com.skapp.community.common.type.VersionType;
+import com.skapp.community.common.util.CommonModuleUtils;
 import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.common.util.MessageUtil;
 import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
@@ -19,6 +19,7 @@ import com.skapp.community.peopleplanner.model.ModuleRoleRestriction;
 import com.skapp.community.peopleplanner.model.Team;
 import com.skapp.community.peopleplanner.payload.request.ModuleRoleRestrictionRequestDto;
 import com.skapp.community.peopleplanner.payload.request.RoleRequestDto;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeeSystemPermissionsDto;
 import com.skapp.community.peopleplanner.payload.response.AllowedModuleRolesResponseDto;
 import com.skapp.community.peopleplanner.payload.response.AllowedRoleDto;
 import com.skapp.community.peopleplanner.payload.response.ModuleRoleRestrictionResponseDto;
@@ -37,8 +38,10 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -61,8 +64,6 @@ public class RolesServiceImpl implements RolesService {
 
 	private final MessageUtil messageUtil;
 
-	private final UserVersionService userVersionService;
-
 	@Override
 	public ResponseEntityDto getSystemRoles() {
 		log.info("getSystemRoles: execution started");
@@ -80,19 +81,13 @@ public class RolesServiceImpl implements RolesService {
 	}
 
 	@Override
-	public void assignRolesToEmployee(RoleRequestDto roleRequestDto, Employee employee) {
+	public EmployeeRole assignRolesToEmployee(EmployeeSystemPermissionsDto roleRequestDto, Employee employee) {
 		log.info("assignRolesToEmployee: execution started");
 
-		Optional<Employee> optionalEmployee = employeeDao.findById(employee.getEmployeeId());
-		if (optionalEmployee.isEmpty()) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
-		}
-
 		EmployeeRole employeeRole = createEmployeeRole(roleRequestDto, employee);
-		employeeRoleDao.save(employeeRole);
 
 		log.info("assignRolesToEmployee: execution ended");
-		new ResponseEntityDto(false, peopleMapper.employeeRoleToEmployeeRoleResponseDto(employeeRole));
+		return employeeRole;
 	}
 
 	@Override
@@ -129,66 +124,23 @@ public class RolesServiceImpl implements RolesService {
 		return moduleRoleRestrictionResponseDto;
 	}
 
-	@Override
-	public void updateEmployeeRoles(RoleRequestDto roleRequestDto, Employee employee) {
-		log.info("updateEmployeeRoles: execution started");
-
-		if (Boolean.TRUE.equals(employee.getEmployeeRole().getIsSuperAdmin())
-				&& employeeRoleDao.countByIsSuperAdminTrue() == 1 && isUserRoleDowngraded(roleRequestDto)) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_ONLY_ONE_SUPER_ADMIN);
+	private boolean isEmployeeDemoted(EmployeeSystemPermissionsDto roleRequestDto, Employee employee) {
+		if (employee == null || employee.getEmployeeRole() == null || roleRequestDto == null) {
+			return false;
 		}
 
-		Optional<EmployeeRole> optionalEmployeeRole = employeeRoleDao.findById(employee.getEmployeeId());
-		if (optionalEmployeeRole.isEmpty()) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
-		}
+		EmployeeRole employeeRole = employee.getEmployeeRole();
 
-		if (isEmployeeDemoted(roleRequestDto, employee)) {
-			List<Team> teams = teamDao.findTeamsManagedByUser(employee.getEmployeeId(), true);
-
-			Long managingEmployeeCount = employeeDao.countEmployeesByManagerId(employee.getEmployeeId());
-
-			if (!teams.isEmpty()) {
-				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_LEADING_TEAMS);
-			}
-
-			if (managingEmployeeCount > 0) {
-				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SUPERVISING_EMPLOYEES);
-			}
-		}
-
-		EmployeeRole employeeRole = optionalEmployeeRole.get();
-		EmployeeRole oldEmployeeRole = new EmployeeRole();
-
-		oldEmployeeRole.setPeopleRole(employeeRole.getPeopleRole());
-		oldEmployeeRole.setLeaveRole(employeeRole.getLeaveRole());
-		oldEmployeeRole.setAttendanceRole(employeeRole.getAttendanceRole());
-		oldEmployeeRole.setIsSuperAdmin(employeeRole.getIsSuperAdmin());
-
-		LocalDate currentDate = DateTimeUtils.getCurrentUtcDate();
-
-		User currentUser = userService.getCurrentUser();
-		employeeRole = updateEmployeeRolesSafely(employeeRole, roleRequestDto, currentDate, currentUser);
-
-		employeeRoleDao.save(employeeRole);
-
-		userVersionService.upgradeUserVersion(employee.getUser().getUserId(), VersionType.MINOR);
-
-		log.info("updateEmployeeRoles: execution ended");
+		return isRoleDemoted(employeeRole.getPeopleRole(), roleRequestDto.getPeopleRole(), Role.PEOPLE_MANAGER,
+				Role.PEOPLE_ADMIN, Role.PEOPLE_EMPLOYEE)
+				|| isRoleDemoted(employeeRole.getAttendanceRole(), roleRequestDto.getAttendanceRole(),
+						Role.ATTENDANCE_MANAGER, Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_EMPLOYEE)
+				|| isRoleDemoted(employeeRole.getLeaveRole(), roleRequestDto.getLeaveRole(), Role.LEAVE_MANAGER,
+						Role.LEAVE_ADMIN, Role.LEAVE_EMPLOYEE);
 	}
 
-	private boolean isEmployeeDemoted(RoleRequestDto roleRequestDto, Employee employee) {
-		Boolean isPeopleDemoted = (employee.getEmployeeRole().getPeopleRole().equals(Role.PEOPLE_MANAGER)
-				|| employee.getEmployeeRole().getPeopleRole().equals(Role.PEOPLE_ADMIN))
-				&& roleRequestDto.getPeopleRole().equals(Role.PEOPLE_EMPLOYEE);
-		Boolean isAttendanceDemoted = (employee.getEmployeeRole().getAttendanceRole().equals(Role.ATTENDANCE_MANAGER)
-				|| employee.getEmployeeRole().getAttendanceRole().equals(Role.ATTENDANCE_ADMIN))
-				&& roleRequestDto.getAttendanceRole().equals(Role.ATTENDANCE_EMPLOYEE);
-		Boolean isLeaveDemoted = (employee.getEmployeeRole().getLeaveRole().equals(Role.LEAVE_MANAGER)
-				|| employee.getEmployeeRole().getLeaveRole().equals(Role.LEAVE_ADMIN))
-				&& roleRequestDto.getLeaveRole().equals(Role.LEAVE_EMPLOYEE);
-
-		return isPeopleDemoted || isAttendanceDemoted || isLeaveDemoted;
+	private boolean isRoleDemoted(Role currentRole, Role newRole, Role managerRole, Role adminRole, Role employeeRole) {
+		return (currentRole == managerRole || currentRole == adminRole) && newRole == employeeRole;
 	}
 
 	protected EmployeeRole updateEmployeeRolesSafely(EmployeeRole employeeRole, RoleRequestDto roleRequestDto,
@@ -301,22 +253,116 @@ public class RolesServiceImpl implements RolesService {
 		return employeeRole;
 	}
 
-	public void validateRoles(RoleRequestDto userRoles) {
-		User currentUser = userService.getCurrentUser();
-
-		if (hasOnlyAdminPermissions(currentUser) && ((userRoles.getAttendanceRole() != null
-				&& validateRestrictedRoleAssignment(userRoles.getAttendanceRole(), ModuleType.ATTENDANCE))
-				|| (userRoles.getPeopleRole() != null
-						&& validateRestrictedRoleAssignment(userRoles.getPeopleRole(), ModuleType.PEOPLE))
-				|| (userRoles.getLeaveRole() != null
-						&& validateRestrictedRoleAssignment(userRoles.getLeaveRole(), ModuleType.LEAVE)))) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SUPER_ADMIN_RESTRICTED_ASSIGNING_ROLE_ACCESS);
+	public void validateRoles(EmployeeSystemPermissionsDto userRoles, User user) {
+		if ((user.getEmployee() == null || user.getEmployee().getEmployeeRole() == null) && userRoles == null) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_SYSTEM_PERMISSION_REQUIRED);
 		}
 
-		if (Boolean.TRUE.equals(userRoles.getIsSuperAdmin())
+		User currentUser = userService.getCurrentUser();
+		if (user.getEmployee() != null && userRoles != null
+				&& Objects.equals(currentUser.getUserId(), user.getEmployee().getEmployeeId())) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_CANNOT_CHANGE_OWN_PERMISSIONS);
+		}
+
+		if (userRoles != null && user.getEmployee() != null
+				&& Boolean.TRUE.equals(user.getEmployee().getEmployeeRole().getIsSuperAdmin())
+				&& employeeRoleDao.countByIsSuperAdminTrue() == 1 && isUserRoleDowngraded(userRoles)) {
+			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_ONLY_ONE_SUPER_ADMIN);
+		}
+
+		if (isEmployeeDemoted(userRoles, user.getEmployee())) {
+			List<Team> teams = teamDao.findTeamsManagedByUser(user.getEmployee().getEmployeeId(), true);
+
+			Long managingEmployeeCount = employeeDao.countEmployeesByManagerId(user.getEmployee().getEmployeeId());
+
+			if (!teams.isEmpty()) {
+				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_LEADING_TEAMS);
+			}
+
+			if (managingEmployeeCount > 0) {
+				throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SUPERVISING_EMPLOYEES);
+			}
+		}
+
+		if ((user.getEmployee() == null || user.getEmployee().getEmployeeRole() == null) && userRoles != null
+				&& userRoles.getIsSuperAdmin() == null) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_SUPER_ADMIN_REQUIRED);
+		}
+
+		if ((user.getEmployee() == null || user.getEmployee().getEmployeeRole() == null) && userRoles != null
+				&& userRoles.getPeopleRole() == null) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_PEOPLE_ROLE_REQUIRED);
+		}
+
+		if ((user.getEmployee() == null || user.getEmployee().getEmployeeRole() == null) && userRoles != null
+				&& userRoles.getAttendanceRole() == null) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_ATTENDANCE_ROLE_REQUIRED);
+		}
+
+		if ((user.getEmployee() == null || user.getEmployee().getEmployeeRole() == null) && userRoles != null
+				&& userRoles.getLeaveRole() == null) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_LEAVE_ROLE_REQUIRED);
+		}
+
+		if (userRoles != null && userRoles.getPeopleRole() != null) {
+			Role peopleRole = userRoles.getPeopleRole();
+			EnumSet<Role> validPeopleRoles = EnumSet.of(Role.PEOPLE_EMPLOYEE, Role.PEOPLE_MANAGER, Role.PEOPLE_ADMIN);
+			if (!validPeopleRoles.contains(peopleRole)) {
+				throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_PEOPLE_ROLE,
+						new String[] { peopleRole.name() });
+			}
+		}
+
+		if (user.getEmployee() != null && user.getEmployee().getEmployeeRole() != null
+				&& user.getEmployee().getEmployeeRole().getIsSuperAdmin() && userRoles != null
+				&& userRoles.getIsSuperAdmin() != null && userRoles.getIsSuperAdmin()
 				&& (userRoles.getPeopleRole() != Role.PEOPLE_ADMIN || userRoles.getLeaveRole() != Role.LEAVE_ADMIN
 						|| userRoles.getAttendanceRole() != Role.ATTENDANCE_ADMIN)) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_SHOULD_ASSIGN_PROPER_PERMISSIONS);
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_SUPER_ADMIN_ROLES_CANNOT_BE_CHANGED);
+		}
+
+		if (userRoles != null && userRoles.getAttendanceRole() != null) {
+			Role attendanceRole = userRoles.getAttendanceRole();
+			EnumSet<Role> validAttendanceRoles = EnumSet.of(Role.ATTENDANCE_EMPLOYEE, Role.ATTENDANCE_MANAGER,
+					Role.ATTENDANCE_ADMIN);
+			if (!validAttendanceRoles.contains(attendanceRole)) {
+				throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_ATTENDANCE_ROLE,
+						new String[] { attendanceRole.name() });
+			}
+		}
+
+		if (userRoles != null && userRoles.getLeaveRole() != null) {
+			Role leaveRole = userRoles.getLeaveRole();
+			EnumSet<Role> validLeaveRoles = EnumSet.of(Role.LEAVE_EMPLOYEE, Role.LEAVE_MANAGER, Role.LEAVE_ADMIN);
+			if (!validLeaveRoles.contains(leaveRole)) {
+				throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_INVALID_LEAVE_ROLE,
+						new String[] { leaveRole.name() });
+			}
+		}
+
+		if ((user.getEmployee() == null || user.getEmployee().getEmployeeRole() == null) && userRoles != null
+				&& Boolean.TRUE.equals(userRoles.getIsSuperAdmin())
+				&& (userRoles.getPeopleRole() != Role.PEOPLE_ADMIN || userRoles.getLeaveRole() != Role.LEAVE_ADMIN
+						|| userRoles.getAttendanceRole() != Role.ATTENDANCE_ADMIN)) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_SHOULD_ASSIGN_PROPER_PERMISSIONS);
+		}
+
+		if (userRoles != null && hasOnlyPeopleAdminPermissions(currentUser) && Boolean.TRUE
+			.equals(validateRestrictedRoleAssignment(userRoles.getAttendanceRole(), ModuleType.ATTENDANCE))) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_ATTENDANCE_RESTRICTED_ROLE_ACCESS,
+					new String[] { userRoles.getAttendanceRole().name() });
+		}
+
+		if (userRoles != null && hasOnlyPeopleAdminPermissions(currentUser) && Boolean.TRUE
+			.equals(validateRestrictedRoleAssignment(userRoles.getPeopleRole(), ModuleType.PEOPLE))) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_PEOPLE_RESTRICTED_ROLE_ACCESS,
+					new String[] { userRoles.getPeopleRole().name() });
+		}
+
+		if (userRoles != null && hasOnlyPeopleAdminPermissions(currentUser)
+				&& Boolean.TRUE.equals(validateRestrictedRoleAssignment(userRoles.getLeaveRole(), ModuleType.LEAVE))) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_LEAVE_RESTRICTED_ROLE_ACCESS,
+					new String[] { userRoles.getLeaveRole().name() });
 		}
 	}
 
@@ -339,21 +385,23 @@ public class RolesServiceImpl implements RolesService {
 		log.info("saveSuperAdminRoles: execution ended");
 	}
 
-	protected boolean hasOnlyAdminPermissions(User currentUser) {
+	protected boolean hasOnlyPeopleAdminPermissions(User currentUser) {
 		return Boolean.FALSE.equals(currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin())
 				&& currentUser.getEmployee().getEmployeeRole().getPeopleRole() == Role.PEOPLE_ADMIN;
 	}
 
-	private Boolean validateRestrictedRoleAssignment(Role role, ModuleType moduleType) {
+	protected Boolean validateRestrictedRoleAssignment(Role role, ModuleType moduleType) {
 		ModuleRoleRestrictionResponseDto restrictedRole = getRestrictedRoleByModule(moduleType);
 
-		return switch (role) {
-			case PEOPLE_ADMIN, ATTENDANCE_ADMIN, LEAVE_ADMIN -> Boolean.TRUE.equals(restrictedRole.getIsAdmin());
-			case PEOPLE_MANAGER, ATTENDANCE_MANAGER, LEAVE_MANAGER ->
-				Boolean.TRUE.equals(restrictedRole.getIsManager());
-			default -> false;
-		};
+		if (role == Role.PEOPLE_ADMIN || role == Role.ATTENDANCE_ADMIN || role == Role.LEAVE_ADMIN) {
+			return Boolean.TRUE.equals(restrictedRole.getIsAdmin());
+		}
 
+		if (role == Role.PEOPLE_MANAGER || role == Role.ATTENDANCE_MANAGER || role == Role.LEAVE_MANAGER) {
+			return Boolean.TRUE.equals(restrictedRole.getIsManager());
+		}
+
+		return false;
 	}
 
 	private AllowedRoleDto createAllowedRole(String roleName, Role role) {
@@ -387,17 +435,36 @@ public class RolesServiceImpl implements RolesService {
 		};
 	}
 
-	protected EmployeeRole createEmployeeRole(RoleRequestDto roleRequestDto, Employee employee) {
-		EmployeeRole employeeRole = new EmployeeRole();
+	protected EmployeeRole createEmployeeRole(EmployeeSystemPermissionsDto roleRequestDto, Employee employee) {
+		EmployeeRole employeeRole = employee.getEmployeeRole();
+		if (employeeRole == null) {
+			employeeRole = new EmployeeRole();
+		}
+
 		User currentUser = userService.getCurrentUser();
 
-		employeeRole.setEmployee(employee);
-		employeeRole.setPeopleRole(roleRequestDto.getPeopleRole());
-		employeeRole.setLeaveRole(roleRequestDto.getLeaveRole());
-		employeeRole.setAttendanceRole(roleRequestDto.getAttendanceRole());
-		employeeRole.setIsSuperAdmin(roleRequestDto.getIsSuperAdmin());
-		employeeRole.setChangedDate(DateTimeUtils.getCurrentUtcDate());
-		employeeRole.setRoleChangedBy(currentUser.getEmployee());
+		boolean isSuperAdmin = (roleRequestDto.getIsSuperAdmin() != null && roleRequestDto.getIsSuperAdmin())
+				|| (roleRequestDto.getIsSuperAdmin() == null && employeeRole.getIsSuperAdmin() != null
+						&& employeeRole.getIsSuperAdmin());
+
+		if (isSuperAdmin) {
+			employeeRole.setPeopleRole(Role.PEOPLE_ADMIN);
+			employeeRole.setLeaveRole(Role.LEAVE_ADMIN);
+			employeeRole.setAttendanceRole(Role.ATTENDANCE_ADMIN);
+			employeeRole.setEsignRole(Role.ESIGN_ADMIN);
+			employeeRole.setIsSuperAdmin(true);
+		}
+		else {
+			CommonModuleUtils.setIfExists(roleRequestDto::getPeopleRole, employeeRole::setPeopleRole);
+			CommonModuleUtils.setIfExists(roleRequestDto::getLeaveRole, employeeRole::setLeaveRole);
+			CommonModuleUtils.setIfExists(roleRequestDto::getAttendanceRole, employeeRole::setAttendanceRole);
+			CommonModuleUtils.setIfExists(roleRequestDto::getEsignRole, employeeRole::setEsignRole);
+			CommonModuleUtils.setIfExists(roleRequestDto::getIsSuperAdmin, employeeRole::setIsSuperAdmin);
+		}
+
+		CommonModuleUtils.setIfExists(DateTimeUtils::getCurrentUtcDate, employeeRole::setChangedDate);
+		CommonModuleUtils.setIfExists(currentUser::getEmployee, employeeRole::setRoleChangedBy);
+		CommonModuleUtils.setIfExists(() -> employee, employeeRole::setEmployee);
 
 		return employeeRole;
 	}
@@ -417,7 +484,7 @@ public class RolesServiceImpl implements RolesService {
 		return roleResponseDto;
 	}
 
-	private boolean isUserRoleDowngraded(RoleRequestDto roleRequestDto) {
+	private boolean isUserRoleDowngraded(EmployeeSystemPermissionsDto roleRequestDto) {
 		return roleRequestDto.getPeopleRole() == null || !roleRequestDto.getPeopleRole().equals(Role.PEOPLE_ADMIN)
 				|| !roleRequestDto.getAttendanceRole().equals(Role.ATTENDANCE_ADMIN)
 				|| !roleRequestDto.getLeaveRole().equals(Role.LEAVE_ADMIN);
