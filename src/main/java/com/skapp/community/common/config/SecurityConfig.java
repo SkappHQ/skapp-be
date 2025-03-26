@@ -3,13 +3,13 @@ package com.skapp.community.common.config;
 import com.skapp.community.common.component.AuthEntryPoint;
 import com.skapp.community.common.component.ExceptionLoggingFilter;
 import com.skapp.community.common.component.JwtAuthFilter;
-import com.skapp.community.common.component.ResetDatabaseApiKeyFilter;
 import com.skapp.community.common.constant.AuthConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -44,7 +44,13 @@ public class SecurityConfig {
 
 	private final ExceptionLoggingFilter exceptionLoggingFilter;
 
-	private final ResetDatabaseApiKeyFilter resetDatabaseApiKeyFilter;
+	@Bean
+	public AuthenticationProvider authenticationProvider() {
+		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+		authProvider.setUserDetailsService(userDetailsService);
+		authProvider.setPasswordEncoder(passwordEncoder());
+		return authProvider;
+	}
 
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
@@ -79,8 +85,7 @@ public class SecurityConfig {
 
 		http.addFilterBefore(exceptionLoggingFilter, UsernamePasswordAuthenticationFilter.class);
 		http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-		http.addFilterBefore(resetDatabaseApiKeyFilter, UsernamePasswordAuthenticationFilter.class);
-		http.authenticationProvider(authProvider);
+		http.authenticationProvider(authenticationProvider());
 
 		return http.build();
 	}
