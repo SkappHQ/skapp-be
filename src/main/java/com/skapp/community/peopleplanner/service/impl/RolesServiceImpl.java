@@ -313,6 +313,14 @@ public class RolesServiceImpl implements RolesService {
 			}
 		}
 
+		if (user.getEmployee() != null && user.getEmployee().getEmployeeRole() != null
+				&& user.getEmployee().getEmployeeRole().getIsSuperAdmin() && userRoles != null
+				&& userRoles.getIsSuperAdmin() != null && userRoles.getIsSuperAdmin()
+				&& (userRoles.getPeopleRole() != Role.PEOPLE_ADMIN || userRoles.getLeaveRole() != Role.LEAVE_ADMIN
+						|| userRoles.getAttendanceRole() != Role.ATTENDANCE_ADMIN)) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_SUPER_ADMIN_ROLES_CANNOT_BE_CHANGED);
+		}
+
 		if (userRoles != null && userRoles.getAttendanceRole() != null) {
 			Role attendanceRole = userRoles.getAttendanceRole();
 			EnumSet<Role> validAttendanceRoles = EnumSet.of(Role.ATTENDANCE_EMPLOYEE, Role.ATTENDANCE_MANAGER,
@@ -332,7 +340,8 @@ public class RolesServiceImpl implements RolesService {
 			}
 		}
 
-		if (userRoles != null && Boolean.TRUE.equals(userRoles.getIsSuperAdmin())
+		if ((user.getEmployee() == null || user.getEmployee().getEmployeeRole() == null) && userRoles != null
+				&& Boolean.TRUE.equals(userRoles.getIsSuperAdmin())
 				&& (userRoles.getPeopleRole() != Role.PEOPLE_ADMIN || userRoles.getLeaveRole() != Role.LEAVE_ADMIN
 						|| userRoles.getAttendanceRole() != Role.ATTENDANCE_ADMIN)) {
 			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_SHOULD_ASSIGN_PROPER_PERMISSIONS);
@@ -433,10 +442,26 @@ public class RolesServiceImpl implements RolesService {
 		}
 
 		User currentUser = userService.getCurrentUser();
-		CommonModuleUtils.setIfExists(roleRequestDto::getPeopleRole, employeeRole::setPeopleRole);
-		CommonModuleUtils.setIfExists(roleRequestDto::getLeaveRole, employeeRole::setLeaveRole);
-		CommonModuleUtils.setIfExists(roleRequestDto::getAttendanceRole, employeeRole::setAttendanceRole);
-		CommonModuleUtils.setIfExists(roleRequestDto::getIsSuperAdmin, employeeRole::setIsSuperAdmin);
+
+		boolean isSuperAdmin = (roleRequestDto.getIsSuperAdmin() != null && roleRequestDto.getIsSuperAdmin())
+				|| (roleRequestDto.getIsSuperAdmin() == null && employeeRole.getIsSuperAdmin() != null
+						&& employeeRole.getIsSuperAdmin());
+
+		if (isSuperAdmin) {
+			employeeRole.setPeopleRole(Role.PEOPLE_ADMIN);
+			employeeRole.setLeaveRole(Role.LEAVE_ADMIN);
+			employeeRole.setAttendanceRole(Role.ATTENDANCE_ADMIN);
+			employeeRole.setEsignRole(Role.ESIGN_ADMIN);
+			employeeRole.setIsSuperAdmin(true);
+		}
+		else {
+			CommonModuleUtils.setIfExists(roleRequestDto::getPeopleRole, employeeRole::setPeopleRole);
+			CommonModuleUtils.setIfExists(roleRequestDto::getLeaveRole, employeeRole::setLeaveRole);
+			CommonModuleUtils.setIfExists(roleRequestDto::getAttendanceRole, employeeRole::setAttendanceRole);
+			CommonModuleUtils.setIfExists(roleRequestDto::getEsignRole, employeeRole::setEsignRole);
+			CommonModuleUtils.setIfExists(roleRequestDto::getIsSuperAdmin, employeeRole::setIsSuperAdmin);
+		}
+
 		CommonModuleUtils.setIfExists(DateTimeUtils::getCurrentUtcDate, employeeRole::setChangedDate);
 		CommonModuleUtils.setIfExists(currentUser::getEmployee, employeeRole::setRoleChangedBy);
 		CommonModuleUtils.setIfExists(() -> employee, employeeRole::setEmployee);
