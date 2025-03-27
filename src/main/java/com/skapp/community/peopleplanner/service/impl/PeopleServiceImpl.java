@@ -861,20 +861,39 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	private Set<EmployeePeriod> processEmployeeProbationPeriod(CreateEmployeeRequestDto requestDto, Employee employee) {
-		Set<EmployeePeriod> existingPeriods = employee.getEmployeePeriods() != null ? employee.getEmployeePeriods()
-				: new HashSet<>();
-
-		Set<EmployeePeriod> result = new HashSet<>();
-
 		if (requestDto == null || requestDto.getEmployment() == null
-				|| requestDto.getEmployment().getEmploymentDetails() == null) {
-			return existingPeriods.stream().filter(EmployeePeriod::getIsActive).collect(Collectors.toSet());
+				|| requestDto.getEmployment().getEmploymentDetails() == null || employee == null) {
+			return employee != null && employee.getEmployeePeriods() != null ? employee.getEmployeePeriods()
+				.stream()
+				.filter(EmployeePeriod::getIsActive)
+				.collect(Collectors.toSet()) : new HashSet<>();
 		}
 
 		EmployeeEmploymentBasicDetailsDto employmentDetails = requestDto.getEmployment().getEmploymentDetails();
 
+		if (employmentDetails.getProbationStartDate() == null && employmentDetails.getProbationEndDate() == null) {
+			if (employee.getEmployeeId() != null && employee.getEmployeePeriods() != null
+					&& !employee.getEmployeePeriods().isEmpty()) {
+				List<Long> periodIds = employee.getEmployeePeriods()
+					.stream()
+					.map(EmployeePeriod::getId)
+					.filter(Objects::nonNull)
+					.collect(Collectors.toList());
+
+				if (!periodIds.isEmpty()) {
+					employeePeriodDao.deleteAllByIdIn(periodIds);
+				}
+
+				employee.getEmployeePeriods().clear();
+			}
+			return new HashSet<>();
+		}
+
+		Set<EmployeePeriod> existingPeriods = employee.getEmployeePeriods() != null ? employee.getEmployeePeriods()
+				: new HashSet<>();
+
 		EmployeePeriod period = existingPeriods.stream()
-			.filter(p -> p.getStartDate() != null && p.getEndDate() != null)
+			.filter(p -> p.getIsActive() != null && p.getIsActive())
 			.findFirst()
 			.orElse(new EmployeePeriod());
 
@@ -883,8 +902,8 @@ public class PeopleServiceImpl implements PeopleService {
 		CommonModuleUtils.setIfExists(() -> true, period::setIsActive);
 		CommonModuleUtils.setIfExists(() -> employee, period::setEmployee);
 
+		Set<EmployeePeriod> result = new HashSet<>();
 		result.add(period);
-		existingPeriods.stream().filter(existing -> !result.contains(existing)).forEach(result::add);
 
 		return result;
 	}
