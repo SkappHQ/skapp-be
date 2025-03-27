@@ -9,12 +9,20 @@ import com.skapp.community.common.service.JwtService;
 import com.skapp.community.common.type.Role;
 import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.common.util.MessageUtil;
+import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
 import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
-import com.skapp.community.peopleplanner.payload.request.EmployeeDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeUpdateDto;
-import com.skapp.community.peopleplanner.payload.request.ProbationPeriodDto;
+import com.skapp.community.peopleplanner.payload.request.employee.CreateEmployeeRequestDto;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeeCommonDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeeEmploymentDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeePersonalDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.EmployeeSystemPermissionsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentBasicDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentBasicDetailsManagerDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentIdentificationAndDiversityDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalContactDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalGeneralDetailsDto;
 import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.EEO;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
@@ -37,8 +45,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -147,54 +153,97 @@ class PeopleControllerIntegrationTest {
 		return mockUser;
 	}
 
-	private EmployeeDetailsDto createEmployeeDetails() {
-		EmployeeDetailsDto employeeDetailsDto = new EmployeeDetailsDto();
-		employeeDetailsDto.setWorkEmail("username9@gmail.com");
-		employeeDetailsDto.setFirstName("Employee");
-		employeeDetailsDto.setLastName("Lastname");
-		employeeDetailsDto.setMiddleName("MiddleName");
-		employeeDetailsDto.setDesignation("Software Engineer");
-		employeeDetailsDto.setCountry("USA");
-		employeeDetailsDto.setPersonalEmail("employee5@gmail.com");
-		employeeDetailsDto.setPhone("0773696445");
-		employeeDetailsDto.setIdentificationNo("P74");
-		employeeDetailsDto.setTimeZone("AST");
-		employeeDetailsDto.setAddress("Address");
-		employeeDetailsDto.setAddressLine2("Address line 2");
-		employeeDetailsDto.setAccountStatus(AccountStatus.ACTIVE);
-		employeeDetailsDto.setEmploymentAllocation(EmploymentAllocation.FULL_TIME);
-		employeeDetailsDto.setEeo(EEO.PROFESSIONALS);
-		employeeDetailsDto.setPrimaryManager(1L);
-		employeeDetailsDto.setSecondaryManager(3L);
+	private CreateEmployeeRequestDto createEmployeeDetails() {
+		CreateEmployeeRequestDto createEmployeeRequestDto = new CreateEmployeeRequestDto();
 
-		EmployeeSystemPermissionsDto roleRequestDto = new EmployeeSystemPermissionsDto();
-		roleRequestDto.setAttendanceRole(Role.ATTENDANCE_EMPLOYEE);
-		roleRequestDto.setLeaveRole(Role.LEAVE_EMPLOYEE);
-		roleRequestDto.setPeopleRole(Role.PEOPLE_EMPLOYEE);
-		roleRequestDto.setIsSuperAdmin(false);
-		employeeDetailsDto.setUserRoles(roleRequestDto);
+		EmployeePersonalDetailsDto employeePersonalDetailsDto = new EmployeePersonalDetailsDto();
+		EmployeePersonalGeneralDetailsDto employeePersonalGeneralDetailsDto = new EmployeePersonalGeneralDetailsDto();
+		employeePersonalGeneralDetailsDto.setFirstName("Employee");
+		employeePersonalGeneralDetailsDto.setLastName("Lastname");
+		employeePersonalGeneralDetailsDto.setMiddleName("MiddleName");
+		employeePersonalGeneralDetailsDto.setNin("P74");
+		employeePersonalGeneralDetailsDto.setGender(Gender.MALE);
 
-		Set<Long> teamIds = new HashSet<>();
-		teamIds.add(1L);
-		employeeDetailsDto.setTeams(teamIds);
+		EmployeePersonalContactDetailsDto employeePersonalContactDetailsDto = new EmployeePersonalContactDetailsDto();
+		employeePersonalContactDetailsDto.setPersonalEmail("employee5@gmail.com");
+		employeePersonalContactDetailsDto.setContactNo("0773696445");
+		employeePersonalContactDetailsDto.setAddressLine1("Address line 1");
+		employeePersonalContactDetailsDto.setAddressLine2("Address line 2");
+		employeePersonalContactDetailsDto.setCountry("USA");
 
-		ProbationPeriodDto probationPeriodDto = new ProbationPeriodDto();
-		probationPeriodDto.setStartDate(LocalDate.parse("2021-10-10"));
-		probationPeriodDto.setEndDate(LocalDate.parse("2021-12-28"));
-		employeeDetailsDto.setProbationPeriod(probationPeriodDto);
+		employeePersonalDetailsDto.setGeneral(employeePersonalGeneralDetailsDto);
+		employeePersonalDetailsDto.setContact(employeePersonalContactDetailsDto);
 
-		employeeDetailsDto.setGender(Gender.MALE);
-		employeeDetailsDto.setJoinDate(DateTimeUtils.getUtcLocalDate(DateTimeUtils.getCurrentYear() - 1, 1, 1));
+		EmployeeEmploymentDetailsDto employeeEmploymentDetailsDto = new EmployeeEmploymentDetailsDto();
+		EmployeeEmploymentBasicDetailsDto employeeEmploymentBasicDetailsDto = getEmployeeEmploymentBasicDetailsDto();
 
-		ProbationPeriodDto employeePeriodDto = new ProbationPeriodDto();
-		employeePeriodDto.setStartDate(DateTimeUtils.getUtcLocalDate(DateTimeUtils.getCurrentYear() - 1, 2, 1));
-		employeePeriodDto.setEndDate(DateTimeUtils.getUtcLocalDate(DateTimeUtils.getCurrentYear() - 1, 9, 1));
-		employeeDetailsDto.setEmployeePeriod(employeePeriodDto);
+		EmployeeEmploymentIdentificationAndDiversityDetailsDto employeeEmploymentIdentificationAndDiversityDetailsDto = new EmployeeEmploymentIdentificationAndDiversityDetailsDto();
+		employeeEmploymentIdentificationAndDiversityDetailsDto.setEeoJobCategory(EEO.PROFESSIONALS);
 
-		employeeDetailsDto.setEmploymentAllocation(EmploymentAllocation.FULL_TIME);
-		employeeDetailsDto.setAccountStatus(AccountStatus.ACTIVE);
+		employeeEmploymentDetailsDto.setEmploymentDetails(employeeEmploymentBasicDetailsDto);
+		employeeEmploymentDetailsDto
+			.setIdentificationAndDiversityDetails(employeeEmploymentIdentificationAndDiversityDetailsDto);
 
-		return employeeDetailsDto;
+		EmployeeSystemPermissionsDto employeeSystemPermissionsDto = new EmployeeSystemPermissionsDto();
+		employeeSystemPermissionsDto.setEsignRole(Role.ESIGN_EMPLOYEE);
+		employeeSystemPermissionsDto.setLeaveRole(Role.LEAVE_EMPLOYEE);
+		employeeSystemPermissionsDto.setAttendanceRole(Role.ATTENDANCE_EMPLOYEE);
+		employeeSystemPermissionsDto.setPeopleRole(Role.PEOPLE_EMPLOYEE);
+		employeeSystemPermissionsDto.setIsSuperAdmin(false);
+
+		EmployeeCommonDetailsDto employeeCommonDetailsDto = new EmployeeCommonDetailsDto();
+		employeeCommonDetailsDto.setAccountStatus(AccountStatus.ACTIVE);
+		employeeCommonDetailsDto.setJobTitle("Software Engineer");
+
+		createEmployeeRequestDto.setPersonal(employeePersonalDetailsDto);
+		createEmployeeRequestDto.setEmployment(employeeEmploymentDetailsDto);
+		createEmployeeRequestDto.setCommon(employeeCommonDetailsDto);
+		createEmployeeRequestDto.setSystemPermissions(employeeSystemPermissionsDto);
+
+		return createEmployeeRequestDto;
+	}
+
+	private static EmployeeEmploymentBasicDetailsDto getEmployeeEmploymentBasicDetailsDto() {
+		EmployeeEmploymentBasicDetailsDto employeeEmploymentBasicDetailsDto = new EmployeeEmploymentBasicDetailsDto();
+		employeeEmploymentBasicDetailsDto.setEmail("username9@gmail.com");
+		employeeEmploymentBasicDetailsDto.setWorkTimeZone("AST");
+
+		EmployeeEmploymentBasicDetailsManagerDetailsDto employeeEmploymentBasicDetailsPrimaryManagerDetailsDto = new EmployeeEmploymentBasicDetailsManagerDetailsDto();
+		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setEmployeeId(1L);
+		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setFirstName("Primary Manager Name 1");
+		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setLastName("Primary Manager Name 2");
+
+		EmployeeEmploymentBasicDetailsManagerDetailsDto employeeEmploymentBasicDetailsSecondaryManagerDetailsDto = new EmployeeEmploymentBasicDetailsManagerDetailsDto();
+		employeeEmploymentBasicDetailsSecondaryManagerDetailsDto.setEmployeeId(1L);
+		employeeEmploymentBasicDetailsSecondaryManagerDetailsDto.setFirstName("Primary Manager Name 1");
+		employeeEmploymentBasicDetailsSecondaryManagerDetailsDto.setLastName("Primary Manager Name 2");
+
+		employeeEmploymentBasicDetailsDto.setPrimarySupervisor(employeeEmploymentBasicDetailsPrimaryManagerDetailsDto);
+		employeeEmploymentBasicDetailsDto
+			.setSecondarySupervisor(employeeEmploymentBasicDetailsSecondaryManagerDetailsDto);
+
+		Long[] teamIds = { 1L };
+		employeeEmploymentBasicDetailsDto.setTeamIds(teamIds);
+
+		employeeEmploymentBasicDetailsDto.setProbationStartDate(LocalDate.parse("2021-10-10"));
+		employeeEmploymentBasicDetailsDto.setProbationEndDate(LocalDate.parse("2021-12-28"));
+		employeeEmploymentBasicDetailsDto
+			.setJoinedDate(DateTimeUtils.getUtcLocalDate(DateTimeUtils.getCurrentYear() - 1, 1, 1));
+
+		employeeEmploymentBasicDetailsDto.setEmploymentAllocation(EmploymentAllocation.FULL_TIME);
+		return employeeEmploymentBasicDetailsDto;
+	}
+
+	private static EmployeeEmploymentBasicDetailsDto getEmploymentBasicDetailsDto() {
+		EmployeeEmploymentBasicDetailsDto employeeEmploymentBasicDetailsDto = new EmployeeEmploymentBasicDetailsDto();
+		employeeEmploymentBasicDetailsDto.setEmail("username20@gmail.com");
+
+		EmployeeEmploymentBasicDetailsManagerDetailsDto employeeEmploymentBasicDetailsPrimaryManagerDetailsDto = new EmployeeEmploymentBasicDetailsManagerDetailsDto();
+		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setEmployeeId(25L);
+		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setFirstName("Primary Manager Name 1");
+		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setLastName("Primary Manager Name 2");
+		employeeEmploymentBasicDetailsDto.setPrimarySupervisor(employeeEmploymentBasicDetailsPrimaryManagerDetailsDto);
+		return employeeEmploymentBasicDetailsDto;
 	}
 
 	@Nested
@@ -204,42 +253,60 @@ class PeopleControllerIntegrationTest {
 		@Test
 		@DisplayName("Add employee with invalid managers - Returns Not Found")
 		void addEmployee_WithInvalidManagers_ReturnsEntityNotFound() throws Exception {
-			EmployeeDetailsDto employeeDetailsDto = createEmployeeDetails();
-			employeeDetailsDto.setWorkEmail("username20@gmail.com");
-			employeeDetailsDto.setPrimaryManager(25L);
+			CreateEmployeeRequestDto createEmployeeRequestDto = createEmployeeDetails();
 
-			performPostRequest(employeeDetailsDto).andDo(print())
-				.andExpect(status().isNotFound())
+			EmployeeEmploymentDetailsDto employeeEmploymentDetailsDto = new EmployeeEmploymentDetailsDto();
+			EmployeeEmploymentBasicDetailsDto employeeEmploymentBasicDetailsDto = getEmploymentBasicDetailsDto();
+			employeeEmploymentDetailsDto.setEmploymentDetails(employeeEmploymentBasicDetailsDto);
+
+			createEmployeeRequestDto.setEmployment(employeeEmploymentDetailsDto);
+
+			performPostRequest(createEmployeeRequestDto).andDo(print())
+				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath(STATUS_PATH).value(STATUS_UNSUCCESSFUL))
-				.andExpect(jsonPath(RESULTS_0_PATH + MESSAGE_PATH).value("Manager not found"));
+				.andExpect(jsonPath(RESULTS_0_PATH + MESSAGE_PATH).value(messageUtil
+					.getMessage(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_PRIMARY_SUPERVISOR_EMPLOYEE_NOT_FOUND)));
 		}
 
 		@Test
 		@DisplayName("Add employee with invalid last name - Returns Bad Request")
 		void addEmployee_WithInvalidLastName_ReturnsBadRequest() throws Exception {
-			EmployeeDetailsDto employeeDetailsDto = createEmployeeDetails();
-			employeeDetailsDto.setFirstName("first name");
-			employeeDetailsDto.setLastName("last name 456");
 
-			performPostRequest(employeeDetailsDto).andDo(print())
+			CreateEmployeeRequestDto createEmployeeRequestDto = createEmployeeDetails();
+			EmployeePersonalDetailsDto employeePersonalDetailsDto = new EmployeePersonalDetailsDto();
+
+			EmployeePersonalGeneralDetailsDto employeePersonalGeneralDetailsDto = new EmployeePersonalGeneralDetailsDto();
+			employeePersonalGeneralDetailsDto.setFirstName("first name");
+			employeePersonalGeneralDetailsDto.setLastName("last name 456");
+
+			employeePersonalDetailsDto.setGeneral(employeePersonalGeneralDetailsDto);
+			createEmployeeRequestDto.setPersonal(employeePersonalDetailsDto);
+
+			performPostRequest(createEmployeeRequestDto).andDo(print())
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath(STATUS_PATH).value(STATUS_UNSUCCESSFUL))
 				.andExpect(jsonPath(RESULTS_0_PATH + MESSAGE_PATH)
-					.value(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_EMPLOYEE_NAME)));
+					.value(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_LAST_NAME)));
 		}
 
 		@Test
 		@DisplayName("Add employee with invalid first name - Returns Bad Request")
 		void addEmployee_WithInvalidFirstName_ReturnsBadRequest() throws Exception {
-			EmployeeDetailsDto employeeDetailsDto = createEmployeeDetails();
-			employeeDetailsDto.setFirstName("first name 123");
-			employeeDetailsDto.setLastName("last name");
+			CreateEmployeeRequestDto createEmployeeRequestDto = createEmployeeDetails();
+			EmployeePersonalDetailsDto employeePersonalDetailsDto = new EmployeePersonalDetailsDto();
 
-			performPostRequest(employeeDetailsDto).andDo(print())
+			EmployeePersonalGeneralDetailsDto employeePersonalGeneralDetailsDto = new EmployeePersonalGeneralDetailsDto();
+			employeePersonalGeneralDetailsDto.setFirstName("first name 123");
+			employeePersonalGeneralDetailsDto.setLastName("last name");
+
+			employeePersonalDetailsDto.setGeneral(employeePersonalGeneralDetailsDto);
+			createEmployeeRequestDto.setPersonal(employeePersonalDetailsDto);
+
+			performPostRequest(createEmployeeRequestDto).andDo(print())
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath(STATUS_PATH).value(STATUS_UNSUCCESSFUL))
 				.andExpect(jsonPath(RESULTS_0_PATH + MESSAGE_PATH)
-					.value(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_EMPLOYEE_NAME)));
+					.value(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_FIRST_NAME)));
 		}
 
 	}
@@ -257,7 +324,7 @@ class PeopleControllerIntegrationTest {
 			performPatchRequest(updateDto).andDo(print())
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath(STATUS_PATH).value(STATUS_UNSUCCESSFUL))
-				.andExpect(jsonPath(RESULTS_0_PATH + MESSAGE_PATH).value("User not found"));
+				.andExpect(jsonPath(RESULTS_0_PATH + MESSAGE_PATH).value("Employee not found"));
 		}
 
 	}
