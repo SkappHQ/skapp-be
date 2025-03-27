@@ -228,7 +228,6 @@ public class PeopleServiceImpl implements PeopleService {
 		applicationEventPublisher.publishEvent(new UserCreatedEvent(this, user));
 		peopleEmailService.sendUserInvitationEmail(user);
 		addNewEmployeeTimeLineRecords(employee, requestDto);
-		updateSubscriptionQuantity(1L, true, false);
 
 		return new ResponseEntityDto(false, processCreateEmployeeResponse(user));
 	}
@@ -1018,7 +1017,7 @@ public class PeopleServiceImpl implements PeopleService {
 				log.error("Error converting previous employment details JSON to DTO", e);
 			}
 		}
-		return null;
+		return new ArrayList<>();
 	}
 
 	private EmployeeEmploymentBasicDetailsDto mapEmploymentBasicDetails(Employee employee) {
