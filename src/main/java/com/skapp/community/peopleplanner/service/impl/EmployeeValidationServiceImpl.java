@@ -14,6 +14,7 @@ import com.skapp.community.peopleplanner.model.Team;
 import com.skapp.community.peopleplanner.payload.request.employee.CreateEmployeeRequestDto;
 import com.skapp.community.peopleplanner.payload.request.employee.EmployeeEmploymentDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.EmployeePersonalDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentCareerProgressionDetailsDto;
 import com.skapp.community.peopleplanner.repository.EmployeeDao;
 import com.skapp.community.peopleplanner.repository.JobFamilyDao;
 import com.skapp.community.peopleplanner.repository.TeamDao;
@@ -171,62 +172,30 @@ public class EmployeeValidationServiceImpl implements EmployeeValidationService 
 
 			if (employmentDetailsDto.getCareerProgression() != null
 					&& !employmentDetailsDto.getCareerProgression().isEmpty()) {
+				boolean isCreateRequest = user.getEmployee() == null;
+
+				long currentEmploymentCount = employmentDetailsDto.getCareerProgression()
+					.stream()
+					.filter(p -> Boolean.TRUE.equals(p.getIsCurrentEmployment()))
+					.count();
+
+				if (currentEmploymentCount > 1) {
+					throw new ValidationException(
+							PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_ONLY_ONE_CURRENT_EMPLOYMENT_ALLOWED);
+				}
+
 				employmentDetailsDto.getCareerProgression().forEach(progression -> {
-					if (progression.getEmploymentType() == null) {
-						throw new ValidationException(
-								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_EMPLOYMENT_TYPE_REQUIRED);
+					if (isCreateRequest) {
+						validateCreateCareerProgression(progression);
 					}
-
-					if (progression.getJobFamilyId() == null) {
-						throw new ValidationException(
-								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_JOB_FAMILY_REQUIRED);
-					}
-
-					if (progression.getJobTitleId() == null) {
-						throw new ValidationException(
-								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_JOB_TITLE_REQUIRED);
-					}
-
-					if (progression.getStartDate() == null) {
-						throw new ValidationException(
-								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_START_DATE_REQUIRED);
-					}
-
-					if (Boolean.FALSE.equals(progression.getIsCurrentEmployment())) {
-						if (progression.getEndDate() == null) {
-							throw new ValidationException(
-									PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_END_DATE_REQUIRED);
+					else {
+						if (progression.getProgressionId() == null) {
+							validateCreateCareerProgression(progression);
 						}
-
-						if (progression.getEndDate().isBefore(progression.getStartDate())) {
-							throw new ValidationException(
-									PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_END_DATE_BEFORE_START_DATE);
+						else {
+							validateExistingProgressionUpdate(progression, user.getEmployee());
 						}
 					}
-
-					if (Boolean.TRUE.equals(progression.getIsCurrentEmployment()) && progression.getEndDate() != null) {
-						throw new ValidationException(
-								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_END_DATE_NOT_REQUIRED_FOR_CURRENT_EMPLOYMENT_TRUE);
-					}
-
-					if (Boolean.TRUE.equals(progression.getIsCurrentEmployment())) {
-						JobFamily jobFamily = jobFamilyDao.getJobFamilyById(progression.getJobFamilyId());
-						if (jobFamily == null) {
-							throw new ModuleException(
-									PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_JOB_FAMILY_NOT_EXIST);
-						}
-
-						JobTitle jobTitle = jobFamily.getJobTitles()
-							.stream()
-							.filter(title -> title.getJobTitleId().equals(progression.getJobTitleId()))
-							.findFirst()
-							.orElse(null);
-						if (jobTitle == null) {
-							throw new ModuleException(
-									PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_JOB_TITLE_NOT_EXIST);
-						}
-					}
-
 				});
 			}
 		}
@@ -378,6 +347,100 @@ public class EmployeeValidationServiceImpl implements EmployeeValidationService 
 						throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_EDUCATION_START_END_DATE);
 					}
 				});
+			}
+		}
+	}
+
+	private void validateCreateCareerProgression(EmployeeEmploymentCareerProgressionDetailsDto progression) {
+		if (progression.getEmploymentType() == null) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_EMPLOYMENT_TYPE_REQUIRED);
+		}
+
+		if (progression.getJobFamilyId() == null) {
+			throw new ValidationException(
+					PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_JOB_FAMILY_REQUIRED);
+		}
+
+		if (progression.getJobTitleId() == null) {
+			throw new ValidationException(
+					PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_JOB_TITLE_REQUIRED);
+		}
+
+		if (progression.getStartDate() == null) {
+			throw new ValidationException(
+					PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_START_DATE_REQUIRED);
+		}
+
+		validateEndDateRules(progression);
+
+		if (Boolean.TRUE.equals(progression.getIsCurrentEmployment())) {
+			validateJobFamilyAndTitle(progression);
+		}
+	}
+
+	private void validateExistingProgressionUpdate(EmployeeEmploymentCareerProgressionDetailsDto progression,
+			Employee employee) {
+		boolean progressionBelongsToEmployee = false;
+		if (employee.getEmployeeProgressions() != null) {
+			progressionBelongsToEmployee = employee.getEmployeeProgressions()
+				.stream()
+				.anyMatch(p -> p.getProgressionId().equals(progression.getProgressionId()));
+		}
+
+		if (!progressionBelongsToEmployee) {
+			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_CAREER_PROGRESSION_NOT_FOUND);
+		}
+
+		if (Boolean.TRUE.equals(progression.getIsCurrentEmployment())) {
+			boolean anotherCurrentExists = employee.getEmployeeProgressions()
+				.stream()
+				.anyMatch(p -> !p.getProgressionId().equals(progression.getProgressionId())
+						&& Boolean.TRUE.equals(p.getIsCurrent()));
+
+			if (anotherCurrentExists) {
+				throw new ValidationException(
+						PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_ONLY_ONE_CURRENT_EMPLOYMENT_ALLOWED);
+			}
+		}
+
+		validateEndDateRules(progression);
+	}
+
+	private void validateEndDateRules(EmployeeEmploymentCareerProgressionDetailsDto progression) {
+		if (Boolean.FALSE.equals(progression.getIsCurrentEmployment())) {
+			if (progression.getEndDate() == null) {
+				throw new ValidationException(
+						PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_END_DATE_REQUIRED);
+			}
+
+			if (progression.getStartDate() != null && progression.getEndDate().isBefore(progression.getStartDate())) {
+				throw new ValidationException(
+						PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_END_DATE_BEFORE_START_DATE);
+			}
+		}
+
+		if (Boolean.TRUE.equals(progression.getIsCurrentEmployment()) && progression.getEndDate() != null) {
+			throw new ValidationException(
+					PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_END_DATE_NOT_REQUIRED_FOR_CURRENT_EMPLOYMENT_TRUE);
+		}
+	}
+
+	private void validateJobFamilyAndTitle(EmployeeEmploymentCareerProgressionDetailsDto progression) {
+		JobFamily jobFamily = jobFamilyDao.getJobFamilyById(progression.getJobFamilyId());
+		if (jobFamily == null) {
+			throw new ModuleException(
+					PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_JOB_FAMILY_NOT_EXIST);
+		}
+
+		if (progression.getJobTitleId() != null) {
+			JobTitle jobTitle = jobFamily.getJobTitles()
+				.stream()
+				.filter(title -> title.getJobTitleId().equals(progression.getJobTitleId()))
+				.findFirst()
+				.orElse(null);
+			if (jobTitle == null) {
+				throw new ModuleException(
+						PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_JOB_TITLE_NOT_EXIST);
 			}
 		}
 	}
