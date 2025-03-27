@@ -324,7 +324,7 @@ class PeopleControllerIntegrationTest {
 			performPatchRequest(updateDto).andDo(print())
 				.andExpect(status().isNotFound())
 				.andExpect(jsonPath(STATUS_PATH).value(STATUS_UNSUCCESSFUL))
-				.andExpect(jsonPath(RESULTS_0_PATH + MESSAGE_PATH).value("Employee not found"));
+				.andExpect(jsonPath(RESULTS_0_PATH + MESSAGE_PATH).value(messageUtil.getMessage(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND)));
 		}
 
 	}
