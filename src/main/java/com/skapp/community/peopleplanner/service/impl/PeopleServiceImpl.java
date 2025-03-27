@@ -672,9 +672,7 @@ public class PeopleServiceImpl implements PeopleService {
 		existingContact.setIsPrimary(isPrimary);
 		CommonModuleUtils.setIfExists(emergencyDto::getName, existingContact::setName);
 		CommonModuleUtils.setIfExists(emergencyDto::getRelationship, existingContact::setEmergencyRelationship);
-		if (emergencyDto.getContactNo() != null && emergencyDto.getCountryCode() != null) {
-			existingContact.setContactNo(emergencyDto.getCountryCode() + emergencyDto.getContactNo());
-		}
+		CommonModuleUtils.setIfExists(emergencyDto::getContactNo, existingContact::setContactNo);
 
 		return existingContact;
 	}
