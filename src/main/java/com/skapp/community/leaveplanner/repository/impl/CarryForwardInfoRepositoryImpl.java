@@ -40,7 +40,9 @@ public class CarryForwardInfoRepositoryImpl implements CarryForwardInfoRepositor
 		Join<CarryForwardInfo, LeaveType> leaveType = root.join(CarryForwardInfo_.leaveType);
 
 		List<Predicate> predicates = new ArrayList<>();
-		predicates.add(criteriaBuilder.equal(root.get(CarryForwardInfo_.cycleEndDate), leaveCycleEndDate));
+		if (leaveCycleEndDate != null) {
+			predicates.add(criteriaBuilder.equal(root.get(CarryForwardInfo_.cycleEndDate), leaveCycleEndDate));
+		}
 		predicates.add(criteriaBuilder.equal(employee.get(Employee_.employeeId), employeeId));
 		predicates.add(criteriaBuilder.equal(leaveType.get(LeaveType_.typeId), leaveTypeId));
 
