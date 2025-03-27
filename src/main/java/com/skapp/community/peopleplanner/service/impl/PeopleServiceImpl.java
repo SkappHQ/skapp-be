@@ -672,9 +672,7 @@ public class PeopleServiceImpl implements PeopleService {
 		existingContact.setIsPrimary(isPrimary);
 		CommonModuleUtils.setIfExists(emergencyDto::getName, existingContact::setName);
 		CommonModuleUtils.setIfExists(emergencyDto::getRelationship, existingContact::setEmergencyRelationship);
-		if (emergencyDto.getContactNo() != null && emergencyDto.getCountryCode() != null) {
-			existingContact.setContactNo(emergencyDto.getCountryCode() + emergencyDto.getContactNo());
-		}
+		CommonModuleUtils.setIfExists(emergencyDto::getContactNo, existingContact::setContactNo);
 
 		return existingContact;
 	}
@@ -763,6 +761,30 @@ public class PeopleServiceImpl implements PeopleService {
 			CommonModuleUtils.setIfExists(dto::getStartDate, progression::setStartDate);
 			CommonModuleUtils.setIfExists(dto::getEndDate, progression::setEndDate);
 			CommonModuleUtils.setIfExists(dto::getIsCurrentEmployment, progression::setIsCurrent);
+
+			if (progression.getProgressionId() != null) {
+				List<EmployeeProgression> employeeProgression = employee.getEmployeeProgressions()
+					.stream()
+					.filter(p -> p.getProgressionId().equals(progression.getProgressionId()))
+					.toList();
+
+				employeeProgression.forEach(empProgression -> {
+					if (!progression.getIsCurrent()) {
+						employee.setEmploymentType(null);
+						employee.setJobFamily(null);
+						employee.setJobTitle(null);
+					}
+
+					if (progression.getIsCurrent()) {
+						CommonModuleUtils.setIfExists(empProgression::getEmploymentType, employee::setEmploymentType);
+						CommonModuleUtils.setIfExists(
+								() -> jobFamilyDao.getJobFamilyById(empProgression.getJobFamilyId()),
+								employee::setJobFamily);
+						CommonModuleUtils.setIfExists(() -> jobTitleDao.getJobTitleById(empProgression.getJobTitleId()),
+								employee::setJobTitle);
+					}
+				});
+			}
 
 			if (Boolean.TRUE.equals(dto.getIsCurrentEmployment())) {
 				CommonModuleUtils.setIfExists(dto::getEmploymentType, employee::setEmploymentType);

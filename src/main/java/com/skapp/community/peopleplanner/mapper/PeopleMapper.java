@@ -206,7 +206,6 @@ public interface PeopleMapper {
 
 	@Mapping(source = "name", target = "name")
 	@Mapping(source = "emergencyRelationship", target = "relationship")
-	@Mapping(source = "contactNo", target = "contactNo")
 	EmployeeEmergencyContactDetailsDto employeeEmergencyToEmergencyContactDto(EmployeeEmergency emergency);
 
 	@Mapping(source = "progressionId", target = "progressionId")
