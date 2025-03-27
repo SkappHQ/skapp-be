@@ -322,6 +322,13 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 			if (leaveEntitlement.getTotalDaysUsed() > 0) {
 				throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_ENTITLEMENT_IN_USE_CANT_DELETED);
 			}
+			if (leaveEntitlement.getReason().equals(LeaveModuleConstant.CARRY_FORWARD_LEAVE_REQUEST_REASON)) {
+				Optional<CarryForwardInfo> currentCarryForwardInfo = carryForwardInfoDao
+					.findByEmployeeEmployeeIdAndLeaveTypeTypeIdAndCycleEndDate(
+							leaveEntitlement.getEmployee().getEmployeeId(), leaveEntitlement.getLeaveType().getTypeId(),
+							null);
+				currentCarryForwardInfo.ifPresent(carryForwardInfoDao::delete);
+			}
 			String oldHistoryRecord = leaveEntitlement.getLeaveType().getName() + " "
 					+ leaveEntitlement.getTotalDaysAllocated();
 			Employee employee = leaveEntitlement.getEmployee();
