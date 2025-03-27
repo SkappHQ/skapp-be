@@ -7,7 +7,7 @@ public class ValidationConstant {
 	}
 
 	/**
-	 * This pattern validates the hexadecimal color name should consist of letters A-F and
+	 * This pattern validates the hexadecimal color code should consist of letters A-F and
 	 * a-f and numbers 0-9 with length 6 to 8
 	 */
 
