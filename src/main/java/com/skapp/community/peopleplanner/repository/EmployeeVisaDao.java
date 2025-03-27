@@ -5,11 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface EmployeeVisaDao extends JpaRepository<EmployeeVisa, Long>, JpaSpecificationExecutor<EmployeeVisa> {
 
-	Optional<EmployeeVisa> findByVisaId(Long item);
+	void deleteAllByVisaIdIn(List<Long> visaIds);
 
 }

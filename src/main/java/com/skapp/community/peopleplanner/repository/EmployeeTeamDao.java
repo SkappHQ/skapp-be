@@ -20,4 +20,6 @@ public interface EmployeeTeamDao extends JpaRepository<EmployeeTeam, Long>, Empl
 
 	List<EmployeeTeam> findByTeamIn(Collection<Team> teams);
 
+	void deleteAllByIdIn(List<Long> employeeTeamIds);
+
 }

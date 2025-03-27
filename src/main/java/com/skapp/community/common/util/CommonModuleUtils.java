@@ -302,8 +302,7 @@ public class CommonModuleUtils {
 	}
 
 	public static <R, V> void setIfRequestValid(R request, Supplier<V> valueSupplier, Consumer<V> setter) {
-		if (request == null || (request instanceof Collection<?> collection && isEmpty(collection))
-				|| (request instanceof String string && string.trim().isEmpty())) {
+		if (request == null || (request instanceof String string && string.trim().isEmpty())) {
 			log.warn("setIfRequestValid: Request is null, empty, or blank, skipping operation.");
 			return;
 		}
