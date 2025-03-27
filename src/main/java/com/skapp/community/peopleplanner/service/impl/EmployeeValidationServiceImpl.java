@@ -4,10 +4,8 @@ import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.exception.ValidationException;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.repository.UserDao;
-import com.skapp.community.common.type.Role;
 import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
 import com.skapp.community.peopleplanner.model.Employee;
-import com.skapp.community.peopleplanner.model.EmployeeRole;
 import com.skapp.community.peopleplanner.model.JobFamily;
 import com.skapp.community.peopleplanner.model.JobTitle;
 import com.skapp.community.peopleplanner.model.Team;
@@ -88,13 +86,6 @@ public class EmployeeValidationServiceImpl implements EmployeeValidationService 
 								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_PRIMARY_SUPERVISOR_EMPLOYEE_NOT_FOUND);
 					}
 
-					EmployeeRole role = primarySupervisor.get().getEmployeeRole();
-					if (role.getPeopleRole() == Role.PEOPLE_EMPLOYEE && role.getLeaveRole() == Role.LEAVE_EMPLOYEE
-							&& role.getAttendanceRole() == Role.ATTENDANCE_EMPLOYEE) {
-						throw new ValidationException(
-								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_PRIMARY_SUPERVISOR_MANAGER_TYPE_REQUIRED);
-					}
-
 					if ((employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor() == null
 							|| employmentDetailsDto.getEmploymentDetails()
 								.getPrimarySupervisor()
@@ -104,7 +95,7 @@ public class EmployeeValidationServiceImpl implements EmployeeValidationService 
 								.getSecondarySupervisor()
 								.getEmployeeId() != null) {
 						throw new ValidationException(
-								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_PRIMARY_SUPERVISOR_MANAGER_TYPE_REQUIRED);
+								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CANNOT_ADD_SECONDARY_SUPERVISOR_WITHOUT_PRIMARY_SUPERVISOR);
 					}
 
 					if (employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor() != null
