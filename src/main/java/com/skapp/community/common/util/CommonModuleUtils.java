@@ -1,5 +1,6 @@
 package com.skapp.community.common.util;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.skapp.community.leaveplanner.model.LeaveRequest;
 import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.Holiday;
@@ -289,7 +290,9 @@ public class CommonModuleUtils {
 	 */
 	public static <T> void setIfExists(Supplier<T> valueSupplier, Consumer<T> setter) {
 		T value = safeGet(valueSupplier);
-		setIfNotNull(value, setter);
+		if (value != null && !(value instanceof JsonNode jsonNode && jsonNode.isEmpty())) {
+			setter.accept(value);
+		}
 	}
 
 	/**
