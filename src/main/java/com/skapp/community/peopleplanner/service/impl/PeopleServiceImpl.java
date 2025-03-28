@@ -716,15 +716,16 @@ public class PeopleServiceImpl implements PeopleService {
 			if (manager != null) {
 				EmployeeManager primary = existingManagers.stream()
 					.filter(em -> em.getManager() != null
-							&& em.getManager().getEmployeeId().equals(primarySupervisor.getEmployeeId())
+							&& !em.getManager().getEmployeeId().equals(primarySupervisor.getEmployeeId())
 							&& em.getManagerType() == ManagerType.PRIMARY)
 					.findFirst()
 					.orElse(new EmployeeManager());
 
-				CommonModuleUtils.setIfExists(() -> manager, primary::setManager);
-				CommonModuleUtils.setIfExists(() -> employee, primary::setEmployee);
-				CommonModuleUtils.setIfExists(() -> ManagerType.PRIMARY, primary::setManagerType);
-				CommonModuleUtils.setIfExists(() -> true, primary::setIsPrimaryManager);
+				primary.setManager(manager);
+				primary.setEmployee(employee);
+				primary.setManagerType(ManagerType.PRIMARY);
+				primary.setIsPrimaryManager(true);
+
 				result.add(primary);
 			}
 		}
@@ -735,14 +736,16 @@ public class PeopleServiceImpl implements PeopleService {
 			if (manager != null) {
 				EmployeeManager secondary = existingManagers.stream()
 					.filter(em -> em.getManager() != null
-							&& em.getManager().getEmployeeId().equals(secondarySupervisor.getEmployeeId())
+							&& !em.getManager().getEmployeeId().equals(secondarySupervisor.getEmployeeId())
 							&& em.getManagerType() == ManagerType.SECONDARY)
 					.findFirst()
 					.orElse(new EmployeeManager());
-				CommonModuleUtils.setIfExists(() -> manager, secondary::setManager);
-				CommonModuleUtils.setIfExists(() -> employee, secondary::setEmployee);
-				CommonModuleUtils.setIfExists(() -> ManagerType.SECONDARY, secondary::setManagerType);
-				CommonModuleUtils.setIfExists(() -> false, secondary::setIsPrimaryManager);
+
+				secondary.setManager(manager);
+				secondary.setEmployee(employee);
+				secondary.setManagerType(ManagerType.SECONDARY);
+				secondary.setIsPrimaryManager(false);
+
 				result.add(secondary);
 			}
 		}
