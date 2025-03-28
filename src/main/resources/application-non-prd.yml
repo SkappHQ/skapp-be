@@ -59,6 +59,7 @@ springdoc:
 jwt:
   access-token:
     signing-key: ${SIGN_IN_KEY}
+    temp-signing-key: ${TEMP_SIGN_IN_KEY}
     expiration-time: 3600000 # Expiration time in milliseconds (1 hour)
   refresh-token:
     long-duration:
