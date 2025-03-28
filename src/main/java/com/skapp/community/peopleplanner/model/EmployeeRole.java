@@ -63,4 +63,18 @@ public class EmployeeRole {
 	@JoinColumn(name = "role_changed_by", referencedColumnName = "employee_id")
 	private Employee roleChangedBy;
 
+	public EmployeeRole(EmployeeRole original) {
+		if (original != null) {
+			this.employeeRoleId = original.getEmployeeRoleId();
+			this.employee = original.getEmployee();
+			this.peopleRole = original.peopleRole;
+			this.leaveRole = original.leaveRole;
+			this.attendanceRole = original.attendanceRole;
+			this.esignRole = original.esignRole;
+			this.isSuperAdmin = original.isSuperAdmin;
+			this.changedDate = original.changedDate;
+			this.roleChangedBy = original.roleChangedBy;
+		}
+	}
+
 }

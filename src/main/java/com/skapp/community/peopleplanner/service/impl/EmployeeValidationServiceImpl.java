@@ -71,19 +71,13 @@ public class EmployeeValidationServiceImpl implements EmployeeValidationService 
 				}
 
 				if (employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor() != null) {
-					if (employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor().getEmployeeId() == null
-							|| employmentDetailsDto.getEmploymentDetails()
-								.getPrimarySupervisor()
-								.getEmployeeId() <= 0) {
-						throw new ValidationException(
-								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_PRIMARY_SUPERVISOR_EMPLOYEE_ID_REQUIRED);
-					}
-
-					Optional<Employee> primarySupervisor = employeeDao
-						.findById(employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor().getEmployeeId());
-					if (primarySupervisor.isEmpty()) {
-						throw new ValidationException(
-								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_PRIMARY_SUPERVISOR_EMPLOYEE_NOT_FOUND);
+					if (employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor().getEmployeeId() != null) {
+						Optional<Employee> primarySupervisor = employeeDao.findById(
+								employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor().getEmployeeId());
+						if (primarySupervisor.isEmpty()) {
+							throw new ValidationException(
+									PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_PRIMARY_SUPERVISOR_EMPLOYEE_NOT_FOUND);
+						}
 					}
 
 					if ((employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor() == null

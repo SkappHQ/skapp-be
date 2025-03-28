@@ -496,7 +496,7 @@ public class PeopleServiceImpl implements PeopleService {
 					.stream()
 					.map(EmployeeFamily::getFamilyId)
 					.filter(Objects::nonNull)
-					.collect(Collectors.toList());
+					.toList();
 
 				if (!familyIds.isEmpty()) {
 					employeeFamilyDao.deleteAllByFamilyIdIn(familyIds);
@@ -518,7 +518,7 @@ public class PeopleServiceImpl implements PeopleService {
 				.stream()
 				.map(EmployeeFamily::getFamilyId)
 				.filter(id -> id != null && !requestFamilyIds.contains(id))
-				.collect(Collectors.toList());
+				.toList();
 
 			if (!familiesToRemove.isEmpty()) {
 				employeeFamilyDao.deleteAllByFamilyIdIn(familiesToRemove);
@@ -571,7 +571,7 @@ public class PeopleServiceImpl implements PeopleService {
 					.stream()
 					.map(EmployeeEducation::getEducationId)
 					.filter(Objects::nonNull)
-					.collect(Collectors.toList());
+					.toList();
 
 				if (!educationIds.isEmpty()) {
 					employeeEducationDao.deleteAllByEducationIdIn(educationIds);
@@ -592,7 +592,7 @@ public class PeopleServiceImpl implements PeopleService {
 				.stream()
 				.map(EmployeeEducation::getEducationId)
 				.filter(id -> id != null && !requestEducationIds.contains(id))
-				.collect(Collectors.toList());
+				.toList();
 
 			if (!educationsToRemove.isEmpty()) {
 				employeeEducationDao.deleteAllByEducationIdIn(educationsToRemove);
@@ -641,7 +641,7 @@ public class PeopleServiceImpl implements PeopleService {
 					.stream()
 					.map(EmployeeTeam::getId)
 					.filter(Objects::nonNull)
-					.collect(Collectors.toList());
+					.toList();
 
 				if (!employeeTeamIds.isEmpty()) {
 					employeeTeamDao.deleteAllByIdIn(employeeTeamIds);
@@ -665,7 +665,7 @@ public class PeopleServiceImpl implements PeopleService {
 				.filter(et -> et.getTeam() != null && !requestTeamIds.contains(et.getTeam().getTeamId()))
 				.map(EmployeeTeam::getId)
 				.filter(Objects::nonNull)
-				.collect(Collectors.toList());
+				.toList();
 
 			if (!teamsToRemove.isEmpty()) {
 				employeeTeamDao.deleteAllByIdIn(teamsToRemove);
@@ -711,43 +711,86 @@ public class PeopleServiceImpl implements PeopleService {
 				? new HashSet<>(employee.getEmployeeManagers()) : new HashSet<>();
 		Set<EmployeeManager> result = new HashSet<>();
 
-		if (primarySupervisor != null && primarySupervisor.getEmployeeId() != null) {
-			Employee manager = employeeDao.findEmployeeByEmployeeId(primarySupervisor.getEmployeeId());
-			if (manager != null) {
-				EmployeeManager primary = existingManagers.stream()
-					.filter(em -> em.getManager() != null
-							&& em.getManager().getEmployeeId().equals(primarySupervisor.getEmployeeId())
-							&& em.getManagerType() == ManagerType.PRIMARY)
-					.findFirst()
-					.orElse(new EmployeeManager());
+		boolean isPrimarySupervisorInRequest = requestDto.getEmploymentDetails().getPrimarySupervisor() != null;
+		boolean isSecondarySupervisorInRequest = requestDto.getEmploymentDetails().getSecondarySupervisor() != null;
 
-				CommonModuleUtils.setIfExists(() -> manager, primary::setManager);
-				CommonModuleUtils.setIfExists(() -> employee, primary::setEmployee);
-				CommonModuleUtils.setIfExists(() -> ManagerType.PRIMARY, primary::setManagerType);
-				CommonModuleUtils.setIfExists(() -> true, primary::setIsPrimaryManager);
-				result.add(primary);
+		Set<Long> newManagerIds = new HashSet<>();
+
+		if (isPrimarySupervisorInRequest) {
+			if (primarySupervisor.getEmployeeId() != null) {
+				newManagerIds.add(primarySupervisor.getEmployeeId());
+				Employee manager = employeeDao.findEmployeeByEmployeeId(primarySupervisor.getEmployeeId());
+				if (manager != null) {
+					EmployeeManager primary = existingManagers.stream()
+						.filter(em -> em.getManager() != null
+								&& !em.getManager().getEmployeeId().equals(primarySupervisor.getEmployeeId())
+								&& em.getManagerType() == ManagerType.PRIMARY)
+						.findFirst()
+						.orElse(new EmployeeManager());
+
+					CommonModuleUtils.setIfExists(() -> manager, primary::setManager);
+					CommonModuleUtils.setIfExists(() -> employee, primary::setEmployee);
+					CommonModuleUtils.setIfExists(() -> ManagerType.PRIMARY, primary::setManagerType);
+					CommonModuleUtils.setIfExists(() -> true, primary::setIsPrimaryManager);
+					result.add(primary);
+				}
+			}
+			else {
+				existingManagers.stream()
+					.filter(em -> em.getManagerType() == ManagerType.PRIMARY)
+					.map(EmployeeManager::getId)
+					.filter(Objects::nonNull)
+					.toList()
+					.forEach(employeeManagerDao::deleteById);
 			}
 		}
-
-		if (secondarySupervisor != null && secondarySupervisor.getEmployeeId() != null && (primarySupervisor == null
-				|| !secondarySupervisor.getEmployeeId().equals(primarySupervisor.getEmployeeId()))) {
-			Employee manager = employeeDao.findEmployeeByEmployeeId(secondarySupervisor.getEmployeeId());
-			if (manager != null) {
-				EmployeeManager secondary = existingManagers.stream()
-					.filter(em -> em.getManager() != null
-							&& em.getManager().getEmployeeId().equals(secondarySupervisor.getEmployeeId())
-							&& em.getManagerType() == ManagerType.SECONDARY)
-					.findFirst()
-					.orElse(new EmployeeManager());
-				CommonModuleUtils.setIfExists(() -> manager, secondary::setManager);
-				CommonModuleUtils.setIfExists(() -> employee, secondary::setEmployee);
-				CommonModuleUtils.setIfExists(() -> ManagerType.SECONDARY, secondary::setManagerType);
-				CommonModuleUtils.setIfExists(() -> false, secondary::setIsPrimaryManager);
-				result.add(secondary);
-			}
+		else {
+			existingManagers.stream().filter(em -> em.getManagerType() == ManagerType.PRIMARY).forEach(result::add);
 		}
 
-		existingManagers.stream().filter(em -> !result.contains(em)).forEach(result::add);
+		if (isSecondarySupervisorInRequest) {
+			if (secondarySupervisor.getEmployeeId() != null
+					&& (primarySupervisor == null || primarySupervisor.getEmployeeId() == null
+							|| !secondarySupervisor.getEmployeeId().equals(primarySupervisor.getEmployeeId()))) {
+
+				newManagerIds.add(secondarySupervisor.getEmployeeId());
+				Employee manager = employeeDao.findEmployeeByEmployeeId(secondarySupervisor.getEmployeeId());
+				if (manager != null) {
+					EmployeeManager secondary = existingManagers.stream()
+						.filter(em -> em.getManager() != null
+								&& !em.getManager().getEmployeeId().equals(secondarySupervisor.getEmployeeId())
+								&& em.getManagerType() == ManagerType.SECONDARY)
+						.findFirst()
+						.orElse(new EmployeeManager());
+					CommonModuleUtils.setIfExists(() -> manager, secondary::setManager);
+					CommonModuleUtils.setIfExists(() -> employee, secondary::setEmployee);
+					CommonModuleUtils.setIfExists(() -> ManagerType.SECONDARY, secondary::setManagerType);
+					CommonModuleUtils.setIfExists(() -> false, secondary::setIsPrimaryManager);
+					result.add(secondary);
+				}
+			}
+			else {
+				existingManagers.stream()
+					.filter(em -> em.getManagerType() == ManagerType.SECONDARY)
+					.map(EmployeeManager::getId)
+					.filter(Objects::nonNull)
+					.toList()
+					.forEach(employeeManagerDao::deleteById);
+			}
+		}
+		else {
+			existingManagers.stream().filter(em -> em.getManagerType() == ManagerType.SECONDARY).forEach(result::add);
+		}
+
+		List<Long> managersToRemove = existingManagers.stream()
+			.filter(em -> em.getManager() != null && !newManagerIds.contains(em.getManager().getEmployeeId()))
+			.map(EmployeeManager::getId)
+			.filter(Objects::nonNull)
+			.toList();
+
+		if (!managersToRemove.isEmpty()) {
+			employeeManagerDao.deleteAllByIdIn(managersToRemove);
+		}
 
 		return result;
 	}
@@ -806,7 +849,7 @@ public class PeopleServiceImpl implements PeopleService {
 					.stream()
 					.map(EmployeeVisa::getVisaId)
 					.filter(Objects::nonNull)
-					.collect(Collectors.toList());
+					.toList();
 
 				if (!visaIds.isEmpty()) {
 					employeeVisaDao.deleteAllByVisaIdIn(visaIds);
@@ -830,7 +873,7 @@ public class PeopleServiceImpl implements PeopleService {
 				.stream()
 				.map(EmployeeVisa::getVisaId)
 				.filter(id -> id != null && !requestVisaIds.contains(id))
-				.collect(Collectors.toList());
+				.toList();
 
 			if (!visasToRemove.isEmpty()) {
 				employeeVisaDao.deleteAllByVisaIdIn(visasToRemove);
@@ -857,7 +900,7 @@ public class PeopleServiceImpl implements PeopleService {
 			CommonModuleUtils.setIfExists(dto::getExpiryDate, visa::setExpirationDate);
 
 			return visa;
-		}).collect(Collectors.toList());
+		}).toList();
 	}
 
 	private Set<EmployeePeriod> processEmployeeProbationPeriod(CreateEmployeeRequestDto requestDto, Employee employee) {
@@ -878,7 +921,7 @@ public class PeopleServiceImpl implements PeopleService {
 					.stream()
 					.map(EmployeePeriod::getId)
 					.filter(Objects::nonNull)
-					.collect(Collectors.toList());
+					.toList();
 
 				if (!periodIds.isEmpty()) {
 					employeePeriodDao.deleteAllByIdIn(periodIds);
@@ -922,7 +965,7 @@ public class PeopleServiceImpl implements PeopleService {
 					.stream()
 					.map(EmployeeProgression::getProgressionId)
 					.filter(Objects::nonNull)
-					.collect(Collectors.toList());
+					.toList();
 
 				if (!progressionIds.isEmpty()) {
 					employeeProgressionDao.deleteAllByProgressionIdIn(progressionIds);
@@ -950,7 +993,7 @@ public class PeopleServiceImpl implements PeopleService {
 					.stream()
 					.map(EmployeeProgression::getProgressionId)
 					.filter(id -> id != null && !requestProgressionIds.contains(id))
-					.collect(Collectors.toList());
+					.toList();
 
 				if (!progressionsToRemove.isEmpty()) {
 					employeeProgressionDao.deleteAllByProgressionIdIn(progressionsToRemove);
@@ -987,13 +1030,13 @@ public class PeopleServiceImpl implements PeopleService {
 					.toList();
 
 				employeeProgression.forEach(empProgression -> {
-					if (!progression.getIsCurrent()) {
+					if (Boolean.FALSE.equals(progression.getIsCurrent())) {
 						employee.setEmploymentType(null);
 						employee.setJobFamily(null);
 						employee.setJobTitle(null);
 					}
 
-					if (progression.getIsCurrent()) {
+					if (Boolean.TRUE.equals(progression.getIsCurrent())) {
 						CommonModuleUtils.setIfExists(empProgression::getEmploymentType, employee::setEmploymentType);
 						CommonModuleUtils.setIfExists(
 								() -> jobFamilyDao.getJobFamilyById(empProgression.getJobFamilyId()),
@@ -1218,9 +1261,8 @@ public class PeopleServiceImpl implements PeopleService {
 		dto.setEmploymentDetails(mapEmploymentBasicDetails(employee));
 
 		Optional.ofNullable(employee.getEmployeeProgressions())
-			.ifPresent(progressions -> dto.setCareerProgression(progressions.stream()
-				.map(peopleMapper::employeeProgressionToCareerProgressionDto)
-				.collect(Collectors.toList())));
+			.ifPresent(progressions -> dto.setCareerProgression(
+					progressions.stream().map(peopleMapper::employeeProgressionToCareerProgressionDto).toList()));
 
 		dto.setIdentificationAndDiversityDetails(mapIdentificationAndDiversityDetails(employee));
 		dto.setPreviousEmployment(mapPreviousEmploymentDetails(employee));
@@ -1885,6 +1927,10 @@ public class PeopleServiceImpl implements PeopleService {
 		return results;
 	}
 
+	/**
+	 * This method is only available for Pro tenants.
+	 * @param isFromEmployeeBulk is the update from employee bulk upload.
+	 */
 	protected void updateSubscriptionQuantity(long quantity, boolean isIncrement, boolean isFromEmployeeBulk) {
 		log.info("updateSubscriptionQuantity: PRO feature {}, {}", quantity, isIncrement);
 	}
