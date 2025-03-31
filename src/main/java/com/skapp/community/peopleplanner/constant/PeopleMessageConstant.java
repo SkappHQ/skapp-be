@@ -192,7 +192,14 @@ public enum PeopleMessageConstant implements MessageConstant {
 			"api.error.people.validation-career-progression-job-title-not-exist"),
 	PEOPLE_ERROR_VALIDATION_CANNOT_CHANGE_ACTIVE_USER_EMAIL(
 			"api.error.people.validation-cannot-change-active-user-email"),
-	PEOPLE_ERROR_SUPER_ADMIN_ROLES_CANNOT_BE_CHANGED("api.error.people.super-admin-roles-cannot-be-changed"),;
+	PEOPLE_ERROR_SUPER_ADMIN_ROLES_CANNOT_BE_CHANGED("api.error.people.super-admin-roles-cannot-be-changed"),
+	PEOPLE_ERROR_VALIDATION_CAREER_PROGRESSION_ID_REQUIRED(
+			"api.error.people.validation-career-progression-id-required"),
+	PEOPLE_ERROR_CAREER_PROGRESSION_NOT_FOUND("api.error.people.career-progression-not-found"),
+	PEOPLE_ERROR_VALIDATION_ONLY_ONE_CURRENT_EMPLOYMENT_ALLOWED(
+			"api.error.people.validation-only-one-current-employment-allowed"),
+	PEOPLE_ERROR_VALIDATION_CANNOT_ADD_SECONDARY_SUPERVISOR_WITHOUT_PRIMARY_SUPERVISOR(
+			"api.error.people.validation-cannot-add-secondary-supervisor-without-primary-supervisor"),;
 
 	private final String messageKey;
 

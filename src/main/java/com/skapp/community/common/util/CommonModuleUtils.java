@@ -1,5 +1,6 @@
 package com.skapp.community.common.util;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.skapp.community.leaveplanner.model.LeaveRequest;
 import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.Holiday;
@@ -289,7 +290,9 @@ public class CommonModuleUtils {
 	 */
 	public static <T> void setIfExists(Supplier<T> valueSupplier, Consumer<T> setter) {
 		T value = safeGet(valueSupplier);
-		setIfNotNull(value, setter);
+		if (value != null && !(value instanceof JsonNode jsonNode && jsonNode.isEmpty())) {
+			setter.accept(value);
+		}
 	}
 
 	/**
@@ -302,8 +305,7 @@ public class CommonModuleUtils {
 	}
 
 	public static <R, V> void setIfRequestValid(R request, Supplier<V> valueSupplier, Consumer<V> setter) {
-		if (request == null || (request instanceof Collection<?> collection && isEmpty(collection))
-				|| (request instanceof String string && string.trim().isEmpty())) {
+		if (request == null || (request instanceof String string && string.trim().isEmpty())) {
 			log.warn("setIfRequestValid: Request is null, empty, or blank, skipping operation.");
 			return;
 		}

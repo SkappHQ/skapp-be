@@ -9,6 +9,8 @@ import java.time.LocalDate;
 @Setter
 public class EmployeeEmploymentPreviousEmploymentDetailsDto {
 
+	private Long employmentId;
+
 	private String companyName;
 
 	private String jobTitle;
