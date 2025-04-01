@@ -607,7 +607,7 @@ public class DateTimeUtils {
 		return utcTime.withZoneSameInstant(ZoneId.of(timeZone)).toLocalDateTime();
 	}
 
-	// Method to format the LocalDateTime with the appropriate suffix for the day
+	// Method to format the LocalDateTime with the appropriate suffix for the day ex: 21st Jan 2024  21:00 PM
 	public static String formatTimestampWithSuffix(LocalDateTime dateTime) {
 		if (dateTime == null) {
 			return null;
