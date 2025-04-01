@@ -52,11 +52,10 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 			.setEmployeeName(timeRequest.getEmployee().getFirstName() + " " + timeRequest.getEmployee().getLastName());
 
 		Set<EmployeeManager> employeeManagers = timeRequest.getEmployee().getEmployeeManagers();
-		employeeManagers
-			.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
-					timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
-					EmailBodyTemplates.ATTENDANCE_MODULE_RECEIVED_TIME_ENTRY_REQUEST_MANAGER,
-					attendanceEmailDynamicFields, NotificationCategory.ATTENDANCE));
+		employeeManagers.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
+				timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
+				EmailBodyTemplates.ATTENDANCE_MODULE_RECEIVED_TIME_ENTRY_REQUEST_MANAGER, attendanceEmailDynamicFields,
+				NotificationCategory.ATTENDANCE));
 	}
 
 	@Override
