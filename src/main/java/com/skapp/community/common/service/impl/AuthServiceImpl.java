@@ -130,6 +130,7 @@ public class AuthServiceImpl implements AuthService {
 	private String encryptSecret;
 
 	@Override
+	@Transactional
 	public ResponseEntityDto signIn(SignInRequestDto signInRequestDto) {
 		log.debug("signIn: execution started");
 
