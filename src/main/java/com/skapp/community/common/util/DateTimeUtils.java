@@ -596,6 +596,5 @@ public class DateTimeUtils {
 		String suffix = getDayOfMonthSuffix(dayOfMonth);
 		return dayOfMonth + suffix + " " + date.format(monthYearFormatter);
 	}
-	
 
 }
