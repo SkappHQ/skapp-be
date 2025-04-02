@@ -901,7 +901,8 @@ public class PeopleServiceImpl implements PeopleService {
 			EmployeeVisa visa;
 			if (existingVisaMap.containsKey(dto.getVisaId())) {
 				visa = existingVisaMap.remove(dto.getVisaId());
-			} else {
+			}
+			else {
 				visa = new EmployeeVisa();
 			}
 			visa.setEmployee(employee);
