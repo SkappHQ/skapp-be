@@ -8,6 +8,8 @@ public class LeaveModuleConstant {
 
 	public static final String DISCARD_LEAVE_REQUEST_REASON = "discard";
 
+	public static final String CARRY_FORWARD_LEAVE_REQUEST_REASON = "Carry Forward";
+
 	public static final String FULL_DAY_LEAVE = "fullDayLeave";
 
 	public static final String HALF_DAY_OR_HALF_AND_FULL_DAY_LEAVE = "halfDayOrHalfAndFullDayLeave";

@@ -1,10 +1,13 @@
 package com.skapp.community.common.util;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.skapp.community.leaveplanner.model.LeaveRequest;
 import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.Holiday;
 import com.skapp.community.peopleplanner.type.HolidayDuration;
 import com.skapp.community.timeplanner.model.TimeConfig;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.RandomStringGenerator;
 
 import java.time.DayOfWeek;
@@ -13,17 +16,18 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+@Slf4j
+@UtilityClass
 public class CommonModuleUtils {
 
 	public static final int MAX_USER_CHUNK_SIZE = 100;
-
-	private CommonModuleUtils() {
-		throw new UnsupportedOperationException("Utility class");
-	}
 
 	/**
 	 * Checks if a given date is a working day based on the time configurations.
@@ -248,6 +252,73 @@ public class CommonModuleUtils {
 		Collections.shuffle(pwdChars);
 
 		return pwdChars.stream().collect(StringBuilder::new, StringBuilder::append, StringBuilder::append).toString();
+	}
+
+	/**
+	 * Safely extracts a value from a potentially nested null structure.
+	 * @param <T> The return type
+	 * @param supplier A function that might throw NullPointerException
+	 * @return The value or null if any part of the chain is null
+	 */
+	public static <T> T safeGet(Supplier<T> supplier) {
+		try {
+			return supplier.get();
+		}
+		catch (NullPointerException e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Sets a value on a target object only if the provided value is not null.
+	 * @param <T> The type of the value
+	 * @param value The value to set
+	 * @param setter A function that sets the value on the target object
+	 */
+	public static <T> void setIfNotNull(T value, Consumer<T> setter) {
+		if (value != null) {
+			setter.accept(value);
+		}
+	}
+
+	/**
+	 * Safely extracts and sets a value from a nested structure only if not null. Combines
+	 * safeGet and setIfNotNull for cleaner syntax.
+	 * @param <T> The type of the value
+	 * @param valueSupplier A function that navigates the object graph to get the value
+	 * @param setter The function to call to set the value
+	 */
+	public static <T> void setIfExists(Supplier<T> valueSupplier, Consumer<T> setter) {
+		T value = safeGet(valueSupplier);
+		if (value != null && !(value instanceof JsonNode jsonNode && jsonNode.isEmpty())) {
+			setter.accept(value);
+		}
+	}
+
+	/**
+	 * Checks if a collection is null or empty.
+	 * @param collection The collection to check
+	 * @return true if the collection is null or empty, false otherwise
+	 */
+	public static boolean isEmpty(Collection<?> collection) {
+		return collection == null || collection.isEmpty();
+	}
+
+	public static <R, V> void setIfRequestValid(R request, Supplier<V> valueSupplier, Consumer<V> setter) {
+		if (request == null || (request instanceof String string && string.trim().isEmpty())) {
+			log.warn("setIfRequestValid: Request is null, empty, or blank, skipping operation.");
+			return;
+		}
+
+		try {
+			V value = valueSupplier.get();
+			if (value != null) {
+				setter.accept(value);
+			}
+		}
+		catch (Exception e) {
+			log.error("setIfRequestValid: Error occurred - {}", e.getMessage(), e);
+		}
 	}
 
 }

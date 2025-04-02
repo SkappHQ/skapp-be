@@ -322,6 +322,13 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 			if (leaveEntitlement.getTotalDaysUsed() > 0) {
 				throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_ENTITLEMENT_IN_USE_CANT_DELETED);
 			}
+			if (leaveEntitlement.getReason().equals(LeaveModuleConstant.CARRY_FORWARD_LEAVE_REQUEST_REASON)) {
+				Optional<CarryForwardInfo> currentCarryForwardInfo = carryForwardInfoDao
+					.findByEmployeeEmployeeIdAndLeaveTypeTypeIdAndCycleEndDate(
+							leaveEntitlement.getEmployee().getEmployeeId(), leaveEntitlement.getLeaveType().getTypeId(),
+							null);
+				currentCarryForwardInfo.ifPresent(carryForwardInfoDao::delete);
+			}
 			String oldHistoryRecord = leaveEntitlement.getLeaveType().getName() + " "
 					+ leaveEntitlement.getTotalDaysAllocated();
 			Employee employee = leaveEntitlement.getEmployee();
@@ -579,6 +586,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 						List<LeaveEntitlement> leaveEntitlements = leaveEntitlementDao.findLeaveEntitlements(
 								leaveType.getTypeId(), true, leaveCycleEndDate, employeeToForward.getEmployeeId());
+
 						float carryForwardDaysMax;
 						double totalDaysAllocated = leaveEntitlements.stream()
 							.mapToDouble(LeaveEntitlement::getTotalDaysAllocated)
@@ -592,6 +600,13 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 						}
 						else {
 							carryForwardDaysMax = leaveType.getMaxCarryForwardDays();
+						}
+
+						if (!leaveEntitlements.isEmpty()) {
+							leaveEntitlements.removeIf(leaveEntitlement -> Objects.equals(leaveEntitlement.getReason(),
+									LeaveModuleConstant.DISCARD_LEAVE_REQUEST_REASON)
+									|| LeaveModuleConstant.CARRY_FORWARD_LEAVE_REQUEST_REASON
+										.equals(leaveEntitlement.getReason()));
 						}
 
 						if (!leaveEntitlements.isEmpty()) {
@@ -790,14 +805,14 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 			}
 
 			List<LeaveEntitlement> list = leaveEntitlementDao.findLeaveEntitlementByValidDate(validFrom, validTo,
-					pageable.getSort(), employeeIds);
+					pageable.getSort(), employeeIds, customLeaveEntitlementsFilterDto.getKeyword());
 
 			if (!list.isEmpty()) {
 				entitlementDetails = getEmployeesWithEntitlements(list);
 			}
 
 			if (Boolean.FALSE.equals(customLeaveEntitlementsFilterDto.getIsExport())) {
-				Long totalItems = leaveEntitlementDao.findEmployeeIdsCountCreatedWithValidDates(validFrom, validTo);
+				Long totalItems = (long) list.size();
 				pageDto.setTotalItems(totalItems);
 				pageDto.setCurrentPage(customLeaveEntitlementsFilterDto.getPage());
 				pageDto.setTotalPages(customLeaveEntitlementsFilterDto.getSize() == 0 ? 1

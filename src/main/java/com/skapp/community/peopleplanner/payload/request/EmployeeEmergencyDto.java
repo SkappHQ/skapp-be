@@ -1,6 +1,6 @@
 package com.skapp.community.peopleplanner.payload.request;
 
-import com.skapp.community.peopleplanner.type.EmergencyRelationship;
+import com.skapp.community.peopleplanner.type.RelationshipTypes;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,7 +12,7 @@ public class EmployeeEmergencyDto {
 
 	private String name;
 
-	private EmergencyRelationship emergencyRelationship;
+	private RelationshipTypes emergencyRelationship;
 
 	private String contactNo;
 

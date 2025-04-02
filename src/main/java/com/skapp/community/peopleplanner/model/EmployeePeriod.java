@@ -38,7 +38,7 @@ public class EmployeePeriod {
 	private LocalDate endDate;
 
 	@Column(name = "is_active")
-	private boolean isActive;
+	private Boolean isActive;
 
 	public EmployeePeriod(EmployeePeriod other) {
 		if (other != null) {

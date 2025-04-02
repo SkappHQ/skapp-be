@@ -477,7 +477,7 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 			// filter the list of manager the employee has to check whether the current
 			// user is one of the managers
 
-			List<EmployeeManager> managers = employee.getEmployees()
+			List<EmployeeManager> managers = employee.getEmployeeManagers()
 				.stream()
 				.filter(employeeManager -> employeeManager.getManager()
 					.getEmployeeId()

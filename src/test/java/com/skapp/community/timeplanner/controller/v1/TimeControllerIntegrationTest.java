@@ -180,7 +180,7 @@ class TimeControllerIntegrationTest {
 		employeeManager.setManager(managerEmployee);
 		Set<EmployeeManager> managerSet = new HashSet<>();
 		managerSet.add(employeeManager);
-		mockEmployee.setManagers(managerSet);
+		mockEmployee.setEmployeeManagers(managerSet);
 
 		// Set up employee role
 		EmployeeRole role = new EmployeeRole();

@@ -229,7 +229,7 @@ public class PeopleEmailServiceImpl implements PeopleEmailService {
 		emailDynamicFields.setEmployeeName(
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
 
-		Set<EmployeeManager> employeeManagers = leaveRequest.getEmployee().getManagers();
+		Set<EmployeeManager> employeeManagers = leaveRequest.getEmployee().getEmployeeManagers();
 		employeeManagers.forEach(employeeManager -> {
 			emailDynamicFields.setEmployeeOrManagerName(
 					employeeManager.getManager().getFirstName() + " " + employeeManager.getManager().getLastName());
@@ -252,7 +252,7 @@ public class PeopleEmailServiceImpl implements PeopleEmailService {
 		emailDynamicFields.setEmployeeName(
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
 
-		Set<EmployeeManager> employeeManagers = leaveRequest.getEmployee().getManagers();
+		Set<EmployeeManager> employeeManagers = leaveRequest.getEmployee().getEmployeeManagers();
 		employeeManagers.forEach(employeeManager -> {
 			emailDynamicFields.setEmployeeOrManagerName(
 					employeeManager.getManager().getFirstName() + " " + employeeManager.getManager().getLastName());

@@ -12,8 +12,8 @@ import com.skapp.community.peopleplanner.payload.response.EmployeeManagerDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeTeamDto;
 import com.skapp.community.peopleplanner.payload.response.PrimarySecondaryOrTeamSupervisorResponseDto;
 import com.skapp.community.peopleplanner.type.AccountStatus;
-import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
+import com.skapp.community.peopleplanner.type.EmploymentType;
 import com.skapp.community.peopleplanner.type.Gender;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
@@ -69,7 +69,7 @@ public interface EmployeeRepository {
 
 	Long countByIsActiveAndTeamsAndGender(boolean isActive, List<Long> teamIds, Gender gender);
 
-	Long countByEmploymentTypeAndEmploymentAllocationAndTeams(EmployeeType employmentType,
+	Long countByEmploymentTypeAndEmploymentAllocationAndTeams(EmploymentType employmentType,
 			EmploymentAllocation employmentAllocation, List<Long> teamIds);
 
 	List<Employee> findByNameAndIsActiveAndTeam(String employeeName, Boolean isActive, Long teamId);

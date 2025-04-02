@@ -2,8 +2,8 @@ package com.skapp.community.peopleplanner.payload.request;
 
 import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.EmployeeSort;
-import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
+import com.skapp.community.peopleplanner.type.EmploymentType;
 import com.skapp.community.peopleplanner.type.Gender;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,7 +27,7 @@ public class EmployeeExportFilterDto {
 
 	private List<String> permissions;
 
-	private List<EmployeeType> employmentTypes;
+	private List<EmploymentType> employmentTypes;
 
 	private List<AccountStatus> accountStatus = new ArrayList<>(Collections.singletonList(AccountStatus.ACTIVE));
 

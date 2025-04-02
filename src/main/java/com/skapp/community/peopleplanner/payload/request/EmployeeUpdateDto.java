@@ -3,8 +3,8 @@ package com.skapp.community.peopleplanner.payload.request;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.EEO;
-import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
+import com.skapp.community.peopleplanner.type.EmploymentType;
 import com.skapp.community.peopleplanner.type.Gender;
 import com.skapp.community.peopleplanner.util.deserializer.AccountStatusDeserializer;
 import com.skapp.community.peopleplanner.util.deserializer.EeoDeserializer;
@@ -60,7 +60,7 @@ public class EmployeeUpdateDto {
 	private ProbationPeriodDto employeePeriod;
 
 	@JsonDeserialize(using = EmployeeTypeDeserializer.class)
-	private EmployeeType employeeType;
+	private EmploymentType employmentType;
 
 	@JsonDeserialize(using = EeoDeserializer.class)
 	private EEO eeo;

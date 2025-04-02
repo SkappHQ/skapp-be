@@ -5,8 +5,6 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class CommonConstants {
 
-	public static final long EP_FREE_USER_LIMIT = 50;
-
 	public static final long MAX_RETRIES_COUNT = 3;
 
 	public static final String DEFAULT_TIME_CONFIG_KEY_HOUR = "hours";
@@ -24,5 +22,9 @@ public class CommonConstants {
 	public static final Integer DEFAULT_TIME_CONFIG_VALUE_START_HOUR = 8;
 
 	public static final Integer DEFAULT_TIME_CONFIG_VALUE_START_MINUTE = 30;
+
+	public static final String NOTIFICATION_TITLE = "title";
+
+	public static final String NOTIFICATION_MESSAGE = "message";
 
 }

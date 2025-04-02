@@ -3,7 +3,6 @@ package com.skapp.community.common.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.skapp.community.common.component.ProfileActivator;
-import com.skapp.community.common.constant.CommonConstants;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.mapper.CommonMapper;
@@ -143,13 +142,10 @@ public class AuthServiceImpl implements AuthService {
 		}
 		User user = optionalUser.get();
 
+		validateTenantStatus(user);
+
 		if (Boolean.FALSE.equals(user.getIsActive())) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_ACCOUNT_DEACTIVATED);
-		}
-
-		if (user.getEmployee().getAccountStatus() == AccountStatus.PENDING && profileActivator.isEpProfile()
-				&& employeeDao.countByAccountStatus(AccountStatus.ACTIVE) >= CommonConstants.EP_FREE_USER_LIMIT) {
-			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EXCEED_MAX_EMPLOYEE_COUNT);
 		}
 
 		Optional<Employee> employee = employeeDao.findById(user.getUserId());
@@ -172,6 +168,10 @@ public class AuthServiceImpl implements AuthService {
 
 		log.info("signIn: execution ended");
 		return new ResponseEntityDto(false, signInResponseDto);
+	}
+
+	protected void validateTenantStatus(User user) {
+		// This is only for Pro version
 	}
 
 	@Transactional

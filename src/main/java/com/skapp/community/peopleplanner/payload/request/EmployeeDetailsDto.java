@@ -1,6 +1,7 @@
 package com.skapp.community.peopleplanner.payload.request;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeeSystemPermissionsDto;
 import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.EEO;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
@@ -86,6 +87,6 @@ public class EmployeeDetailsDto {
 
 	private List<EmployeeFamilyDto> employeeFamilies;
 
-	private RoleRequestDto userRoles;
+	private EmployeeSystemPermissionsDto userRoles;
 
 }

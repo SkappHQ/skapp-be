@@ -292,6 +292,8 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		leaveEmailDynamicFields.setEmployeeName(
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
+		leaveEmailDynamicFields
+			.setManagerName(leaveRequest.getReviewer().getFirstName() + " " + leaveRequest.getReviewer().getLastName());
 		leaveEmailDynamicFields.setLeaveType(leaveRequest.getLeaveType().getName());
 		leaveEmailDynamicFields.setLeaveStartDate(leaveRequest.getStartDate().toString());
 		leaveEmailDynamicFields.setLeaveEndDate(leaveRequest.getEndDate().toString());
@@ -315,6 +317,8 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		leaveEmailDynamicFields.setEmployeeName(
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
+		leaveEmailDynamicFields
+			.setManagerName(leaveRequest.getReviewer().getFirstName() + " " + leaveRequest.getReviewer().getLastName());
 		leaveEmailDynamicFields.setLeaveType(leaveRequest.getLeaveType().getName());
 		leaveEmailDynamicFields.setLeaveStartDate(leaveRequest.getStartDate().toString());
 		leaveEmailDynamicFields.setLeaveEndDate(leaveRequest.getEndDate().toString());
@@ -338,6 +342,8 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		leaveEmailDynamicFields.setEmployeeName(
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
+		leaveEmailDynamicFields
+			.setManagerName(leaveRequest.getReviewer().getFirstName() + " " + leaveRequest.getReviewer().getLastName());
 		leaveEmailDynamicFields.setLeaveType(leaveRequest.getLeaveType().getName());
 		leaveEmailDynamicFields.setLeaveStartDate(leaveRequest.getStartDate().toString());
 		leaveEmailDynamicFields.setLeaveEndDate(leaveRequest.getEndDate().toString());
@@ -361,6 +367,8 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		leaveEmailDynamicFields.setEmployeeName(
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
+		leaveEmailDynamicFields
+			.setManagerName(leaveRequest.getReviewer().getFirstName() + " " + leaveRequest.getReviewer().getLastName());
 		leaveEmailDynamicFields.setLeaveType(leaveRequest.getLeaveType().getName());
 		leaveEmailDynamicFields.setLeaveStartDate(leaveRequest.getStartDate().toString());
 		leaveEmailDynamicFields.setLeaveEndDate(leaveRequest.getEndDate().toString());
@@ -452,7 +460,7 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 	public void sendAutoApprovedSingleDayLeaveRequestManagerEmail(LeaveRequest leaveRequest) {
 		LeaveEmailDynamicFields leaveEmailDynamicFields = new LeaveEmailDynamicFields();
 
-		leaveEmailDynamicFields.setEmployeeOrManagerName(
+		leaveEmailDynamicFields.setEmployeeName(
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
 		leaveEmailDynamicFields.setLeaveType(leaveRequest.getLeaveType().getName());
 		leaveEmailDynamicFields.setLeaveStartDate(leaveRequest.getStartDate().toString());
@@ -473,7 +481,7 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 	public void sendAutoApprovedMultiDayLeaveRequestManagerEmail(LeaveRequest leaveRequest) {
 		LeaveEmailDynamicFields leaveEmailDynamicFields = new LeaveEmailDynamicFields();
 
-		leaveEmailDynamicFields.setEmployeeOrManagerName(
+		leaveEmailDynamicFields.setEmployeeName(
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
 		leaveEmailDynamicFields.setLeaveType(leaveRequest.getLeaveType().getName());
 		leaveEmailDynamicFields.setLeaveStartDate(leaveRequest.getStartDate().toString());

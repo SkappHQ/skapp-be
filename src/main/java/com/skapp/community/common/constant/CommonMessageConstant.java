@@ -24,6 +24,7 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_FILE_URL("api.error.common.file-url"),
 	COMMON_ERROR_USER_ACCOUNT_ACTIVATED("api.error.common.user-account-already-activated"),
 	COMMON_ERROR_USER_ACCOUNT_DEACTIVATED("api.error.common.user-account-deactivated"),
+	COMMON_ERROR_CANNOT_TERMINATE_OR_DELETE_YOUR_SELF("api.error.common.cannot-terminate-or-delete-yourself"),
 	COMMON_ERROR_EXCEED_MAX_ORGANIZATION_COUNT("api.error.common.organization-create"),
 	COMMON_ERROR_USER_ALREADY_EXISTS("api.error.common.user-already-exists"),
 	COMMON_ERROR_USER_NOT_FOUND("api.error.common.user-not-found"),
@@ -117,10 +118,10 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_EPOCH_MILLIS_CANNOT_BE_NULL("api.error.common.epoch-millis-cannot-be-null"),
 	COMMON_ERROR_INVALID_TOKEN("api.error.common.invalid-token"),
 	COMMON_ERROR_JWT_SIGNIN_KEY_GENERATION_ISSUE("api.error.common.jwt-signin-key-generation-issue"),
-	COMMON_ERROR_SYSTEM_VERSION_MISMATCH("api.error.ep.common.system-version-mismatch"),
-	COMMON_ERROR_USER_VERSION_MISMATCH("api.error.ep.common.user-version-mismatch"),
 	COMMON_ERROR_INVALID_AUTHORIZATION_HEADER("api.error.common.invalid-authorization-header"),
-	COMMON_ERROR_SAME_PASSWORD("api.error.common.same-password"),;
+	COMMON_ERROR_SAME_PASSWORD("api.error.common.same-password"),
+	COMMON_ERROR_SYSTEM_VERSION_MISMATCH("api.error.common.system-version-mismatch"),
+	COMMON_ERROR_USER_VERSION_MISMATCH("api.error.common.user-version-mismatch"),;
 
 	private final String messageKey;
 
