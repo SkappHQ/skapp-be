@@ -72,8 +72,6 @@ public class DateTimeUtils {
 
 	private static final DateTimeFormatter AM_PM_FORMATTER = DateTimeFormatter.ofPattern("hh:mm a");
 
-	private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMM yyyy HH:mm a");
-
 	private DateTimeUtils() {
 		throw new UnsupportedOperationException("Utility class");
 	}
@@ -598,43 +596,6 @@ public class DateTimeUtils {
 		String suffix = getDayOfMonthSuffix(dayOfMonth);
 		return dayOfMonth + suffix + " " + date.format(monthYearFormatter);
 	}
-
-	public static LocalDateTime convertUTCToTimeZone(LocalDateTime createdDate, String timeZone) {
-		if (createdDate == null)
-			return null;
-
-		ZonedDateTime utcTime = createdDate.atZone(ZoneId.of("UTC"));
-		return utcTime.withZoneSameInstant(ZoneId.of(timeZone)).toLocalDateTime();
-	}
-
-	// Method to format the LocalDateTime with the appropriate suffix for the day ex: 21st Jan 2024  21:00 PM
-	public static String formatTimestampWithSuffix(LocalDateTime dateTime) {
-		if (dateTime == null) {
-			return null;
-		}
-
-		// Format the date to "dd MMM yyyy HH:mm a"
-		String formattedDate = dateTime.format(formatter);
-
-		// Get the day of the month and determine the suffix
-		int day = dateTime.getDayOfMonth();
-		String suffix = getDaySuffix(day);
-
-		// Replace the day with the day + suffix (e.g., "21st", "1st")
-		return formattedDate.replaceFirst(String.valueOf(day), day + suffix);
-	}
-
-	// Helper method to get the correct suffix for the day
-	private static String getDaySuffix(int day) {
-		if (day >= 11 && day <= 13) {
-			return "th";  // Special case for 11th, 12th, and 13th
-		}
-		switch (day % 10) {
-			case 1: return "st";
-			case 2: return "nd";
-			case 3: return "rd";
-			default: return "th";
-		}
-	}
+	
 
 }
