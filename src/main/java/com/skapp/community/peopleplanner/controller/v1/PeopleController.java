@@ -11,6 +11,7 @@ import com.skapp.community.peopleplanner.payload.request.NotificationSettingsPat
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.request.employee.CreateEmployeeRequestDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeManagerResponseDto;
+import com.skapp.community.peopleplanner.service.PeopleReadService;
 import com.skapp.community.peopleplanner.service.PeopleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -39,6 +40,8 @@ import java.util.List;
 public class PeopleController {
 
 	private final PeopleService peopleService;
+
+	private final PeopleReadService peopleReadService;
 
 	@Operation(summary = "Create a new employee",
 			description = "This endpoint creates a new employee with the provided details.")
@@ -89,7 +92,7 @@ public class PeopleController {
 	@Operation(summary = "Get employee by ID", description = "This endpoint fetches an employee by their ID.")
 	@GetMapping(value = "/employee/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> getEmployeeById(@PathVariable Long id) {
-		ResponseEntityDto employeeResponse = peopleService.getEmployeeById(id);
+		ResponseEntityDto employeeResponse = peopleReadService.getEmployeeById(id);
 		return new ResponseEntity<>(employeeResponse, HttpStatus.OK);
 	}
 
