@@ -25,8 +25,6 @@ public interface PeopleService {
 
 	ResponseEntityDto exportEmployees(EmployeeExportFilterDto employeeExportFilterDto);
 
-	ResponseEntityDto getEmployeeById(Long employeeId);
-
 	ResponseEntityDto getCurrentEmployee();
 
 	ResponseEntityDto addBulkEmployees(List<EmployeeBulkDto> employeeBulkDto);

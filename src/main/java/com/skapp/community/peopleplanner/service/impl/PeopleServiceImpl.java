@@ -1,7 +1,5 @@
 package com.skapp.community.peopleplanner.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -62,8 +60,6 @@ import com.skapp.community.peopleplanner.payload.request.NotificationSettingsPat
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.request.ProbationPeriodDto;
 import com.skapp.community.peopleplanner.payload.request.employee.CreateEmployeeRequestDto;
-import com.skapp.community.peopleplanner.payload.request.employee.EmployeeCommonDetailsDto;
-import com.skapp.community.peopleplanner.payload.request.employee.EmployeeEmergencyDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.EmployeeEmploymentDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.EmployeePersonalDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.EmployeeSystemPermissionsDto;
@@ -71,15 +67,11 @@ import com.skapp.community.peopleplanner.payload.request.employee.emergency.Empl
 import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentBasicDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentBasicDetailsManagerDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentCareerProgressionDetailsDto;
-import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentIdentificationAndDiversityDetailsDto;
-import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentPreviousEmploymentDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentVisaDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeeExtraInfoDto;
-import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalContactDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalEducationalDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalFamilyDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalGeneralDetailsDto;
-import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalHealthAndOtherDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.personal.EmployeePersonalSocialMediaDetailsDto;
 import com.skapp.community.peopleplanner.payload.response.AnalyticsSearchResponseDto;
 import com.skapp.community.peopleplanner.payload.response.CreateEmployeeResponseDto;
@@ -1165,245 +1157,6 @@ public class PeopleServiceImpl implements PeopleService {
 				responseDtos.size());
 
 		return new ResponseEntityDto(false, responseDtos);
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public ResponseEntityDto getEmployeeById(Long employeeId) {
-		return new ResponseEntityDto(false, mapEmployeeToDto(employeeDao.findById(employeeId)
-			.orElseThrow(() -> new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND))));
-	}
-
-	private CreateEmployeeRequestDto mapEmployeeToDto(Employee employee) {
-		CreateEmployeeRequestDto dto = new CreateEmployeeRequestDto();
-		dto.setPersonal(mapPersonalDetails(employee));
-		dto.setEmergency(mapEmergencyDetails(employee));
-		dto.setEmployment(mapEmploymentDetails(employee));
-		dto.setSystemPermissions(mapSystemPermissions(employee));
-		dto.setCommon(mapCommonDetails(employee));
-		return dto;
-	}
-
-	private EmployeePersonalDetailsDto mapPersonalDetails(Employee employee) {
-		EmployeePersonalDetailsDto dto = new EmployeePersonalDetailsDto();
-		dto.setGeneral(mapPersonalGeneralDetails(employee));
-		dto.setContact(mapPersonalContactDetails(employee));
-
-		Optional.ofNullable(employee.getEmployeeFamilies())
-			.ifPresent(families -> dto
-				.setFamily(families.stream().map(peopleMapper::employeeFamilyToFamilyDetailsDto).toList()));
-
-		Optional.ofNullable(employee.getEmployeeEducations())
-			.ifPresent(educations -> dto.setEducational(
-					educations.stream().map(peopleMapper::employeeEducationToEducationalDetailsDto).toList()));
-
-		dto.setSocialMedia(mapPersonalSocialMediaDetails(employee));
-		dto.setHealthAndOther(mapPersonalHealthAndOtherDetails(employee));
-		return dto;
-	}
-
-	private EmployeePersonalGeneralDetailsDto mapPersonalGeneralDetails(Employee employee) {
-		EmployeePersonalGeneralDetailsDto dto = new EmployeePersonalGeneralDetailsDto();
-		dto.setFirstName(employee.getFirstName());
-		dto.setMiddleName(employee.getMiddleName());
-		dto.setLastName(employee.getLastName());
-		dto.setGender(employee.getGender());
-
-		Optional.of(employee.getPersonalInfo()).ifPresent(personalInfo -> {
-			dto.setDateOfBirth(personalInfo.getBirthDate());
-			dto.setNationality(personalInfo.getNationality());
-			dto.setPassportNumber(personalInfo.getPassportNo());
-			dto.setMaritalStatus(personalInfo.getMaritalStatus());
-			dto.setNin(personalInfo.getNin());
-		});
-
-		return dto;
-	}
-
-	private EmployeePersonalContactDetailsDto mapPersonalContactDetails(Employee employee) {
-		EmployeePersonalContactDetailsDto dto = new EmployeePersonalContactDetailsDto();
-		dto.setPersonalEmail(employee.getPersonalEmail());
-		dto.setContactNo(employee.getPhone());
-		dto.setAddressLine1(employee.getAddressLine1());
-		dto.setAddressLine2(employee.getAddressLine2());
-		dto.setCountry(employee.getCountry());
-
-		Optional.ofNullable(employee.getPersonalInfo()).ifPresent(personalInfo -> {
-			dto.setCity(personalInfo.getCity());
-			dto.setState(personalInfo.getState());
-			dto.setPostalCode(personalInfo.getPostalCode());
-		});
-
-		return dto;
-	}
-
-	private EmployeePersonalSocialMediaDetailsDto mapPersonalSocialMediaDetails(Employee employee) {
-		if (employee.getPersonalInfo() != null && employee.getPersonalInfo().getSocialMediaDetails() != null) {
-			try {
-				return mapper.treeToValue(employee.getPersonalInfo().getSocialMediaDetails(),
-						EmployeePersonalSocialMediaDetailsDto.class);
-			}
-			catch (JsonProcessingException e) {
-				log.error("Error converting social media details JSON to DTO", e);
-			}
-		}
-		return new EmployeePersonalSocialMediaDetailsDto();
-	}
-
-	private EmployeePersonalHealthAndOtherDetailsDto mapPersonalHealthAndOtherDetails(Employee employee) {
-		EmployeePersonalHealthAndOtherDetailsDto dto = new EmployeePersonalHealthAndOtherDetailsDto();
-
-		if (employee.getPersonalInfo() != null) {
-			EmployeePersonalInfo personalInfo = employee.getPersonalInfo();
-			dto.setBloodGroup(personalInfo.getBloodGroup());
-
-			if (personalInfo.getExtraInfo() != null) {
-				try {
-					EmployeeExtraInfoDto extraInfo = mapper.treeToValue(personalInfo.getExtraInfo(),
-							EmployeeExtraInfoDto.class);
-					dto.setAllergies(extraInfo.getAllergies());
-					dto.setDietaryRestrictions(extraInfo.getDietaryRestrictions());
-					dto.setTShirtSize(extraInfo.getTShirtSize());
-				}
-				catch (JsonProcessingException e) {
-					log.error("Error converting extra info JSON to DTO", e);
-				}
-			}
-		}
-
-		return dto;
-	}
-
-	private EmployeeEmergencyDetailsDto mapEmergencyDetails(Employee employee) {
-		EmployeeEmergencyDetailsDto dto = new EmployeeEmergencyDetailsDto();
-
-		if (employee.getEmployeeEmergencies() != null && !employee.getEmployeeEmergencies().isEmpty()) {
-			List<EmployeeEmergency> emergencies = new ArrayList<>(employee.getEmployeeEmergencies());
-
-			emergencies.stream()
-				.filter(EmployeeEmergency::getIsPrimary)
-				.findFirst()
-				.or(() -> emergencies.isEmpty() ? Optional.empty() : Optional.of(emergencies.getFirst()))
-				.ifPresent(e -> dto.setPrimaryEmergencyContact(peopleMapper.employeeEmergencyToEmergencyContactDto(e)));
-
-			emergencies.stream()
-				.filter(e -> !e.getIsPrimary())
-				.findFirst()
-				.ifPresent(
-						e -> dto.setSecondaryEmergencyContact(peopleMapper.employeeEmergencyToEmergencyContactDto(e)));
-		}
-
-		return dto;
-	}
-
-	private EmployeeEmploymentDetailsDto mapEmploymentDetails(Employee employee) {
-		EmployeeEmploymentDetailsDto dto = new EmployeeEmploymentDetailsDto();
-		dto.setEmploymentDetails(mapEmploymentBasicDetails(employee));
-
-		Optional.ofNullable(employee.getEmployeeProgressions())
-			.ifPresent(progressions -> dto.setCareerProgression(
-					progressions.stream().map(peopleMapper::employeeProgressionToCareerProgressionDto).toList()));
-
-		dto.setIdentificationAndDiversityDetails(mapIdentificationAndDiversityDetails(employee));
-		dto.setPreviousEmployment(mapPreviousEmploymentDetails(employee));
-
-		Optional.ofNullable(employee.getEmployeeVisas())
-			.ifPresent(visas -> dto
-				.setVisaDetails(visas.stream().map(peopleMapper::employeeVisaToVisaDetailsDto).toList()));
-
-		return dto;
-	}
-
-	private EmployeeEmploymentIdentificationAndDiversityDetailsDto mapIdentificationAndDiversityDetails(
-			Employee employee) {
-		EmployeeEmploymentIdentificationAndDiversityDetailsDto dto = new EmployeeEmploymentIdentificationAndDiversityDetailsDto();
-
-		Optional.ofNullable(employee.getPersonalInfo()).ifPresent(personalInfo -> {
-			dto.setSsn(personalInfo.getSsn());
-			dto.setEthnicity(personalInfo.getEthnicity());
-		});
-
-		dto.setEeoJobCategory(employee.getEeo());
-
-		return dto;
-	}
-
-	private List<EmployeeEmploymentPreviousEmploymentDetailsDto> mapPreviousEmploymentDetails(Employee employee) {
-		if (employee.getPersonalInfo() != null && employee.getPersonalInfo().getPreviousEmploymentDetails() != null) {
-			try {
-				return mapper.treeToValue(employee.getPersonalInfo().getPreviousEmploymentDetails(),
-						new TypeReference<>() {
-						});
-			}
-			catch (JsonProcessingException e) {
-				log.error("Error converting previous employment details JSON to DTO", e);
-			}
-		}
-		return new ArrayList<>();
-	}
-
-	private EmployeeEmploymentBasicDetailsDto mapEmploymentBasicDetails(Employee employee) {
-		EmployeeEmploymentBasicDetailsDto dto = new EmployeeEmploymentBasicDetailsDto();
-		dto.setJoinedDate(employee.getJoinDate());
-		dto.setWorkTimeZone(employee.getTimeZone());
-		dto.setEmploymentAllocation(employee.getEmploymentAllocation());
-
-		Optional.ofNullable(employee.getUser()).ifPresent(user -> {
-			dto.setEmployeeNumber(employee.getIdentificationNo());
-			dto.setEmail(user.getEmail());
-		});
-
-		Optional.ofNullable(employee.getEmployeeTeams())
-			.ifPresent(teams -> dto
-				.setTeamIds(teams.stream().map(team -> team.getTeam().getTeamId()).toArray(Long[]::new)));
-
-		if (employee.getEmployeeManagers() != null) {
-			dto.setPrimarySupervisor(employee.getEmployeeManagers()
-				.stream()
-				.filter(EmployeeManager::getIsPrimaryManager)
-				.findFirst()
-				.map(peopleMapper::employeeManagerToManagerDetailsDto)
-				.orElse(null));
-
-			dto.setSecondarySupervisor(employee.getEmployeeManagers()
-				.stream()
-				.filter(m -> !m.getIsPrimaryManager())
-				.findFirst()
-				.map(peopleMapper::employeeManagerToManagerDetailsDto)
-				.orElse(null));
-		}
-
-		Optional.ofNullable(employee.getEmployeePeriods())
-			.flatMap(periods -> periods.stream().findFirst())
-			.ifPresent(probation -> {
-				dto.setProbationStartDate(probation.getStartDate());
-				dto.setProbationEndDate(probation.getEndDate());
-			});
-
-		return dto;
-	}
-
-	private EmployeeSystemPermissionsDto mapSystemPermissions(Employee employee) {
-		EmployeeSystemPermissionsDto dto = new EmployeeSystemPermissionsDto();
-
-		Optional.ofNullable(employee.getEmployeeRole()).ifPresent(role -> {
-			dto.setIsSuperAdmin(role.getIsSuperAdmin());
-			dto.setPeopleRole(role.getPeopleRole());
-			dto.setLeaveRole(role.getLeaveRole());
-			dto.setAttendanceRole(role.getAttendanceRole());
-			dto.setEsignRole(role.getEsignRole());
-		});
-
-		return dto;
-	}
-
-	private EmployeeCommonDetailsDto mapCommonDetails(Employee employee) {
-		EmployeeCommonDetailsDto dto = new EmployeeCommonDetailsDto();
-		dto.setAccountStatus(employee.getAccountStatus());
-		dto.setAuthPic(employee.getAuthPic());
-		dto.setEmployeeId(employee.getEmployeeId());
-		dto.setJobTitle(employee.getJobTitle() != null ? employee.getJobTitle().getName() : null);
-		return dto;
 	}
 
 	@Override
