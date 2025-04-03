@@ -1,6 +1,7 @@
 package com.skapp.community.peopleplanner.payload.response;
 
 import com.skapp.community.leaveplanner.type.ManagerType;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentBasicDetailsDto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,7 +9,7 @@ import lombok.Setter;
 @Setter
 public class ManagerResponseDto {
 
-	private EmployeeResponseDto manager;
+	private EmployeeEmploymentBasicDetailsDto manager;
 
 	private Boolean isPrimaryManager;
 
