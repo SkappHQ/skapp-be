@@ -457,22 +457,35 @@ public class PeopleServiceImpl implements PeopleService {
 				personalInfo::setEthnicity);
 
 		// Social media details
-		EmployeePersonalSocialMediaDetailsDto socialMedia = CommonModuleUtils
-			.safeGet(() -> requestDto.getPersonal().getSocialMedia());
-		if (socialMedia == null) {
-			socialMedia = new EmployeePersonalSocialMediaDetailsDto();
+		JsonNode oldSocialMediaNode = personalInfo.getSocialMediaDetails();
+		EmployeePersonalSocialMediaDetailsDto socialMedia = Optional.ofNullable(oldSocialMediaNode)
+				.map(node -> CommonModuleUtils.jsonNodeToValue(node, EmployeePersonalSocialMediaDetailsDto.class, mapper))
+				.orElseGet(EmployeePersonalSocialMediaDetailsDto::new);
+
+		var requestSocialMedia = Optional.ofNullable(requestDto.getPersonal())
+				.map(EmployeePersonalDetailsDto::getSocialMedia)
+				.orElse(null);
+
+		if (requestSocialMedia != null) {
+			CommonModuleUtils.setIfExists(requestSocialMedia::getLinkedIn, socialMedia::setLinkedIn);
+			CommonModuleUtils.setIfExists(requestSocialMedia::getFacebook, socialMedia::setFacebook);
+			CommonModuleUtils.setIfExists(requestSocialMedia::getInstagram, socialMedia::setInstagram);
+			CommonModuleUtils.setIfExists(requestSocialMedia::getX, socialMedia::setX);
 		}
+
 		personalInfo.setSocialMediaDetails(mapper.valueToTree(socialMedia));
 
-		// Extra info
-		EmployeeExtraInfoDto extraInfo = new EmployeeExtraInfoDto();
-		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getHealthAndOther().getAllergies(),
-				extraInfo::setAllergies);
-		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getHealthAndOther().getTShirtSize(),
-				extraInfo::setTShirtSize);
-		CommonModuleUtils.setIfExists(() -> requestDto.getPersonal().getHealthAndOther().getDietaryRestrictions(),
-				extraInfo::setDietaryRestrictions);
-		personalInfo.setExtraInfo(mapper.valueToTree(extraInfo));
+		// Extra Info
+		EmployeeExtraInfoDto extraInfo = Optional.ofNullable(employee.getPersonalInfo().getExtraInfo())
+				.map(node -> CommonModuleUtils.jsonNodeToValue(node, EmployeeExtraInfoDto.class, mapper))
+				.orElseGet(EmployeeExtraInfoDto::new);
+
+		var healthAndOther = requestDto.getPersonal().getHealthAndOther();
+		CommonModuleUtils.setIfExists(healthAndOther::getAllergies, extraInfo::setAllergies);
+		CommonModuleUtils.setIfExists(healthAndOther::getTShirtSize, extraInfo::setTShirtSize);
+		CommonModuleUtils.setIfExists(healthAndOther::getDietaryRestrictions, extraInfo::setDietaryRestrictions);
+
+		CommonModuleUtils.setIfExists(() -> mapper.valueToTree(extraInfo), personalInfo::setExtraInfo);
 
 		// Previous employment
 		CommonModuleUtils.setIfExists(() -> mapper.valueToTree(requestDto.getEmployment().getPreviousEmployment()),
