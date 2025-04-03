@@ -19,6 +19,4 @@ public interface EmployeeManagerDao extends JpaRepository<EmployeeManager, Long>
 
 	List<EmployeeManager> findByManagerInAndManagerType(List<Employee> employees, ManagerType managerType);
 
-	void deleteAllByIdIn(List<Long> managersToRemove);
-
 }
