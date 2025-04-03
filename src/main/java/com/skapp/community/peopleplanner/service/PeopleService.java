@@ -25,8 +25,6 @@ public interface PeopleService {
 
 	ResponseEntityDto exportEmployees(EmployeeExportFilterDto employeeExportFilterDto);
 
-	ResponseEntityDto getEmployeeById(Long employeeId);
-
 	ResponseEntityDto getCurrentEmployee();
 
 	ResponseEntityDto addBulkEmployees(List<EmployeeBulkDto> employeeBulkDto);
@@ -55,5 +53,7 @@ public interface PeopleService {
 	ResponseEntityDto searchEmployeesAndTeamsByKeyword(String keyword);
 
 	ResponseEntityDto isPrimarySecondaryOrTeamSupervisor(Long employeeId);
+
+	ResponseEntityDto hasSupervisoryRoles(Long employeeId);
 
 }

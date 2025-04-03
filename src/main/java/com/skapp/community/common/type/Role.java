@@ -1,5 +1,8 @@
 package com.skapp.community.common.type;
 
+import lombok.Getter;
+
+@Getter
 public enum Role {
 
 	SUPER_ADMIN, PEOPLE_ADMIN, PEOPLE_MANAGER, PEOPLE_EMPLOYEE, LEAVE_ADMIN, LEAVE_MANAGER, LEAVE_EMPLOYEE,

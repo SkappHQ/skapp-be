@@ -81,6 +81,8 @@ public interface EmployeeRepository {
 	PrimarySecondaryOrTeamSupervisorResponseDto isPrimarySecondaryOrTeamSupervisor(Employee employee,
 			Employee currentEmployee);
 
+	PrimarySecondaryOrTeamSupervisorResponseDto isPrimaryOrSecondarySupervisor(Employee employee);
+
 	Long findAllActiveAndPendingEmployeesCount();
 
 }

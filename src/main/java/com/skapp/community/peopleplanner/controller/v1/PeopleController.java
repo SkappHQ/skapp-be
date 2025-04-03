@@ -11,6 +11,7 @@ import com.skapp.community.peopleplanner.payload.request.NotificationSettingsPat
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.request.employee.CreateEmployeeRequestDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeManagerResponseDto;
+import com.skapp.community.peopleplanner.service.PeopleReadService;
 import com.skapp.community.peopleplanner.service.PeopleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -39,6 +40,8 @@ import java.util.List;
 public class PeopleController {
 
 	private final PeopleService peopleService;
+
+	private final PeopleReadService peopleReadService;
 
 	@Operation(summary = "Create a new employee",
 			description = "This endpoint creates a new employee with the provided details.")
@@ -89,7 +92,7 @@ public class PeopleController {
 	@Operation(summary = "Get employee by ID", description = "This endpoint fetches an employee by their ID.")
 	@GetMapping(value = "/employee/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> getEmployeeById(@PathVariable Long id) {
-		ResponseEntityDto employeeResponse = peopleService.getEmployeeById(id);
+		ResponseEntityDto employeeResponse = peopleReadService.getEmployeeById(id);
 		return new ResponseEntity<>(employeeResponse, HttpStatus.OK);
 	}
 
@@ -122,6 +125,14 @@ public class PeopleController {
 	@GetMapping(value = "/{employeeId}/is-supervised-by-me")
 	public ResponseEntity<ResponseEntityDto> isPrimarySecondaryOrTeamSupervisor(@PathVariable Long employeeId) {
 		return new ResponseEntity<>(peopleService.isPrimarySecondaryOrTeamSupervisor(employeeId), HttpStatus.OK);
+	}
+
+	@Operation(summary = "Check if an employee is a primary, secondary or team supervisor ",
+			description = "This endpoint checks if the given employee is supervising an employee or team.")
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_ADMIN')")
+	@GetMapping(value = "/{employeeId}/has-supervisory-roles")
+	public ResponseEntity<ResponseEntityDto> hasSupervisoryRoles(@PathVariable Long employeeId) {
+		return new ResponseEntity<>(peopleService.hasSupervisoryRoles(employeeId), HttpStatus.OK);
 	}
 
 	@Operation(summary = "Bulk add employees", description = "This endpoint allows adding multiple employees at once.")
