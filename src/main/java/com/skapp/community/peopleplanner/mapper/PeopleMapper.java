@@ -15,6 +15,7 @@ import com.skapp.community.peopleplanner.model.EmployeePeriod;
 import com.skapp.community.peopleplanner.model.EmployeePersonalInfo;
 import com.skapp.community.peopleplanner.model.EmployeeProgression;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
+import com.skapp.community.peopleplanner.model.EmployeeTeam;
 import com.skapp.community.peopleplanner.model.EmployeeVisa;
 import com.skapp.community.peopleplanner.model.Holiday;
 import com.skapp.community.peopleplanner.model.JobFamily;
@@ -57,6 +58,7 @@ import com.skapp.community.peopleplanner.payload.response.JobTitleResponseDetail
 import com.skapp.community.peopleplanner.payload.response.ModuleRoleRestrictionResponseDto;
 import com.skapp.community.peopleplanner.payload.response.TeamBasicDetailsResponseDto;
 import com.skapp.community.peopleplanner.payload.response.TeamDetailResponseDto;
+import com.skapp.community.peopleplanner.payload.response.TeamEmployeeResponseDto;
 import com.skapp.community.peopleplanner.payload.response.TeamResponseDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -230,6 +232,11 @@ public interface PeopleMapper {
 	@Mapping(source = "manager.lastName", target = "lastName")
 	@Mapping(source = "manager.authPic", target = "authPic")
 	EmployeeEmploymentBasicDetailsManagerDetailsDto employeeManagerToManagerDetailsDto(EmployeeManager managerRel);
+
+	@Mapping(source = "team.teamId", target = "team.teamId")
+	@Mapping(source = "team.teamName", target = "team.teamName")
+	@Mapping(source = "isSupervisor", target = "team.isSupervisor")
+	TeamEmployeeResponseDto employeeTeamToEmployeeTeamDto(EmployeeTeam employeeTeam);
 
 	// DTO to Entity mappings
 	@Mapping(source = "familyId", target = "familyId")

@@ -143,6 +143,8 @@ public class AuthServiceImpl implements AuthService {
 		}
 		User user = optionalUser.get();
 
+		validateTenantStatus(user);
+
 		if (Boolean.FALSE.equals(user.getIsActive())) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_ACCOUNT_DEACTIVATED);
 		}
@@ -167,6 +169,10 @@ public class AuthServiceImpl implements AuthService {
 
 		log.info("signIn: execution ended");
 		return new ResponseEntityDto(false, signInResponseDto);
+	}
+
+	protected void validateTenantStatus(User user) {
+		// This is only for Pro version
 	}
 
 	@Transactional

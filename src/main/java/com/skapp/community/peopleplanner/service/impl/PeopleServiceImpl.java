@@ -96,6 +96,7 @@ import com.skapp.community.peopleplanner.payload.response.EmployeeManagerRespons
 import com.skapp.community.peopleplanner.payload.response.EmployeePeriodResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeTeamDto;
 import com.skapp.community.peopleplanner.payload.response.PrimarySecondaryOrTeamSupervisorResponseDto;
+import com.skapp.community.peopleplanner.payload.response.TeamEmployeeResponseDto;
 import com.skapp.community.peopleplanner.repository.EmployeeDao;
 import com.skapp.community.peopleplanner.repository.EmployeeEducationDao;
 import com.skapp.community.peopleplanner.repository.EmployeeFamilyDao;
@@ -1168,13 +1169,13 @@ public class PeopleServiceImpl implements PeopleService {
 		dto.setMiddleName(employee.getMiddleName());
 		dto.setLastName(employee.getLastName());
 		dto.setGender(employee.getGender());
-		dto.setNin(employee.getIdentificationNo());
 
-		Optional.ofNullable(employee.getPersonalInfo()).ifPresent(personalInfo -> {
+		Optional.of(employee.getPersonalInfo()).ifPresent(personalInfo -> {
 			dto.setDateOfBirth(personalInfo.getBirthDate());
 			dto.setNationality(personalInfo.getNationality());
 			dto.setPassportNumber(personalInfo.getPassportNo());
 			dto.setMaritalStatus(personalInfo.getMaritalStatus());
+			dto.setNin(personalInfo.getNin());
 		});
 
 		return dto;
@@ -1794,6 +1795,15 @@ public class PeopleServiceImpl implements PeopleService {
 			period.ifPresent(employeePeriod -> responseDto
 				.setPeriodResponseDto(peopleMapper.employeePeriodToEmployeePeriodResponseDto(employeePeriod)));
 			responseDtos.add(responseDto);
+
+			List<EmployeeTeam> teamList = employeeTeamDao.findByEmployee(employee);
+			if (!teamList.isEmpty()) {
+				List<TeamEmployeeResponseDto> teamDtos = teamList.stream()
+					.map(peopleMapper::employeeTeamToEmployeeTeamDto)
+					.toList();
+				responseDto.setTeams(teamDtos);
+			}
+
 		}
 		return responseDtos;
 	}
