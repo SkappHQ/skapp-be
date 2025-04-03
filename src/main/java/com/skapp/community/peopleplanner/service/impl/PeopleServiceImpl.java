@@ -139,6 +139,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -846,11 +847,12 @@ public class PeopleServiceImpl implements PeopleService {
 
 		if (requestDto.getEmployment().getVisaDetails().isEmpty()) {
 			if (employee.getEmployeeVisas() != null && !employee.getEmployeeVisas().isEmpty()) {
-				List<Long> visaIds = employee.getEmployeeVisas()
-					.stream()
-					.map(EmployeeVisa::getVisaId)
-					.filter(Objects::nonNull)
-					.toList();
+				List<Long> visaIds = new ArrayList<>();
+				for (EmployeeVisa visa : employee.getEmployeeVisas()) {
+					if (visa.getVisaId() != null) {
+						visaIds.add(visa.getVisaId());
+					}
+				}
 
 				if (!visaIds.isEmpty()) {
 					employeeVisaDao.deleteAllByVisaIdIn(visaIds);
@@ -863,18 +865,19 @@ public class PeopleServiceImpl implements PeopleService {
 
 		if (employee.getEmployeeId() != null && employee.getEmployeeVisas() != null
 				&& !employee.getEmployeeVisas().isEmpty()) {
-			Set<Long> requestVisaIds = requestDto.getEmployment()
-				.getVisaDetails()
-				.stream()
-				.map(EmployeeEmploymentVisaDetailsDto::getVisaId)
-				.filter(Objects::nonNull)
-				.collect(Collectors.toSet());
+			Set<Long> requestVisaIds = new HashSet<>();
+			for (EmployeeEmploymentVisaDetailsDto visaDetail : requestDto.getEmployment().getVisaDetails()) {
+				if (visaDetail.getVisaId() != null) {
+					requestVisaIds.add(visaDetail.getVisaId());
+				}
+			}
 
-			List<Long> visasToRemove = employee.getEmployeeVisas()
-				.stream()
-				.map(EmployeeVisa::getVisaId)
-				.filter(id -> id != null && !requestVisaIds.contains(id))
-				.toList();
+			List<Long> visasToRemove = new ArrayList<>();
+			for (EmployeeVisa visa : employee.getEmployeeVisas()) {
+				if (visa.getVisaId() != null && !requestVisaIds.contains(visa.getVisaId())) {
+					visasToRemove.add(visa.getVisaId());
+				}
+			}
 
 			if (!visasToRemove.isEmpty()) {
 				employeeVisaDao.deleteAllByVisaIdIn(visasToRemove);
@@ -886,13 +889,22 @@ public class PeopleServiceImpl implements PeopleService {
 		List<EmployeeVisa> existingVisas = employee.getEmployeeVisas() != null ? employee.getEmployeeVisas()
 				: new ArrayList<>();
 
-		Map<Long, EmployeeVisa> existingVisaMap = existingVisas.stream()
-			.filter(visa -> visa.getVisaId() != null)
-			.collect(Collectors.toMap(EmployeeVisa::getVisaId, visa -> visa));
+		Map<Long, EmployeeVisa> existingVisaMap = new HashMap<>();
+		for (EmployeeVisa visa : existingVisas) {
+			if (visa.getVisaId() != null) {
+				existingVisaMap.put(visa.getVisaId(), visa);
+			}
+		}
 
-		return requestDto.getEmployment().getVisaDetails().stream().map(dto -> {
-			EmployeeVisa visa = existingVisaMap.containsKey(dto.getVisaId()) ? existingVisaMap.remove(dto.getVisaId())
-					: new EmployeeVisa();
+		List<EmployeeVisa> updatedVisas = new ArrayList<>();
+		for (EmployeeEmploymentVisaDetailsDto dto : requestDto.getEmployment().getVisaDetails()) {
+			EmployeeVisa visa;
+			if (existingVisaMap.containsKey(dto.getVisaId())) {
+				visa = existingVisaMap.remove(dto.getVisaId());
+			}
+			else {
+				visa = new EmployeeVisa();
+			}
 			visa.setEmployee(employee);
 
 			CommonModuleUtils.setIfExists(dto::getVisaType, visa::setVisaType);
@@ -900,8 +912,10 @@ public class PeopleServiceImpl implements PeopleService {
 			CommonModuleUtils.setIfExists(dto::getIssuedDate, visa::setIssuedDate);
 			CommonModuleUtils.setIfExists(dto::getExpiryDate, visa::setExpirationDate);
 
-			return visa;
-		}).toList();
+			updatedVisas.add(visa);
+		}
+
+		return updatedVisas;
 	}
 
 	private Set<EmployeePeriod> processEmployeeProbationPeriod(CreateEmployeeRequestDto requestDto, Employee employee) {
