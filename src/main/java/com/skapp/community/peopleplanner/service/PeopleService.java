@@ -56,4 +56,6 @@ public interface PeopleService {
 
 	ResponseEntityDto isPrimarySecondaryOrTeamSupervisor(Long employeeId);
 
+	ResponseEntityDto hasSupervisoryRoles(Long employeeId);
+
 }

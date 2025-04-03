@@ -1744,6 +1744,27 @@ public class PeopleServiceImpl implements PeopleService {
 		return new ResponseEntityDto(false, primarySecondaryOrTeamSupervisor);
 	}
 
+	@Override
+	public ResponseEntityDto hasSupervisoryRoles(Long employeeId) {
+
+		Optional<Employee> employeeOptional = employeeDao.findById(employeeId);
+		if (employeeOptional.isEmpty()) {
+			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
+		}
+
+		List<EmployeeTeam> employeeTeams = employeeTeamDao.findEmployeeTeamsByEmployee(employeeOptional.get());
+
+		PrimarySecondaryOrTeamSupervisorResponseDto primarySecondaryOrTeamSupervisor = employeeDao
+			.isPrimaryOrSecondarySupervisor(employeeOptional.get());
+
+		boolean isTeamSupervisor = employeeTeams.stream()
+			.anyMatch(currentTeam -> employeeTeams.stream()
+				.anyMatch(empTeam -> currentTeam.getTeam().equals(empTeam.getTeam()) && currentTeam.getIsSupervisor()));
+
+		primarySecondaryOrTeamSupervisor.setIsTeamSupervisor(isTeamSupervisor);
+		return new ResponseEntityDto(false, primarySecondaryOrTeamSupervisor);
+	}
+
 	public List<EmployeeAllDataExportResponseDto> exportAllEmployeeData(List<Employee> employees,
 			List<EmployeeTeamDto> teamList, List<Long> employeeIds) {
 		List<EmployeeManagerDto> employeeManagerDtos = employeeDao.findManagersByEmployeeIds(employeeIds);

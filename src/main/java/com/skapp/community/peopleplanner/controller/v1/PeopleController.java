@@ -124,6 +124,14 @@ public class PeopleController {
 		return new ResponseEntity<>(peopleService.isPrimarySecondaryOrTeamSupervisor(employeeId), HttpStatus.OK);
 	}
 
+	@Operation(summary = "Check if an employee is a primary, secondary or team supervisor ",
+			description = "This endpoint checks if the given employee is supervising an employee or team.")
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_ADMIN')")
+	@GetMapping(value = "/{employeeId}/has-supervisory-roles")
+	public ResponseEntity<ResponseEntityDto> hasSupervisoryRoles(@PathVariable Long employeeId) {
+		return new ResponseEntity<>(peopleService.hasSupervisoryRoles(employeeId), HttpStatus.OK);
+	}
+
 	@Operation(summary = "Bulk add employees", description = "This endpoint allows adding multiple employees at once.")
 	@PostMapping(value = "/bulk/employees", produces = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_ADMIN')")
