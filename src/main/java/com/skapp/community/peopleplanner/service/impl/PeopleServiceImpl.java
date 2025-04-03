@@ -399,6 +399,8 @@ public class PeopleServiceImpl implements PeopleService {
 		if (user.getUserId() != null) {
 			CommonModuleUtils.setIfExists(() -> createNotificationSettings(requestDto.getSystemPermissions(), user),
 					user::setSettings);
+			CommonModuleUtils.setIfExists(() -> requestDto.getEmployment().getEmploymentDetails().getEmail(),
+					user::setEmail);
 			return user;
 		}
 
@@ -420,6 +422,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 		CommonModuleUtils.setIfExists(() -> createNotificationSettings(requestDto.getSystemPermissions(), user),
 				user::setSettings);
+
 		user.setLoginMethod(loginMethod);
 		user.setIsActive(true);
 
@@ -716,33 +719,46 @@ public class PeopleServiceImpl implements PeopleService {
 		boolean isSecondarySupervisorInRequest = requestDto.getEmploymentDetails().getSecondarySupervisor() != null;
 
 		Set<Long> newManagerIds = new HashSet<>();
+		List<Long> primaryManagersToRemove = new ArrayList<>();
+		List<Long> secondaryManagersToRemove = new ArrayList<>();
 
 		if (isPrimarySupervisorInRequest) {
 			if (primarySupervisor.getEmployeeId() != null) {
 				newManagerIds.add(primarySupervisor.getEmployeeId());
+
+				for (EmployeeManager em : existingManagers) {
+					if (em.getManager() != null && em.getManagerType() == ManagerType.PRIMARY
+							&& !newManagerIds.contains(em.getManager().getEmployeeId())
+							&& em.getEmployee().equals(employee)) {
+						Long id = em.getId();
+						if (id != null) {
+							primaryManagersToRemove.add(id);
+						}
+					}
+				}
+
 				Employee manager = employeeDao.findEmployeeByEmployeeId(primarySupervisor.getEmployeeId());
 				if (manager != null) {
-					EmployeeManager primary = existingManagers.stream()
-						.filter(em -> em.getManager() != null
-								&& !em.getManager().getEmployeeId().equals(primarySupervisor.getEmployeeId())
-								&& em.getManagerType() == ManagerType.PRIMARY)
-						.findFirst()
-						.orElse(new EmployeeManager());
+					EmployeeManager primary = new EmployeeManager();
 
 					CommonModuleUtils.setIfExists(() -> manager, primary::setManager);
 					CommonModuleUtils.setIfExists(() -> employee, primary::setEmployee);
 					CommonModuleUtils.setIfExists(() -> ManagerType.PRIMARY, primary::setManagerType);
 					CommonModuleUtils.setIfExists(() -> true, primary::setIsPrimaryManager);
+
 					result.add(primary);
 				}
+
 			}
 			else {
-				existingManagers.stream()
-					.filter(em -> em.getManagerType() == ManagerType.PRIMARY)
-					.map(EmployeeManager::getId)
-					.filter(Objects::nonNull)
-					.toList()
-					.forEach(employeeManagerDao::deleteById);
+				for (EmployeeManager em : existingManagers) {
+					if (em.getManagerType() == ManagerType.PRIMARY) {
+						Long id = em.getId();
+						if (id != null) {
+							employeeManagerDao.deleteById(id);
+						}
+					}
+				}
 			}
 		}
 		else {
@@ -755,42 +771,51 @@ public class PeopleServiceImpl implements PeopleService {
 							|| !secondarySupervisor.getEmployeeId().equals(primarySupervisor.getEmployeeId()))) {
 
 				newManagerIds.add(secondarySupervisor.getEmployeeId());
+
+				for (EmployeeManager em : existingManagers) {
+					if (em.getManager() != null && em.getManagerType() == ManagerType.SECONDARY
+							&& !newManagerIds.contains(em.getManager().getEmployeeId())
+							&& em.getEmployee().equals(employee)) {
+						Long id = em.getId();
+						if (id != null) {
+							secondaryManagersToRemove.add(id);
+						}
+					}
+				}
+
 				Employee manager = employeeDao.findEmployeeByEmployeeId(secondarySupervisor.getEmployeeId());
 				if (manager != null) {
-					EmployeeManager secondary = existingManagers.stream()
-						.filter(em -> em.getManager() != null
-								&& !em.getManager().getEmployeeId().equals(secondarySupervisor.getEmployeeId())
-								&& em.getManagerType() == ManagerType.SECONDARY)
-						.findFirst()
-						.orElse(new EmployeeManager());
+					EmployeeManager secondary = new EmployeeManager();
+
 					CommonModuleUtils.setIfExists(() -> manager, secondary::setManager);
 					CommonModuleUtils.setIfExists(() -> employee, secondary::setEmployee);
 					CommonModuleUtils.setIfExists(() -> ManagerType.SECONDARY, secondary::setManagerType);
 					CommonModuleUtils.setIfExists(() -> false, secondary::setIsPrimaryManager);
+
 					result.add(secondary);
 				}
 			}
 			else {
-				existingManagers.stream()
-					.filter(em -> em.getManagerType() == ManagerType.SECONDARY)
-					.map(EmployeeManager::getId)
-					.filter(Objects::nonNull)
-					.toList()
-					.forEach(employeeManagerDao::deleteById);
+				for (EmployeeManager em : existingManagers) {
+					if (em.getManagerType() == ManagerType.SECONDARY) {
+						Long id = em.getId();
+						if (id != null) {
+							employeeManagerDao.deleteById(id);
+						}
+					}
+				}
 			}
 		}
 		else {
 			existingManagers.stream().filter(em -> em.getManagerType() == ManagerType.SECONDARY).forEach(result::add);
 		}
 
-		List<Long> managersToRemove = existingManagers.stream()
-			.filter(em -> em.getManager() != null && !newManagerIds.contains(em.getManager().getEmployeeId()))
-			.map(EmployeeManager::getId)
-			.filter(Objects::nonNull)
-			.toList();
+		if (!primaryManagersToRemove.isEmpty()) {
+			employeeManagerDao.deleteAllById(primaryManagersToRemove);
+		}
 
-		if (!managersToRemove.isEmpty()) {
-			employeeManagerDao.deleteAllByIdIn(managersToRemove);
+		if (!secondaryManagersToRemove.isEmpty()) {
+			employeeManagerDao.deleteAllById(secondaryManagersToRemove);
 		}
 
 		return result;
