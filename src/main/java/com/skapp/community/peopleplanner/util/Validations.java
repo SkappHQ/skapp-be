@@ -264,12 +264,12 @@ public class Validations {
 	}
 
 	public static void validateCity(String city) {
-		if (city != null && !city.trim().matches(LETTERS_AND_SPACE_REGEX))
+		if (city != null && !city.trim().matches(ADDRESS_REGEX))
 			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CITY);
 	}
 
 	public static void validateState(String state) {
-		if (state != null && !state.trim().matches(LETTERS_AND_SPACE_REGEX))
+		if (state != null && !state.trim().matches(ADDRESS_REGEX))
 			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_STATE);
 	}
 
