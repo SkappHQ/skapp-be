@@ -459,12 +459,12 @@ public class PeopleServiceImpl implements PeopleService {
 		// Social media details
 		JsonNode oldSocialMediaNode = personalInfo.getSocialMediaDetails();
 		EmployeePersonalSocialMediaDetailsDto socialMedia = Optional.ofNullable(oldSocialMediaNode)
-				.map(node -> CommonModuleUtils.jsonNodeToValue(node, EmployeePersonalSocialMediaDetailsDto.class, mapper))
-				.orElseGet(EmployeePersonalSocialMediaDetailsDto::new);
+			.map(node -> CommonModuleUtils.jsonNodeToValue(node, EmployeePersonalSocialMediaDetailsDto.class, mapper))
+			.orElseGet(EmployeePersonalSocialMediaDetailsDto::new);
 
 		var requestSocialMedia = Optional.ofNullable(requestDto.getPersonal())
-				.map(EmployeePersonalDetailsDto::getSocialMedia)
-				.orElse(null);
+			.map(EmployeePersonalDetailsDto::getSocialMedia)
+			.orElse(null);
 
 		if (requestSocialMedia != null) {
 			CommonModuleUtils.setIfExists(requestSocialMedia::getLinkedIn, socialMedia::setLinkedIn);
@@ -477,8 +477,8 @@ public class PeopleServiceImpl implements PeopleService {
 
 		// Extra Info
 		EmployeeExtraInfoDto extraInfo = Optional.ofNullable(employee.getPersonalInfo().getExtraInfo())
-				.map(node -> CommonModuleUtils.jsonNodeToValue(node, EmployeeExtraInfoDto.class, mapper))
-				.orElseGet(EmployeeExtraInfoDto::new);
+			.map(node -> CommonModuleUtils.jsonNodeToValue(node, EmployeeExtraInfoDto.class, mapper))
+			.orElseGet(EmployeeExtraInfoDto::new);
 
 		var healthAndOther = requestDto.getPersonal().getHealthAndOther();
 		CommonModuleUtils.setIfExists(healthAndOther::getAllergies, extraInfo::setAllergies);

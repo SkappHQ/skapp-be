@@ -327,17 +327,20 @@ public class CommonModuleUtils {
 		if (node == null) {
 			try {
 				return valueType.getDeclaredConstructor().newInstance();
-			} catch (Exception e) {
+			}
+			catch (Exception e) {
 				return null;
 			}
 		}
 
 		try {
 			return mapper.treeToValue(node, valueType);
-		} catch (JsonProcessingException e) {
+		}
+		catch (JsonProcessingException e) {
 			try {
 				return valueType.getDeclaredConstructor().newInstance();
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 				return null;
 			}
 		}
