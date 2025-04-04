@@ -792,12 +792,11 @@ public class TimeServiceImpl implements TimeService {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND);
 		}
 
-		boolean isManager = user.getEmployee()
+		boolean isManager = timeRequest.get()
+			.getEmployee()
 			.getEmployeeManagers()
 			.stream()
-			.anyMatch(manager -> manager.getEmployee()
-				.getEmployeeId()
-				.equals(timeRequest.get().getEmployee().getEmployeeId()));
+			.anyMatch(employeeManager -> employeeManager.getManager().getUser() == user);
 
 		if (!isManager) {
 			throw new ModuleException(TimeMessageConstant.TIME_ERROR_TIME_REQUEST_MANAGER_MISMATCH);
