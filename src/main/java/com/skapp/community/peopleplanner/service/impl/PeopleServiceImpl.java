@@ -392,8 +392,13 @@ public class PeopleServiceImpl implements PeopleService {
 		if (user.getUserId() != null) {
 			CommonModuleUtils.setIfExists(() -> createNotificationSettings(requestDto.getSystemPermissions(), user),
 					user::setSettings);
-			CommonModuleUtils.setIfExists(() -> requestDto.getEmployment().getEmploymentDetails().getEmail(),
-					user::setEmail);
+
+			if (user.getEmployee().getAccountStatus() == AccountStatus.PENDING
+					&& requestDto.getEmployment().getEmploymentDetails().getEmail() != null
+					&& !requestDto.getEmployment().getEmploymentDetails().getEmail().isEmpty()) {
+				resendInvitationEmail(requestDto, user);
+			}
+
 			return user;
 		}
 
@@ -420,6 +425,19 @@ public class PeopleServiceImpl implements PeopleService {
 		user.setIsActive(true);
 
 		return user;
+	}
+
+	private void resendInvitationEmail(CreateEmployeeRequestDto requestDto, User user) {
+		CommonModuleUtils.setIfExists(() -> requestDto.getEmployment().getEmploymentDetails().getEmail(),
+				user::setEmail);
+
+		String tempPassword = CommonModuleUtils.generateSecureRandomPassword();
+		CommonModuleUtils.setIfExists(() -> encryptionDecryptionService.encrypt(tempPassword, encryptSecret),
+				user::setTempPassword);
+		CommonModuleUtils.setIfExists(() -> passwordEncoder.encode(tempPassword), user::setPassword);
+
+		peopleEmailService.sendUserInvitationEmail(user);
+
 	}
 
 	private EmployeePersonalInfo processEmployeePersonalInfo(CreateEmployeeRequestDto requestDto, Employee employee) {
