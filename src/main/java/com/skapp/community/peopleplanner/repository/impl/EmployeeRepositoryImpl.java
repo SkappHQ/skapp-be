@@ -101,6 +101,8 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		List<Predicate> predicates = new ArrayList<>();
 
+		predicates.add(criteriaBuilder.notEqual(root.get(Employee_.ACCOUNT_STATUS), AccountStatus.DELETED));
+
 		if (employeeFilterDto.getRole() != null && !employeeFilterDto.getRole().isEmpty()) {
 			predicates
 				.add(root.get(Employee_.JOB_FAMILY).get(JobFamily_.JOB_FAMILY_ID).in(employeeFilterDto.getRole()));
@@ -148,6 +150,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 			Predicate rolePredicate = criteriaBuilder.or(attendanceRolePredicate, peopleRolePredicate,
 					leaveRolePredicate);
 			predicates.add(rolePredicate);
+			predicates.add(criteriaBuilder.equal(roleJoin.get(EmployeeRole_.IS_SUPER_ADMIN), false));
 		}
 
 		Predicate[] predArray = new Predicate[predicates.size()];
