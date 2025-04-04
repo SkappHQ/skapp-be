@@ -4,7 +4,6 @@ import io.jsonwebtoken.Claims;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.security.Key;
-import java.util.Date;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -16,7 +15,7 @@ public interface JwtService {
 
 	String generateAccessToken(UserDetails userDetails, Long userId);
 
-	String generateTemporaryAccessToken(UserDetails userDetails, Map<String, Object> claims, Date expiration );
+	String generateTemporaryAccessToken(UserDetails userDetails, Map<String, Object> extraClaims);
 
 	String generateRefreshToken(UserDetails userDetails);
 
