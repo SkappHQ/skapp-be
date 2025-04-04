@@ -148,7 +148,6 @@ import java.util.stream.Collectors;
 import static com.skapp.community.common.util.Validation.ADDRESS_REGEX;
 import static com.skapp.community.common.util.Validation.ALPHANUMERIC_REGEX;
 import static com.skapp.community.common.util.Validation.NAME_REGEX;
-import static com.skapp.community.common.util.Validation.SPECIAL_CHAR_REGEX;
 import static com.skapp.community.common.util.Validation.VALID_NIN_NUMBER_REGEXP;
 
 @Service
@@ -1685,11 +1684,21 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	public void validateStateInBulk(String state, List<String> errors) {
-		if (state != null && (!state.trim().matches(SPECIAL_CHAR_REGEX))) {
-			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_CITY_STATE));
+		if (state != null && (!state.trim().matches(Validation.ADDRESS_REGEX))) {
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_CITY));
 		}
 
 		if (state != null && state.length() > PeopleConstants.MAX_ADDRESS_LENGTH)
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_STATE_PROVINCE,
+					new Object[] { PeopleConstants.MAX_ADDRESS_LENGTH }));
+	}
+
+	public void validateCityInBulk(String city, List<String> errors) {
+		if (city != null && (!city.trim().matches(Validation.ADDRESS_REGEX))) {
+			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_STATE));
+		}
+
+		if (city != null && city.length() > PeopleConstants.MAX_ADDRESS_LENGTH)
 			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_STATE_PROVINCE,
 					new Object[] { PeopleConstants.MAX_ADDRESS_LENGTH }));
 	}
@@ -2291,7 +2300,7 @@ public class PeopleServiceImpl implements PeopleService {
 			validateAddressInBulk(employeeBulkDto.getAddress(), errors);
 		if (employeeBulkDto.getAddressLine2() != null)
 			validateAddressInBulk(employeeBulkDto.getAddressLine2(), errors);
-		validateStateInBulk(employeeBulkDto.getEmployeePersonalInfo().getCity(), errors);
+		validateCityInBulk(employeeBulkDto.getEmployeePersonalInfo().getCity(), errors);
 		validatePassportNumber(employeeBulkDto.getEmployeePersonalInfo().getPassportNo(), errors);
 		if (employeeBulkDto.getEmployeePersonalInfo().getSsn() != null) {
 			validateSocialSecurityNumber(employeeBulkDto.getEmployeePersonalInfo().getSsn(), errors);
