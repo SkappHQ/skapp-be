@@ -68,7 +68,7 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_VALIDATION_EMPLOYEE_NAME("api.error.common.validation.employee-name"),
 	COMMON_ERROR_VALIDATION_EMAIL_LENGTH("api.error.common.validation.email-length"),
 	COMMON_ERROR_VALIDATION_FIRST_NAME("api.error.common.validation.first-name"),
-	COMMON_ERROR_VALIDATION_CITY_STATE("api.error.common.validation.city-state"),
+	COMMON_ERROR_VALIDATION_CITY("api.error.common.validation.city-state"),
 	COMMON_ERROR_VALIDATION_SSN("api.error.common.validation.ssn"),
 	COMMON_ERROR_VALIDATION_LAST_NAME("api.error.common.validation.last-name"),
 	COMMON_ERROR_VALIDATION_NAME("api.error.common.validation.name"),
@@ -121,7 +121,8 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_INVALID_AUTHORIZATION_HEADER("api.error.common.invalid-authorization-header"),
 	COMMON_ERROR_SAME_PASSWORD("api.error.common.same-password"),
 	COMMON_ERROR_SYSTEM_VERSION_MISMATCH("api.error.common.system-version-mismatch"),
-	COMMON_ERROR_USER_VERSION_MISMATCH("api.error.common.user-version-mismatch"),;
+	COMMON_ERROR_USER_VERSION_MISMATCH("api.error.common.user-version-mismatch"),
+	COMMON_ERROR_VALIDATION_STATE("api.error.common.validation.state"),;
 
 	private final String messageKey;
 
