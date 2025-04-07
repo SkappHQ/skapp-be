@@ -217,7 +217,8 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 		}
 
 		leaveEntitlementDao.saveAll(leaveEntitlements);
-		addBulkLeaveEntitlementsTimeLineRecords(optionalEmployee.get(), leaveEntitlements);
+		addBulkLeaveEntitlementsTimeLineRecords(optionalEmployee.get(), leaveEntitlements,
+				userService.getCurrentUser());
 
 		log.info("processLeaveEntitlements: execution ended");
 		return message;
@@ -729,6 +730,8 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 			.chunkData(bulkLeaveEntitlementDto.getEntitlementDetailsList());
 		TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 
+		User currentUser = userService.getCurrentUser();
+
 		for (List<EntitlementDetailsDto> entitlementBulkChunkDtoList : chunkedBulkData) {
 			for (EntitlementDetailsDto entitlementBulkDto : entitlementBulkChunkDtoList) {
 				CompletableFuture<Void> task = CompletableFuture.runAsync(() -> {
@@ -738,7 +741,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 							@Override
 							protected void doInTransactionWithoutResult(@NonNull TransactionStatus status) {
 								createNewLeaveEntitlementFromBulk(bulkLeaveEntitlementDto.getYear(), entitlementBulkDto,
-										leaveBulkSkippedCountDto, bulkRecordErrorLogs, bulkStatusSummary);
+										leaveBulkSkippedCountDto, bulkRecordErrorLogs, bulkStatusSummary, currentUser);
 							}
 						});
 					}
@@ -986,7 +989,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 	private void createNewLeaveEntitlementFromBulk(int year, EntitlementDetailsDto entitlementDetailsDto,
 			LeaveBulkSkippedCountDto leaveBulkSkippedCountDto, List<ErrorLogDto> bulkRecordErrorLogs,
-			BulkStatusSummaryDto bulkStatusSummary) {
+			BulkStatusSummaryDto bulkStatusSummary, User currentUser) {
 
 		List<LeaveEntitlement> entitlements = new ArrayList<>();
 		LeaveCycleDetailsDto leaveCycleDetail = leaveCycleService.getLeaveCycleConfigs();
@@ -1063,7 +1066,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 			leaveEntitlementDao.saveAll(entitlements);
 
-			addBulkLeaveEntitlementsTimeLineRecords(employee, entitlements);
+			addBulkLeaveEntitlementsTimeLineRecords(employee, entitlements, currentUser);
 
 			bulkStatusSummary.incrementSuccessCount();
 
@@ -1399,7 +1402,8 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 	 * @param employee The employee for whom bulk leave entitlements are assigned.
 	 * @param entitlements The list of leave entitlements assigned.
 	 */
-	protected void addBulkLeaveEntitlementsTimeLineRecords(Employee employee, List<LeaveEntitlement> entitlements) {
+	protected void addBulkLeaveEntitlementsTimeLineRecords(Employee employee, List<LeaveEntitlement> entitlements,
+			User currentUser) {
 		// This feature is available only for Pro tenants.
 	}
 

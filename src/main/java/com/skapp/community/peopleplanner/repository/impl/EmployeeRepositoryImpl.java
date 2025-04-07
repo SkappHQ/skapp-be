@@ -37,6 +37,7 @@ import com.skapp.community.peopleplanner.type.EmploymentAllocation;
 import com.skapp.community.peopleplanner.type.EmploymentType;
 import com.skapp.community.peopleplanner.type.Gender;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -100,6 +101,8 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		List<Predicate> predicates = new ArrayList<>();
 
+		predicates.add(criteriaBuilder.notEqual(root.get(Employee_.ACCOUNT_STATUS), AccountStatus.DELETED));
+
 		if (employeeFilterDto.getRole() != null && !employeeFilterDto.getRole().isEmpty()) {
 			predicates
 				.add(root.get(Employee_.JOB_FAMILY).get(JobFamily_.JOB_FAMILY_ID).in(employeeFilterDto.getRole()));
@@ -147,6 +150,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 			Predicate rolePredicate = criteriaBuilder.or(attendanceRolePredicate, peopleRolePredicate,
 					leaveRolePredicate);
 			predicates.add(rolePredicate);
+			predicates.add(criteriaBuilder.equal(roleJoin.get(EmployeeRole_.IS_SUPER_ADMIN), false));
 		}
 
 		Predicate[] predArray = new Predicate[predicates.size()];
@@ -1102,6 +1106,42 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		return new PrimarySecondaryOrTeamSupervisorResponseDto((Boolean) result[0], (Boolean) result[1],
 				(Boolean) result[2]);
+	}
+
+	@Override
+	public PrimarySecondaryOrTeamSupervisorResponseDto isPrimaryOrSecondarySupervisor(Employee employee) {
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Object[]> criteriaQuery = criteriaBuilder.createQuery(Object[].class);
+		Root<EmployeeManager> root = criteriaQuery.from(EmployeeManager.class);
+
+		Predicate managerPredicate = criteriaBuilder.equal(root.get(EmployeeManager_.manager).get(Employee_.employeeId),
+				employee.getEmployeeId());
+
+		criteriaQuery.where(managerPredicate);
+
+		Expression<Boolean> isPrimaryManager = criteriaBuilder.equal(root.get(EmployeeManager_.managerType),
+				ManagerType.PRIMARY);
+
+		Expression<Boolean> isSecondaryManager = criteriaBuilder.equal(root.get(EmployeeManager_.managerType),
+				ManagerType.SECONDARY);
+
+		criteriaQuery.multiselect(
+				criteriaBuilder.function("MAX", Boolean.class,
+						criteriaBuilder.selectCase().when(isPrimaryManager, true).otherwise(false)),
+				criteriaBuilder.function("MAX", Boolean.class,
+						criteriaBuilder.selectCase().when(isSecondaryManager, true).otherwise(false)),
+				criteriaBuilder.literal(false));
+
+		TypedQuery<Object[]> query = entityManager.createQuery(criteriaQuery);
+
+		try {
+			Object[] result = query.getSingleResult();
+			return new PrimarySecondaryOrTeamSupervisorResponseDto((Boolean) result[0], (Boolean) result[1],
+					(Boolean) result[2]);
+		}
+		catch (NoResultException e) {
+			return new PrimarySecondaryOrTeamSupervisorResponseDto(false, false, false);
+		}
 	}
 
 	@Override
