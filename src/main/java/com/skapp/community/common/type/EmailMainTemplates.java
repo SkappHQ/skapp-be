@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum EmailMainTemplates {
+public enum EmailMainTemplates implements EmailTemplates {
 
 	MAIN_TEMPLATE_V1("main-template-v1");
 

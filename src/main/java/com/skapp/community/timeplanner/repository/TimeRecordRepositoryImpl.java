@@ -301,7 +301,7 @@ public class TimeRecordRepositoryImpl implements TimeRecordRepository {
 					criteriaBuilder.or(isAdminPredicate, employeeJoin.get(Employee_.employeeId).in(employeesSubquery)));
 		}
 		else {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeJoin.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeJoin.join(Employee_.employeeTeams);
 			predicates.add(criteriaBuilder.and(criteriaBuilder.not(isAdminPredicate),
 					employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamsFilter)));
 		}

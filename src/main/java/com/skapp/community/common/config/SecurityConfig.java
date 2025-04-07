@@ -4,7 +4,6 @@ import com.skapp.community.common.component.AuthEntryPoint;
 import com.skapp.community.common.component.ExceptionLoggingFilter;
 import com.skapp.community.common.component.JwtAuthFilter;
 import com.skapp.community.common.constant.AuthConstants;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -37,16 +36,12 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @ConditionalOnMissingBean(name = "EPSecurityConfig")
 public class SecurityConfig {
 
-	@NonNull
 	private final JwtAuthFilter jwtAuthFilter;
 
-	@NonNull
 	private final UserDetailsService userDetailsService;
 
-	@NonNull
 	private final AuthEntryPoint authEntryPoint;
 
-	@NonNull
 	private final ExceptionLoggingFilter exceptionLoggingFilter;
 
 	@Bean
@@ -70,6 +65,10 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+		authProvider.setUserDetailsService(userDetailsService);
+		authProvider.setPasswordEncoder(passwordEncoder());
+
 		http.cors(Customizer.withDefaults());
 		http.csrf(AbstractHttpConfigurer::disable)
 			.sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))

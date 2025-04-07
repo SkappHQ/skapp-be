@@ -1,6 +1,6 @@
 package com.skapp.community.peopleplanner.model;
 
-import com.skapp.community.peopleplanner.type.EmployeeType;
+import com.skapp.community.peopleplanner.type.EmploymentType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,7 +31,7 @@ public class EmployeeProgression {
 
 	@Column(name = "employee_type", columnDefinition = "varchar(255)")
 	@Enumerated(EnumType.STRING)
-	private EmployeeType employeeType;
+	private EmploymentType employmentType;
 
 	@Column(name = "start_date")
 	private LocalDate startDate;
@@ -51,5 +51,16 @@ public class EmployeeProgression {
 
 	@Column(name = "job_title_id")
 	private Long jobTitleId;
+
+	public EmployeeProgression(EmployeeProgression employeeProgression) {
+		this.progressionId = employeeProgression.progressionId;
+		this.employmentType = employeeProgression.employmentType;
+		this.startDate = employeeProgression.startDate;
+		this.endDate = employeeProgression.endDate;
+		this.isCurrent = employeeProgression.isCurrent;
+		this.jobFamilyId = employeeProgression.jobFamilyId;
+		this.jobTitleId = employeeProgression.jobTitleId;
+		this.employee = employeeProgression.employee;
+	}
 
 }

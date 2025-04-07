@@ -2,6 +2,9 @@ package com.skapp.community.common.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.skapp.community.common.constant.CommonConstants;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.mapper.CommonMapper;
@@ -23,13 +26,17 @@ import com.skapp.community.common.type.OrganizationConfigType;
 import com.skapp.community.common.util.MessageUtil;
 import com.skapp.community.leaveplanner.service.LeaveCycleService;
 import com.skapp.community.leaveplanner.service.LeaveTypeService;
+import com.skapp.community.timeplanner.model.TimeConfig;
+import com.skapp.community.timeplanner.repository.TimeConfigDao;
 import com.skapp.community.timeplanner.service.AttendanceConfigService;
-import com.skapp.community.timeplanner.service.TimeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static com.skapp.community.common.util.Validation.isValidOrganizationTimeZone;
@@ -50,8 +57,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 
 	private final LeaveTypeService leaveTypeService;
 
-	private final TimeService timeService;
-
 	private final LeaveCycleService leaveCycleService;
 
 	private final UserService userService;
@@ -61,6 +66,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 	private final ObjectMapper objectMapper;
 
 	private final EncryptionDecryptionService encryptionDecryptionService;
+
+	private final TimeConfigDao timeConfigDao;
 
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
@@ -106,15 +113,16 @@ public class OrganizationServiceImpl implements OrganizationService {
 		log.info("saveEmailServerConfigs: execution started");
 
 		Optional<OrganizationConfig> existingConfigOptional = organizationConfigDao
-			.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.EMAIL_CONFIGS);
+			.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.EMAIL_CONFIGS.name());
 
 		try {
 			emailServerRequestDto.setAppPassword(
 					encryptionDecryptionService.encrypt(emailServerRequestDto.getAppPassword(), encryptSecret));
 
 			String updatedJsonEmailServiceConfigs = objectMapper.writeValueAsString(emailServerRequestDto);
-			OrganizationConfig organizationConfig = existingConfigOptional.orElseGet(
-					() -> new OrganizationConfig(OrganizationConfigType.EMAIL_CONFIGS, updatedJsonEmailServiceConfigs));
+			OrganizationConfig organizationConfig = existingConfigOptional
+				.orElseGet(() -> new OrganizationConfig(OrganizationConfigType.EMAIL_CONFIGS.name(),
+						updatedJsonEmailServiceConfigs));
 
 			organizationConfig.setOrganizationConfigValue(updatedJsonEmailServiceConfigs);
 			organizationConfigDao.save(organizationConfig);
@@ -137,7 +145,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 		log.info("getEmailServiceConfigs: execution started");
 
 		Optional<OrganizationConfig> configOptional = organizationConfigDao
-			.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.EMAIL_CONFIGS);
+			.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.EMAIL_CONFIGS.name());
 
 		if (configOptional.isEmpty()) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EMAIL_CONFIG_NOT_FOUND);
@@ -213,12 +221,54 @@ public class OrganizationServiceImpl implements OrganizationService {
 		log.info("setDefaultOrganizationConfigs: execution started");
 
 		attendanceConfigService.setDefaultAttendanceConfig();
-		timeService.getDefaultTimeConfigs();
+		getDefaultTimeConfigs();
 		leaveTypeService.createDefaultLeaveType();
 		leaveCycleService.setLeaveCycleDefaultConfigs();
 		saveEmailServerConfigs(new EmailServerRequestDto(null, null, null, null, false));
 
 		log.info("setDefaultOrganizationConfigs: execution ended");
+	}
+
+	@Override
+	public String getOrganizationTimeZone() {
+		return organizationDao.findTopByOrderByOrganizationIdDesc()
+			.map(Organization::getOrganizationTimeZone)
+			.orElse("UTC");
+	}
+
+	public void getDefaultTimeConfigs() {
+		List<TimeConfig> timeConfigs = new ArrayList<>();
+		List<DayOfWeek> daysOfWeek = List.of(DayOfWeek.values());
+		daysOfWeek.forEach(dayOfWeek -> {
+			TimeConfig newTimeConfig = new TimeConfig();
+			newTimeConfig.setDay(dayOfWeek);
+
+			ArrayNode arrayNode = objectMapper.createArrayNode();
+			ObjectNode objectNodeMorning = objectMapper.createObjectNode();
+			ObjectNode objectNodeEvening = objectMapper.createObjectNode();
+
+			objectNodeMorning.put(CommonConstants.DEFAULT_TIME_CONFIG_KEY_HOUR,
+					CommonConstants.DEFAULT_TIME_CONFIG_VALUE_HOUR);
+			objectNodeMorning.put(CommonConstants.DEFAULT_TIME_CONFIG_KEY_TIME_BLOCK,
+					CommonConstants.DEFAULT_TIME_CONFIG_VALUE_MORNING);
+			objectNodeEvening.put(CommonConstants.DEFAULT_TIME_CONFIG_KEY_HOUR,
+					CommonConstants.DEFAULT_TIME_CONFIG_VALUE_HOUR);
+			objectNodeEvening.put(CommonConstants.DEFAULT_TIME_CONFIG_KEY_TIME_BLOCK,
+					CommonConstants.DEFAULT_TIME_CONFIG_VALUE_EVENING);
+
+			// Add objects to the array node
+			arrayNode.add(objectNodeMorning);
+			arrayNode.add(objectNodeEvening);
+			newTimeConfig.setTimeBlocks(arrayNode);
+			newTimeConfig.setTotalHours(CommonConstants.DEFAULT_TIME_CONFIG_VALUE_TOTAL_HOUR);
+			newTimeConfig.setStartHour(CommonConstants.DEFAULT_TIME_CONFIG_VALUE_START_HOUR);
+			newTimeConfig.setStartMinute(CommonConstants.DEFAULT_TIME_CONFIG_VALUE_START_MINUTE);
+			newTimeConfig.setIsWeekStartDay(dayOfWeek.name().equals(DayOfWeek.MONDAY.name()));
+			timeConfigs.add(newTimeConfig);
+		});
+
+		timeConfigDao.saveAll(timeConfigs);
+
 	}
 
 }

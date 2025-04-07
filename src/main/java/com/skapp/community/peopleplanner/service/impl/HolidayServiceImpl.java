@@ -4,6 +4,7 @@ import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.payload.response.BulkStatusSummary;
 import com.skapp.community.common.payload.response.PageDto;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
+import com.skapp.community.common.service.OrganizationService;
 import com.skapp.community.common.util.CommonModuleUtils;
 import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.common.util.MessageUtil;
@@ -35,7 +36,6 @@ import com.skapp.community.peopleplanner.type.BulkRecordStatus;
 import com.skapp.community.peopleplanner.type.HolidayDuration;
 import com.skapp.community.timeplanner.model.TimeConfig;
 import com.skapp.community.timeplanner.repository.TimeConfigDao;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -60,35 +60,27 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public class HolidayServiceImpl implements HolidayService {
 
-	@NonNull
 	private final MessageUtil messageUtil;
 
-	@NonNull
 	private final PeopleMapper peopleMapper;
 
-	@NonNull
 	private final HolidayDao holidayDao;
 
-	@NonNull
 	private final PageTransformer pageTransformer;
 
-	@NonNull
 	private final TimeConfigDao timeConfigDao;
 
-	@NonNull
 	private final LeaveRequestDao leaveRequestDao;
 
-	@NonNull
 	private final LeaveRequestEntitlementDao leaveRequestEntitlementDao;
 
-	@NonNull
 	private final LeaveEntitlementDao leaveEntitlementDao;
 
-	@NonNull
 	private final PeopleEmailService peopleEmailService;
 
-	@NonNull
 	private final PeopleNotificationService peopleNotificationService;
+
+	private final OrganizationService organizationService;
 
 	@Override
 	public ResponseEntityDto getAllHolidays(HolidayFilterDto holidayFilterDto) {
@@ -176,7 +168,8 @@ public class HolidayServiceImpl implements HolidayService {
 		List<TimeConfig> workingDays = timeConfigDao.findAll();
 
 		List<HolidayResponseDto> holidayResponseDtos = new ArrayList<>();
-		if (!workingDays.isEmpty() && !CommonModuleUtils.checkIfDayIsWorkingDay(date, workingDays)) {
+		if (!workingDays.isEmpty() && !CommonModuleUtils.checkIfDayIsWorkingDay(date, workingDays,
+				organizationService.getOrganizationTimeZone())) {
 			HolidayResponseDto holiday = new HolidayResponseDto();
 			holiday.setDate(date);
 			holiday.setName("Day Off!");

@@ -1,6 +1,6 @@
 package com.skapp.community.peopleplanner.model;
 
-import com.skapp.community.peopleplanner.type.EmergencyRelationship;
+import com.skapp.community.peopleplanner.type.RelationshipTypes;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -32,7 +32,7 @@ public class EmployeeEmergency {
 
 	@Column(name = "relationship", columnDefinition = "varchar(255)")
 	@Enumerated(EnumType.STRING)
-	private EmergencyRelationship emergencyRelationship;
+	private RelationshipTypes emergencyRelationship;
 
 	@Column(name = "contact_no", length = 15)
 	private String contactNo;

@@ -24,6 +24,7 @@ import com.skapp.community.peopleplanner.model.Employee_;
 import com.skapp.community.peopleplanner.model.JobFamily_;
 import com.skapp.community.peopleplanner.model.Team;
 import com.skapp.community.peopleplanner.model.Team_;
+import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeCountDto;
@@ -32,10 +33,11 @@ import com.skapp.community.peopleplanner.payload.response.EmployeeTeamDto;
 import com.skapp.community.peopleplanner.payload.response.PrimarySecondaryOrTeamSupervisorResponseDto;
 import com.skapp.community.peopleplanner.repository.EmployeeRepository;
 import com.skapp.community.peopleplanner.type.AccountStatus;
-import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
+import com.skapp.community.peopleplanner.type.EmploymentType;
 import com.skapp.community.peopleplanner.type.Gender;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -52,7 +54,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -61,7 +63,7 @@ import java.util.Optional;
 
 import static com.skapp.community.peopleplanner.util.PeopleUtil.getSearchString;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class EmployeeRepositoryImpl implements EmployeeRepository {
 
@@ -99,13 +101,15 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		List<Predicate> predicates = new ArrayList<>();
 
+		predicates.add(criteriaBuilder.notEqual(root.get(Employee_.ACCOUNT_STATUS), AccountStatus.DELETED));
+
 		if (employeeFilterDto.getRole() != null && !employeeFilterDto.getRole().isEmpty()) {
 			predicates
 				.add(root.get(Employee_.JOB_FAMILY).get(JobFamily_.JOB_FAMILY_ID).in(employeeFilterDto.getRole()));
 		}
 
 		if (employeeFilterDto.getTeam() != null && !employeeFilterDto.getTeam().isEmpty()) {
-			Join<Employee, EmployeeTeam> employeeTeam = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeam = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeam.get(EmployeeTeam_.TEAM).get(Team_.TEAM_ID).in(employeeFilterDto.getTeam()));
 		}
 
@@ -119,7 +123,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		}
 
 		if (employeeFilterDto.getEmploymentTypes() != null && !employeeFilterDto.getEmploymentTypes().isEmpty()) {
-			predicates.add(root.get(Employee_.EMPLOYEE_TYPE).in(employeeFilterDto.getEmploymentTypes()));
+			predicates.add(root.get(Employee_.EMPLOYMENT_TYPE).in(employeeFilterDto.getEmploymentTypes()));
 		}
 
 		if (employeeFilterDto.getAccountStatus() != null && !employeeFilterDto.getAccountStatus().isEmpty()) {
@@ -146,6 +150,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 			Predicate rolePredicate = criteriaBuilder.or(attendanceRolePredicate, peopleRolePredicate,
 					leaveRolePredicate);
 			predicates.add(rolePredicate);
+			predicates.add(criteriaBuilder.equal(roleJoin.get(EmployeeRole_.IS_SUPER_ADMIN), false));
 		}
 
 		Predicate[] predArray = new Predicate[predicates.size()];
@@ -181,12 +186,106 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 	}
 
 	@Override
+	public List<Employee> findEmployeesForExport(EmployeeExportFilterDto employeeExportFilterDto) {
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
+		Root<Employee> root = criteriaQuery.from(Employee.class);
+
+		root.fetch(Employee_.personalInfo, JoinType.LEFT);
+		root.fetch(Employee_.employeeEmergencies, JoinType.LEFT);
+		Join<Employee, User> userJoin = root.join(Employee_.user);
+		Join<Employee, EmployeePersonalInfo> personalInfoJoin = root.join(Employee_.personalInfo, JoinType.LEFT);
+		Join<Employee, EmployeeRole> roleJoin = root.join((Employee_.employeeRole));
+
+		List<Predicate> predicates = new ArrayList<>();
+
+		if (employeeExportFilterDto.getRole() != null && !employeeExportFilterDto.getRole().isEmpty()) {
+			predicates.add(
+					root.get(Employee_.JOB_FAMILY).get(JobFamily_.JOB_FAMILY_ID).in(employeeExportFilterDto.getRole()));
+		}
+
+		if (employeeExportFilterDto.getTeam() != null && !employeeExportFilterDto.getTeam().isEmpty()) {
+			Join<Employee, EmployeeTeam> employeeTeam = root.join(Employee_.employeeTeams);
+			predicates
+				.add(employeeTeam.get(EmployeeTeam_.TEAM).get(Team_.TEAM_ID).in(employeeExportFilterDto.getTeam()));
+		}
+
+		if (employeeExportFilterDto.getNationality() != null && !employeeExportFilterDto.getNationality().isEmpty()) {
+			predicates.add(personalInfoJoin.get(EmployeePersonalInfo_.NATIONALITY)
+				.in(employeeExportFilterDto.getNationality()));
+		}
+
+		if (employeeExportFilterDto.getGender() != null) {
+			predicates.add(criteriaBuilder.equal(root.get(Employee_.GENDER), employeeExportFilterDto.getGender()));
+		}
+
+		if (employeeExportFilterDto.getEmploymentTypes() != null
+				&& !employeeExportFilterDto.getEmploymentTypes().isEmpty()) {
+			predicates.add(root.get(Employee_.EMPLOYMENT_TYPE).in(employeeExportFilterDto.getEmploymentTypes()));
+		}
+
+		if (employeeExportFilterDto.getAccountStatus() != null
+				&& !employeeExportFilterDto.getAccountStatus().isEmpty()) {
+			predicates.add(root.get(Employee_.ACCOUNT_STATUS).in(employeeExportFilterDto.getAccountStatus()));
+		}
+
+		if (employeeExportFilterDto.getEmploymentAllocations() != null
+				&& !employeeExportFilterDto.getEmploymentAllocations().isEmpty()) {
+			predicates
+				.add(root.get(Employee_.EMPLOYMENT_ALLOCATION).in(employeeExportFilterDto.getEmploymentAllocations()));
+		}
+
+		if (employeeExportFilterDto.getSearchKeyword() != null
+				&& !employeeExportFilterDto.getSearchKeyword().isEmpty()) {
+			predicates
+				.add(findByEmailName(employeeExportFilterDto.getSearchKeyword(), criteriaBuilder, root, userJoin));
+		}
+
+		if (employeeExportFilterDto.getPermissions() != null && !employeeExportFilterDto.getPermissions().isEmpty()) {
+			Predicate attendanceRolePredicate = roleJoin.get(EmployeeRole_.ATTENDANCE_ROLE)
+				.in(employeeExportFilterDto.getPermissions());
+			Predicate peopleRolePredicate = roleJoin.get(EmployeeRole_.PEOPLE_ROLE)
+				.in(employeeExportFilterDto.getPermissions());
+			Predicate leaveRolePredicate = roleJoin.get(EmployeeRole_.LEAVE_ROLE)
+				.in(employeeExportFilterDto.getPermissions());
+
+			Predicate rolePredicate = criteriaBuilder.or(attendanceRolePredicate, peopleRolePredicate,
+					leaveRolePredicate);
+			predicates.add(rolePredicate);
+		}
+
+		criteriaQuery.where(predicates.toArray(new Predicate[0]));
+
+		if (employeeExportFilterDto.getSearchKeyword() != null
+				&& !employeeExportFilterDto.getSearchKeyword().isEmpty()) {
+			List<Order> orderList = new ArrayList<>();
+			Order sortingOrder = criteriaBuilder.asc(criteriaBuilder.selectCase()
+				.when(criteriaBuilder.like(root.get(Employee_.FIRST_NAME),
+						getSearchString(employeeExportFilterDto.getSearchKeyword())), 1)
+				.when(criteriaBuilder.like(root.get(Employee_.LAST_NAME),
+						getSearchString(employeeExportFilterDto.getSearchKeyword())), 2)
+				.when(criteriaBuilder.like(userJoin.get(User_.EMAIL),
+						getSearchString(employeeExportFilterDto.getSearchKeyword())), 3)
+				.otherwise(4));
+			orderList.add(sortingOrder);
+			criteriaQuery.orderBy(orderList);
+		}
+		else {
+			criteriaQuery.distinct(true);
+		}
+
+		TypedQuery<Employee> query = entityManager.createQuery(criteriaQuery);
+
+		return query.getResultList();
+	}
+
+	@Override
 	public List<EmployeeTeamDto> findTeamsByEmployees(List<Long> employeeIDs) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 
 		CriteriaQuery<EmployeeTeamDto> criteriaQuery = criteriaBuilder.createQuery(EmployeeTeamDto.class);
 		Root<Employee> root = criteriaQuery.from(Employee.class);
-		Join<Employee, EmployeeTeam> employeeTeam = root.join(Employee_.TEAMS);
+		Join<Employee, EmployeeTeam> employeeTeam = root.join(Employee_.employeeTeams);
 		Join<EmployeeTeam, Team> team = employeeTeam.join(EmployeeTeam_.TEAM);
 
 		List<Predicate> predicates = new ArrayList<>();
@@ -206,7 +305,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		CriteriaQuery<EmployeeManagerDto> criteriaQuery = criteriaBuilder.createQuery(EmployeeManagerDto.class);
 		Root<Employee> root = criteriaQuery.from(Employee.class);
-		Join<Employee, EmployeeManager> managers = root.join(Employee_.EMPLOYEES);
+		Join<Employee, EmployeeManager> managers = root.join(Employee_.employeeManagers);
 		Join<EmployeeManager, Employee> manEmp = managers.join(EmployeeManager_.MANAGER);
 		Join<Employee, User> userJoin = root.join(Employee_.user);
 
@@ -364,10 +463,20 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		Root<Employee> totalEmployeeRoot = totalEmployeesSubquery.from(Employee.class);
 		Join<Employee, User> userJoin = totalEmployeeRoot.join(Employee_.user);
 
+		Subquery<Long> employeesOnLeaveSubquery = criteriaQuery.subquery(Long.class);
+		Root<LeaveRequest> leaveRoot = employeesOnLeaveSubquery.from(LeaveRequest.class);
+		employeesOnLeaveSubquery.select(leaveRoot.get(LeaveRequest_.employee).get(Employee_.employeeId))
+			.where(criteriaBuilder.and(
+					criteriaBuilder.lessThanOrEqualTo(leaveRoot.get(LeaveRequest_.startDate), filterDto.getDate()),
+					criteriaBuilder.greaterThanOrEqualTo(leaveRoot.get(LeaveRequest_.endDate), filterDto.getDate()),
+					leaveRoot.get(LeaveRequest_.status).in(LeaveRequestStatus.APPROVED, LeaveRequestStatus.PENDING)));
+
 		if (filterDto.getTeamIds().contains(-1L)) {
 			if (isLeaveAdmin) {
 				totalEmployeesSubquery.select(criteriaBuilder.countDistinct(totalEmployeeRoot))
-					.where(criteriaBuilder.equal(userJoin.get(User_.isActive), true));
+					.where(criteriaBuilder.and(criteriaBuilder.equal(userJoin.get(User_.isActive), true),
+							criteriaBuilder
+								.not(totalEmployeeRoot.get(Employee_.employeeId).in(employeesOnLeaveSubquery))));
 			}
 			else {
 				Subquery<Long> managedEmployeesSubquery = criteriaQuery.subquery(Long.class);
@@ -398,19 +507,21 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 				totalEmployeesSubquery.select(criteriaBuilder.countDistinct(totalEmployeeRoot))
 					.where(criteriaBuilder.and(criteriaBuilder.equal(userJoin.get(User_.isActive), true),
-							totalEmployeeRoot.get(Employee_.employeeId).in(employeesSubquery)));
+							totalEmployeeRoot.get(Employee_.employeeId).in(employeesSubquery), criteriaBuilder
+								.not(totalEmployeeRoot.get(Employee_.employeeId).in(employeesOnLeaveSubquery))));
 			}
 		}
 		else {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = employee.join(Employee_.teams);
-			Join<Employee, EmployeeTeam> totalEmployeeTeamJoin = totalEmployeeRoot.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = employee.join(Employee_.employeeTeams);
+			Join<Employee, EmployeeTeam> totalEmployeeTeamJoin = totalEmployeeRoot.join(Employee_.employeeTeams);
 
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(filterDto.getTeamIds()));
 
 			totalEmployeesSubquery.select(criteriaBuilder.countDistinct(totalEmployeeRoot))
 				.where(criteriaBuilder.and(
 						totalEmployeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(filterDto.getTeamIds()),
-						criteriaBuilder.equal(userJoin.get(User_.isActive), true)));
+						criteriaBuilder.equal(userJoin.get(User_.isActive), true),
+						criteriaBuilder.not(totalEmployeeRoot.get(Employee_.employeeId).in(employeesOnLeaveSubquery))));
 		}
 
 		if (filterDto.getDate() != null) {
@@ -422,6 +533,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		predicates.add(root.get(LeaveRequest_.STATUS).in(LeaveRequestStatus.APPROVED, LeaveRequestStatus.PENDING));
 
 		criteriaQuery.where(predicates.toArray(new Predicate[0]));
+
 		criteriaQuery.multiselect(criteriaBuilder.countDistinct(employee), totalEmployeesSubquery);
 
 		return entityManager.createQuery(criteriaQuery).getSingleResult();
@@ -436,7 +548,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		List<Predicate> predicates = new ArrayList<>();
 
-		Join<Employee, EmployeeManager> empJoin = root.join(Employee_.employees);
+		Join<Employee, EmployeeManager> empJoin = root.join(Employee_.employeeManagers);
 		Join<EmployeeManager, Employee> empMan = empJoin.join(EmployeeManager_.manager);
 		Join<Employee, User> userJoin = root.join(Employee_.user);
 		predicates.add(criteriaBuilder.notEqual(userJoin.get(User_.isActive), false));
@@ -484,7 +596,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		List<Predicate> predicates = new ArrayList<>();
 
-		Join<Employee, EmployeeManager> managers = root.join(Employee_.managers);
+		Join<Employee, EmployeeManager> managers = root.join(Employee_.employeeManagers);
 		Join<EmployeeManager, Employee> employeeJoin = managers.join(EmployeeManager_.employee);
 		Join<Employee, User> userJoin = root.join(Employee_.user);
 
@@ -547,7 +659,8 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		}
 		else if (filterDto.getTeamIds() != null && !filterDto.getTeamIds().isEmpty()) {
 			// Filter by specific team IDs
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(LeaveRequest_.employee).join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(LeaveRequest_.employee)
+				.join(Employee_.employeeTeams);
 			predicates.add(criteriaBuilder.and(criteriaBuilder.not(isAdminPredicate),
 					employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(filterDto.getTeamIds())));
 		}
@@ -580,7 +693,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		List<Predicate> predicates = new ArrayList<>();
 
-		Join<Employee, EmployeeManager> managers = root.join(Employee_.managers);
+		Join<Employee, EmployeeManager> managers = root.join(Employee_.employeeManagers);
 		Join<EmployeeManager, Employee> manEmp = managers.join(EmployeeManager_.employee);
 		Join<Employee, User> userJoin = root.join(Employee_.user);
 		predicates.add(criteriaBuilder.notEqual(userJoin.get(User_.isActive), false));
@@ -612,7 +725,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		predicates.add(criteriaBuilder.equal(root.get(Employee_.accountStatus), accountStatus));
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -652,7 +765,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		}
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -682,7 +795,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		sumPredicates.add(criteriaBuilder.equal(sumUserJoin.get(User_.isActive), true));
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> sumEmployeeTeamJoin = sumRoot.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> sumEmployeeTeamJoin = sumRoot.join(Employee_.employeeTeams);
 			sumPredicates.add(sumEmployeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -712,7 +825,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		countPredicates.add(criteriaBuilder.equal(countUserJoin.get(User_.isActive), true));
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> countEmployeeTeamJoin = countRoot.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> countEmployeeTeamJoin = countRoot.join(Employee_.employeeTeams);
 			countPredicates.add(countEmployeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -757,7 +870,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		predicates.add(criteriaBuilder.between(terminationDate, startDate, endDate));
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -787,7 +900,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		predicates.add(criteriaBuilder.lessThanOrEqualTo(createdDateAsLocalDate, endDate));
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(new ArrayList<>(teamIds)));
 		}
 
@@ -818,7 +931,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		predicates.add(criteriaBuilder.equal(root.get(Employee_.GENDER), gender));
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -831,7 +944,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 	}
 
 	@Override
-	public Long countByEmploymentTypeAndEmploymentAllocationAndTeams(EmployeeType employmentType,
+	public Long countByEmploymentTypeAndEmploymentAllocationAndTeams(EmploymentType employmentType,
 			EmploymentAllocation employmentAllocation, List<Long> teamIds) {
 		if (teamIds != null && teamIds.isEmpty()) {
 			return 0L;
@@ -847,7 +960,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		predicates.add(criteriaBuilder.equal(userJoin.get(User_.isActive), true));
 
 		if (employmentType != null) {
-			predicates.add(criteriaBuilder.equal(root.get(Employee_.EMPLOYEE_TYPE), employmentType));
+			predicates.add(criteriaBuilder.equal(root.get(Employee_.EMPLOYMENT_TYPE), employmentType));
 		}
 
 		if (employmentAllocation != null) {
@@ -855,7 +968,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		}
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -891,7 +1004,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		}
 
 		if (teamId != null) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(criteriaBuilder.equal(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId), teamId));
 		}
 
@@ -920,7 +1033,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		List<Predicate> predicates = new ArrayList<>();
 
-		Join<Employee, EmployeeManager> empJoin = root.join(Employee_.employees);
+		Join<Employee, EmployeeManager> empJoin = root.join(Employee_.employeeManagers);
 		Join<EmployeeManager, Employee> empMan = empJoin.join(EmployeeManager_.manager);
 		Join<Employee, User> userJoin = root.join(Employee_.user);
 		predicates.add(criteriaBuilder.notEqual(userJoin.get(User_.isActive), false));
@@ -995,6 +1108,47 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 				(Boolean) result[2]);
 	}
 
+	@Override
+	public PrimarySecondaryOrTeamSupervisorResponseDto isPrimaryOrSecondarySupervisor(Employee employee) {
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Object[]> criteriaQuery = criteriaBuilder.createQuery(Object[].class);
+		Root<EmployeeManager> root = criteriaQuery.from(EmployeeManager.class);
+
+		Predicate managerPredicate = criteriaBuilder.equal(root.get(EmployeeManager_.manager).get(Employee_.employeeId),
+				employee.getEmployeeId());
+
+		criteriaQuery.where(managerPredicate);
+
+		Expression<Boolean> isPrimaryManager = criteriaBuilder.equal(root.get(EmployeeManager_.managerType),
+				ManagerType.PRIMARY);
+
+		Expression<Boolean> isSecondaryManager = criteriaBuilder.equal(root.get(EmployeeManager_.managerType),
+				ManagerType.SECONDARY);
+
+		criteriaQuery.multiselect(
+				criteriaBuilder.function("MAX", Boolean.class,
+						criteriaBuilder.selectCase().when(isPrimaryManager, true).otherwise(false)),
+				criteriaBuilder.function("MAX", Boolean.class,
+						criteriaBuilder.selectCase().when(isSecondaryManager, true).otherwise(false)),
+				criteriaBuilder.literal(false));
+
+		TypedQuery<Object[]> query = entityManager.createQuery(criteriaQuery);
+
+		try {
+			Object[] result = query.getSingleResult();
+			return new PrimarySecondaryOrTeamSupervisorResponseDto((Boolean) result[0], (Boolean) result[1],
+					(Boolean) result[2]);
+		}
+		catch (NoResultException e) {
+			return new PrimarySecondaryOrTeamSupervisorResponseDto(false, false, false);
+		}
+	}
+
+	@Override
+	public Long findAllActiveAndPendingEmployeesCount() {
+		return 0L;
+	}
+
 	private Predicate findByEmailName(String keyword, CriteriaBuilder criteriaBuilder, Root<Employee> employee,
 			Join<Employee, User> userJoin) {
 		keyword = getSearchString(keyword);
@@ -1015,7 +1169,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		List<Predicate> predicates = new ArrayList<>();
 
-		Join<Employee, EmployeeManager> empJoin = root.join(Employee_.employees);
+		Join<Employee, EmployeeManager> empJoin = root.join(Employee_.employeeManagers);
 		Join<EmployeeManager, Employee> empMan = empJoin.join(EmployeeManager_.manager);
 		Join<Employee, User> userJoin = root.join(Employee_.user);
 

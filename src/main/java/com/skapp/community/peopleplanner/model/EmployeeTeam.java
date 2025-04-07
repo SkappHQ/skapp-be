@@ -36,4 +36,11 @@ public class EmployeeTeam {
 	@Column(name = "is_supervisor", nullable = false)
 	private Boolean isSupervisor;
 
+	public EmployeeTeam(EmployeeTeam employeeTeam) {
+		this.id = employeeTeam.id;
+		this.team = employeeTeam.team;
+		this.isSupervisor = employeeTeam.isSupervisor;
+		this.employee = employeeTeam.employee;
+	}
+
 }

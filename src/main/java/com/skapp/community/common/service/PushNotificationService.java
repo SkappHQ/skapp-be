@@ -4,6 +4,6 @@ import com.skapp.community.common.model.Notification;
 
 public interface PushNotificationService {
 
-	public void sendNotification(Long userId, Notification notification);
+	void sendNotification(Long userId, Notification notification, String title);
 
 }

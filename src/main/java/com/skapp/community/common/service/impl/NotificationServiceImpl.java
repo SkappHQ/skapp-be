@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.skapp.community.common.constant.CommonConstants;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.model.Notification;
@@ -14,6 +15,7 @@ import com.skapp.community.common.payload.response.PageDto;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.repository.NotificationDao;
 import com.skapp.community.common.service.NotificationService;
+import com.skapp.community.common.service.OrganizationService;
 import com.skapp.community.common.service.PushNotificationService;
 import com.skapp.community.common.service.UserService;
 import com.skapp.community.common.type.EmailBodyTemplates;
@@ -23,7 +25,6 @@ import com.skapp.community.common.util.transformer.PageTransformer;
 import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.repository.EmployeeDao;
 import jakarta.transaction.Transactional;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
@@ -35,6 +36,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -48,21 +52,19 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
-	@NonNull
 	private final PushNotificationService pushNotificationService;
 
-	@NonNull
 	private final NotificationDao notificationDao;
 
-	@NonNull
 	private final UserService userService;
 
-	@NonNull
 	private final PageTransformer pageTransformer;
 
 	private static final String NOTIFICATION_LANGUAGE = "en";
 
 	private final EmployeeDao employeeDao;
+
+	private final OrganizationService organizationService;
 
 	@Override
 	public void createNotification(Employee employee, String resourceId, NotificationType notificationType,
@@ -73,12 +75,18 @@ public class NotificationServiceImpl implements NotificationService {
 			Notification notification = new Notification();
 			notification.setEmployee(employee);
 			notification.setResourceId(resourceId);
-			notification.setBody(getNotificationBody(emailBodyTemplates, dynamicFields, notificationCategory));
+
+			Map<String, String> notificationContent = getNotificationContent(emailBodyTemplates, dynamicFields,
+					notificationCategory);
+			String title = notificationContent.get(CommonConstants.NOTIFICATION_TITLE);
+			String body = notificationContent.get(CommonConstants.NOTIFICATION_MESSAGE);
+
+			notification.setBody(body);
 			notification.setIsViewed(false);
 			notification.setNotificationType(notificationType);
 			notificationDao.save(notification);
 
-			pushNotificationService.sendNotification(notification.getEmployee().getEmployeeId(), notification);
+			pushNotificationService.sendNotification(notification.getEmployee().getEmployeeId(), notification, title);
 		}
 		catch (Exception e) {
 			log.error("createNotification: ", e);
@@ -88,9 +96,9 @@ public class NotificationServiceImpl implements NotificationService {
 		log.info("createNotification: execution ended");
 	}
 
-	private String getNotificationBody(EmailBodyTemplates emailBodyTemplates, Object dynamicFields,
+	private Map<String, String> getNotificationContent(EmailBodyTemplates emailBodyTemplates, Object dynamicFields,
 			NotificationCategory notificationCategory) {
-		String templateMessage = getNotificationMessageFromNotificationTemplates(emailBodyTemplates,
+		Map<String, String> contentMap = getNotificationContentFromNotificationTemplates(emailBodyTemplates,
 				notificationCategory);
 		Map<String, String> placeholders = convertObjectToMap(dynamicFields);
 		Map<String, Map<String, Map<String, String>>> translations = loadEnumTranslations();
@@ -105,7 +113,14 @@ public class NotificationServiceImpl implements NotificationService {
 				return languageTranslations.containsKey(key) && languageTranslations.get(key).containsKey(value)
 						? languageTranslations.get(key).get(value) : value;
 			}));
-		return replacePlaceholders(templateMessage, translatedPlaceholders);
+
+		Map<String, String> result = new HashMap<>();
+		result.put(CommonConstants.NOTIFICATION_TITLE,
+				replacePlaceholders(contentMap.get(CommonConstants.NOTIFICATION_TITLE), translatedPlaceholders));
+		result.put(CommonConstants.NOTIFICATION_MESSAGE,
+				replacePlaceholders(contentMap.get(CommonConstants.NOTIFICATION_MESSAGE), translatedPlaceholders));
+
+		return result;
 	}
 
 	private String replacePlaceholders(String body, Map<String, String> values) {
@@ -142,7 +157,7 @@ public class NotificationServiceImpl implements NotificationService {
 		}
 	}
 
-	private String getNotificationMessageFromNotificationTemplates(EmailBodyTemplates emailBodyTemplates,
+	private Map<String, String> getNotificationContentFromNotificationTemplates(EmailBodyTemplates emailBodyTemplates,
 			NotificationCategory notificationCategory) {
 
 		InputStream file;
@@ -175,9 +190,11 @@ public class NotificationServiceImpl implements NotificationService {
 
 			for (JsonNode templateNode : category) {
 				if (templateNode.path("id").asText().equals(emailBodyTemplates.getTemplateId())) {
-					String message = templateNode.path("message").asText();
+					Map<String, String> contentMap = new HashMap<>();
+					contentMap.put("title", templateNode.path("title").asText());
+					contentMap.put("message", templateNode.path("message").asText());
 					log.info("getTemplateFromJson: execution ended");
-					return message;
+					return contentMap;
 				}
 			}
 
@@ -272,10 +289,14 @@ public class NotificationServiceImpl implements NotificationService {
 	}
 
 	public List<NotificationResponseDto> mapNotifications(List<Notification> notifications) {
+
+		String organizationTimeZone = organizationService.getOrganizationTimeZone();
+
 		return notifications.stream().map(notification -> {
 			NotificationResponseDto notificationResponseDto = new NotificationResponseDto();
 			notificationResponseDto.setId(notification.getId());
-			notificationResponseDto.setCreatedDate(notification.getCreatedDate());
+			notificationResponseDto
+				.setCreatedDate(convertToOrganizationTimeZone(notification.getCreatedDate(), organizationTimeZone));
 			notificationResponseDto.setBody(notification.getBody());
 			notificationResponseDto.setIsViewed(notification.getIsViewed());
 			notificationResponseDto.setResourceId(notification.getResourceId());
@@ -293,6 +314,13 @@ public class NotificationServiceImpl implements NotificationService {
 
 			return notificationResponseDto;
 		}).toList();
+	}
+
+	private LocalDateTime convertToOrganizationTimeZone(LocalDateTime createdDate, String organizationTimeZone) {
+		if (createdDate == null)
+			return null;
+		ZonedDateTime utcTime = createdDate.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of("UTC"));
+		return utcTime.withZoneSameInstant(ZoneId.of(organizationTimeZone)).toLocalDateTime();
 	}
 
 }

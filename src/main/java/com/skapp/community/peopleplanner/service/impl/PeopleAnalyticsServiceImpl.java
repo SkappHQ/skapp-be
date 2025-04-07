@@ -26,8 +26,8 @@ import com.skapp.community.peopleplanner.repository.JobFamilyDao;
 import com.skapp.community.peopleplanner.repository.TeamDao;
 import com.skapp.community.peopleplanner.service.PeopleAnalyticsService;
 import com.skapp.community.peopleplanner.type.AccountStatus;
-import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
+import com.skapp.community.peopleplanner.type.EmploymentType;
 import com.skapp.community.peopleplanner.type.Gender;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -105,11 +105,11 @@ public class PeopleAnalyticsServiceImpl implements PeopleAnalyticsService {
 
 		EmploymentTypesResponseDto employmentTypesResponseDto = new EmploymentTypesResponseDto();
 		employmentTypesResponseDto.setIntern(employeeDao.countByEmploymentTypeAndEmploymentAllocationAndTeams(
-				EmployeeType.INTERN, null, employmentBreakdownFilterDto.getTeams()));
+				EmploymentType.INTERN, null, employmentBreakdownFilterDto.getTeams()));
 		employmentTypesResponseDto.setContract(employeeDao.countByEmploymentTypeAndEmploymentAllocationAndTeams(
-				EmployeeType.CONTRACT, null, employmentBreakdownFilterDto.getTeams()));
+				EmploymentType.CONTRACT, null, employmentBreakdownFilterDto.getTeams()));
 		employmentTypesResponseDto.setPermanent(employeeDao.countByEmploymentTypeAndEmploymentAllocationAndTeams(
-				EmployeeType.PERMANENT, null, employmentBreakdownFilterDto.getTeams()));
+				EmploymentType.PERMANENT, null, employmentBreakdownFilterDto.getTeams()));
 
 		employmentBreakdownResponseDto.setEmploymentTypesResponseDto(employmentTypesResponseDto);
 

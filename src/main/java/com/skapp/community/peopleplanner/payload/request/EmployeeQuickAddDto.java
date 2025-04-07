@@ -1,6 +1,6 @@
 package com.skapp.community.peopleplanner.payload.request;
 
-import jakarta.validation.constraints.NotNull;
+import com.skapp.community.peopleplanner.payload.request.employee.EmployeeSystemPermissionsDto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,15 +8,12 @@ import lombok.Setter;
 @Setter
 public class EmployeeQuickAddDto {
 
-	@NotNull(message = "{notnull.firstName}")
 	private String firstName;
 
-	@NotNull(message = "{notnull.lastName}")
 	private String lastName;
 
-	@NotNull(message = "{notnull.workEmail}")
-	private String workEmail;
+	private String email;
 
-	private RoleRequestDto userRoles;
+	private EmployeeSystemPermissionsDto userRoles;
 
 }

@@ -3,21 +3,20 @@ package com.skapp.community.peopleplanner.controller.v1;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeBulkDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeDataValidationDto;
-import com.skapp.community.peopleplanner.payload.request.EmployeeDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeIsAvailableDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeQuickAddDto;
-import com.skapp.community.peopleplanner.payload.request.EmployeeUpdateDto;
 import com.skapp.community.peopleplanner.payload.request.NotificationSettingsPatchRequestDto;
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
+import com.skapp.community.peopleplanner.payload.request.employee.CreateEmployeeRequestDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeManagerResponseDto;
-import com.skapp.community.peopleplanner.service.EmployeeTimelineService;
+import com.skapp.community.peopleplanner.service.PeopleReadService;
 import com.skapp.community.peopleplanner.service.PeopleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -40,18 +39,17 @@ import java.util.List;
 @Tag(name = "People Controller", description = "Endpoints for managing employees")
 public class PeopleController {
 
-	@NonNull
 	private final PeopleService peopleService;
 
-	@NonNull
-	private final EmployeeTimelineService employeeService;
+	private final PeopleReadService peopleReadService;
 
 	@Operation(summary = "Create a new employee",
 			description = "This endpoint creates a new employee with the provided details.")
 	@PostMapping(value = "/employee", produces = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_ADMIN')")
-	public ResponseEntity<ResponseEntityDto> addNewEmployee(@Valid @RequestBody EmployeeDetailsDto employeeDetailsDto) {
-		ResponseEntityDto response = peopleService.addNewEmployee(employeeDetailsDto);
+	public ResponseEntity<ResponseEntityDto> addNewEmployee(
+			@Valid @RequestBody CreateEmployeeRequestDto employeeDetailsDto) {
+		ResponseEntityDto response = peopleService.createEmployee(employeeDetailsDto);
 		return new ResponseEntity<>(response, HttpStatus.CREATED);
 	}
 
@@ -67,21 +65,11 @@ public class PeopleController {
 
 	@Operation(summary = "Update an employee", description = "This endpoint updates an existing employee by their ID.")
 	@PatchMapping(value = "/employee/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_ADMIN')")
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_EMPLOYEE')")
 	public ResponseEntity<ResponseEntityDto> updateEmployee(
 			@PathVariable @Schema(description = "ID of the employee to update", example = "1") Long id,
-			@Valid @RequestBody EmployeeUpdateDto employeeUpdateDto) {
-		ResponseEntityDto response = peopleService.updateEmployee(id, employeeUpdateDto);
-		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
-
-	@Operation(summary = "Update an employee", description = "This endpoint updates an existing employee by their ID.")
-	@PatchMapping(value = "/employee/me/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-	@PreAuthorize("hasAnyRole('ROLE_ATTENDANCE_EMPLOYEE','ROLE_PEOPLE_EMPLOYEE','ROLE_LEAVE_EMPLOYEE')")
-	public ResponseEntity<ResponseEntityDto> updateCurrentEmployee(
-			@PathVariable @Schema(description = "ID of the employee to update", example = "1") Long id,
-			@Valid @RequestBody EmployeeUpdateDto employeeUpdateDto) {
-		ResponseEntityDto response = peopleService.updateLoggedInUser(id, employeeUpdateDto);
+			@Valid @RequestBody CreateEmployeeRequestDto createEmployeeRequestDto) {
+		ResponseEntityDto response = peopleService.updateEmployee(id, createEmployeeRequestDto);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
@@ -93,20 +81,19 @@ public class PeopleController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	@Operation(summary = "Get a list of employees",
+			description = "This endpoint fetches a list of employees based on provided filters to export.")
+	@GetMapping(value = "/employees/export", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ResponseEntityDto> exportEmployeesData(EmployeeExportFilterDto employeeExportFilterDto) {
+		ResponseEntityDto response = peopleService.exportEmployees(employeeExportFilterDto);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
 	@Operation(summary = "Get employee by ID", description = "This endpoint fetches an employee by their ID.")
 	@GetMapping(value = "/employee/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ResponseEntityDto> getEmployeeById(@PathVariable Long id) {
-		ResponseEntityDto employeeResponse = peopleService.getEmployeeById(id);
+		ResponseEntityDto employeeResponse = peopleReadService.getEmployeeById(id);
 		return new ResponseEntity<>(employeeResponse, HttpStatus.OK);
-	}
-
-	@Operation(summary = "Get timeline records of an employee",
-			description = "This endpoint fetches the timeline records of an employee by their ID.")
-	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_PEOPLE_ADMIN','ROLE_PEOPLE_MANAGER')")
-	@GetMapping(value = "/employees/timeline/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ResponseEntityDto> employeeTimelineRecords(@PathVariable Long id) {
-		ResponseEntityDto response = employeeService.getEmployeeTimelineRecords(id);
-		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 	@Operation(summary = "Get current logged-in employee",
@@ -138,6 +125,14 @@ public class PeopleController {
 	@GetMapping(value = "/{employeeId}/is-supervised-by-me")
 	public ResponseEntity<ResponseEntityDto> isPrimarySecondaryOrTeamSupervisor(@PathVariable Long employeeId) {
 		return new ResponseEntity<>(peopleService.isPrimarySecondaryOrTeamSupervisor(employeeId), HttpStatus.OK);
+	}
+
+	@Operation(summary = "Check if an employee is a primary, secondary or team supervisor ",
+			description = "This endpoint checks if the given employee is supervising an employee or team.")
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_ADMIN')")
+	@GetMapping(value = "/{employeeId}/has-supervisory-roles")
+	public ResponseEntity<ResponseEntityDto> hasSupervisoryRoles(@PathVariable Long employeeId) {
+		return new ResponseEntity<>(peopleService.hasSupervisoryRoles(employeeId), HttpStatus.OK);
 	}
 
 	@Operation(summary = "Bulk add employees", description = "This endpoint allows adding multiple employees at once.")
@@ -180,6 +175,14 @@ public class PeopleController {
 	@PatchMapping("/user/terminate/{userId}")
 	public ResponseEntity<ResponseEntityDto> terminateUser(@PathVariable Long userId) {
 		ResponseEntityDto response = peopleService.terminateUser(userId);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	@Operation(summary = "Delete an user", description = "Delete an user account")
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_ADMIN')")
+	@PatchMapping("/user/delete/{userId}")
+	public ResponseEntity<ResponseEntityDto> deleteUser(@PathVariable Long userId) {
+		ResponseEntityDto response = peopleService.deleteUser(userId);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 

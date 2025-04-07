@@ -46,15 +46,12 @@ class JobServiceImplUnitTest {
 	@Mock
 	private MessageUtil messageUtil;
 
-	@Mock
-	private EmployeeTimelineService employeeTimelineService;
-
 	JobServiceImpl jobService;
 
 	@BeforeEach
 	void setup() {
 		jobService = Mockito.spy(new JobServiceImpl(jobFamilyDao, jobTitleDao, jobFamilyTitleDao, employeeDao,
-				peopleMapper, messageUtil, employeeTimelineService));
+				peopleMapper, messageUtil));
 	}
 
 	@Test

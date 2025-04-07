@@ -3,7 +3,6 @@ package com.skapp.community.common.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.skapp.community.common.component.ProfileActivator;
-import com.skapp.community.common.constant.CommonConstants;
 import com.skapp.community.common.constant.CommonMessageConstant;
 import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.mapper.CommonMapper;
@@ -131,8 +130,9 @@ public class AuthServiceImpl implements AuthService {
 	private String encryptSecret;
 
 	@Override
+	@Transactional
 	public ResponseEntityDto signIn(SignInRequestDto signInRequestDto) {
-		log.info("signIn: execution started");
+		log.debug("signIn: execution started");
 
 		authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(signInRequestDto.getEmail(), signInRequestDto.getPassword()));
@@ -143,24 +143,15 @@ public class AuthServiceImpl implements AuthService {
 		}
 		User user = optionalUser.get();
 
+		validateTenantStatus(user);
+
 		if (Boolean.FALSE.equals(user.getIsActive())) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_ACCOUNT_DEACTIVATED);
-		}
-
-		if (user.getEmployee().getAccountStatus() == AccountStatus.PENDING && profileActivator.isEpProfile()
-				&& employeeDao.countByAccountStatus(AccountStatus.ACTIVE) >= CommonConstants.EP_FREE_USER_LIMIT) {
-			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EXCEED_MAX_EMPLOYEE_COUNT);
 		}
 
 		Optional<Employee> employee = employeeDao.findById(user.getUserId());
 		if (employee.isEmpty()) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND);
-		}
-		Employee userEmployee = employee.get();
-
-		if (userEmployee.getAccountStatus() == AccountStatus.PENDING) {
-			userEmployee.setAccountStatus(AccountStatus.ACTIVE);
-			employeeDao.save(userEmployee);
 		}
 
 		EmployeeSignInResponseDto employeeSignInResponseDto = peopleMapper
@@ -178,6 +169,10 @@ public class AuthServiceImpl implements AuthService {
 
 		log.info("signIn: execution ended");
 		return new ResponseEntityDto(false, signInResponseDto);
+	}
+
+	protected void validateTenantStatus(User user) {
+		// This is only for Pro version
 	}
 
 	@Transactional
@@ -283,6 +278,10 @@ public class AuthServiceImpl implements AuthService {
 		String newPassword = resetPasswordRequestDto.getNewPassword();
 		createNewPassword(newPassword, user);
 
+		Employee employee = user.getEmployee();
+		employee.setAccountStatus(AccountStatus.ACTIVE);
+		employeeDao.save(employee);
+
 		log.info("employeeResetPassword: execution ended");
 		return new ResponseEntityDto(false, "User password reset successfully");
 	}
@@ -297,17 +296,8 @@ public class AuthServiceImpl implements AuthService {
 		}
 		User user = optionalUser.get();
 
-		SharePasswordResponseDto sharePasswordResponseDto = new SharePasswordResponseDto();
-		sharePasswordResponseDto.setUserId(user.getUserId());
-
-		EmployeeCredentialsResponseDto employeeCredentialsResponseDto = new EmployeeCredentialsResponseDto();
-		employeeCredentialsResponseDto.setEmail(user.getEmail());
-		employeeCredentialsResponseDto
-			.setTempPassword(encryptionDecryptionService.decrypt(user.getTempPassword(), encryptSecret));
-
-		sharePasswordResponseDto.setEmployeeCredentials(employeeCredentialsResponseDto);
-		sharePasswordResponseDto.setFirstName(user.getEmployee().getFirstName());
-		sharePasswordResponseDto.setLastName(user.getEmployee().getLastName());
+		SharePasswordResponseDto sharePasswordResponseDto = getSharePasswordResponseDto(user, user,
+				encryptionDecryptionService.decrypt(user.getTempPassword(), encryptSecret));
 
 		log.info("sharePassword: execution ended");
 		return new ResponseEntityDto(false, sharePasswordResponseDto);
@@ -329,16 +319,7 @@ public class AuthServiceImpl implements AuthService {
 		user.setIsPasswordChangedForTheFirstTime(true);
 		User savedUser = userDao.save(user);
 
-		SharePasswordResponseDto sharePasswordResponseDto = new SharePasswordResponseDto();
-		sharePasswordResponseDto.setUserId(savedUser.getUserId());
-
-		EmployeeCredentialsResponseDto employeeCredentialsResponseDto = new EmployeeCredentialsResponseDto();
-		employeeCredentialsResponseDto.setEmail(user.getEmail());
-		employeeCredentialsResponseDto.setTempPassword(tempPassword);
-
-		sharePasswordResponseDto.setEmployeeCredentials(employeeCredentialsResponseDto);
-		sharePasswordResponseDto.setFirstName(user.getEmployee().getFirstName());
-		sharePasswordResponseDto.setLastName(user.getEmployee().getLastName());
+		SharePasswordResponseDto sharePasswordResponseDto = getSharePasswordResponseDto(savedUser, user, tempPassword);
 
 		log.info("resetAndSharePassword: execution ended");
 		return new ResponseEntityDto(false, sharePasswordResponseDto);
@@ -350,7 +331,7 @@ public class AuthServiceImpl implements AuthService {
 
 		if (!profileActivator.isEpProfile()) {
 			Optional<OrganizationConfig> optionalOrganizationConfig = organizationConfigDao
-				.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.EMAIL_CONFIGS);
+				.findOrganizationConfigByOrganizationConfigType(OrganizationConfigType.EMAIL_CONFIGS.name());
 
 			if (optionalOrganizationConfig.isEmpty()) {
 				log.error("Email configuration not found");
@@ -458,11 +439,29 @@ public class AuthServiceImpl implements AuthService {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_OLD_PASSWORD_INCORRECT);
 		}
 
+		if (passwordEncoder.matches(changePasswordRequestDto.getNewPassword(), user.getPassword())) {
+			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_SAME_PASSWORD);
+		}
+
 		String newPassword = changePasswordRequestDto.getNewPassword();
 		createNewPassword(newPassword, user);
 
 		log.info("changePassword: execution ended");
 		return new ResponseEntityDto(false, "User password changed successfully");
+	}
+
+	private SharePasswordResponseDto getSharePasswordResponseDto(User savedUser, User user, String tempPassword) {
+		SharePasswordResponseDto sharePasswordResponseDto = new SharePasswordResponseDto();
+		sharePasswordResponseDto.setUserId(savedUser.getUserId());
+
+		EmployeeCredentialsResponseDto employeeCredentialsResponseDto = new EmployeeCredentialsResponseDto();
+		employeeCredentialsResponseDto.setEmail(user.getEmail());
+		employeeCredentialsResponseDto.setTempPassword(tempPassword);
+
+		sharePasswordResponseDto.setEmployeeCredentials(employeeCredentialsResponseDto);
+		sharePasswordResponseDto.setFirstName(user.getEmployee().getFirstName());
+		sharePasswordResponseDto.setLastName(user.getEmployee().getLastName());
+		return sharePasswordResponseDto;
 	}
 
 	private UserSettings createNotificationSettings(User user) {

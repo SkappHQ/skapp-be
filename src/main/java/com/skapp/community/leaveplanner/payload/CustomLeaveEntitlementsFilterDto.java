@@ -24,4 +24,6 @@ public class CustomLeaveEntitlementsFilterDto {
 
 	private CustomLeaveEntitlementSort sortKey = CustomLeaveEntitlementSort.CREATED_DATE;
 
+	private String keyword;
+
 }
