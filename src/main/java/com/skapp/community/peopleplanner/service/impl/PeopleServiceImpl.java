@@ -498,10 +498,12 @@ public class PeopleServiceImpl implements PeopleService {
 			.map(node -> CommonModuleUtils.jsonNodeToValue(node, EmployeeExtraInfoDto.class, mapper))
 			.orElseGet(EmployeeExtraInfoDto::new);
 
-		var healthAndOther = requestDto.getPersonal().getHealthAndOther();
-		CommonModuleUtils.setIfExists(healthAndOther::getAllergies, extraInfo::setAllergies);
-		CommonModuleUtils.setIfExists(healthAndOther::getTShirtSize, extraInfo::setTShirtSize);
-		CommonModuleUtils.setIfExists(healthAndOther::getDietaryRestrictions, extraInfo::setDietaryRestrictions);
+		if (requestDto.getPersonal() != null) {
+			var healthAndOther = requestDto.getPersonal().getHealthAndOther();
+			CommonModuleUtils.setIfExists(healthAndOther::getAllergies, extraInfo::setAllergies);
+			CommonModuleUtils.setIfExists(healthAndOther::getTShirtSize, extraInfo::setTShirtSize);
+			CommonModuleUtils.setIfExists(healthAndOther::getDietaryRestrictions, extraInfo::setDietaryRestrictions);
+		}
 
 		CommonModuleUtils.setIfExists(() -> mapper.valueToTree(extraInfo), personalInfo::setExtraInfo);
 
