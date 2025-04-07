@@ -392,7 +392,8 @@ public class PeopleServiceImpl implements PeopleService {
 			CommonModuleUtils.setIfExists(() -> createNotificationSettings(requestDto.getSystemPermissions(), user),
 					user::setSettings);
 
-			if (user.getEmployee().getAccountStatus() == AccountStatus.PENDING
+			if (user.getEmployee().getAccountStatus() == AccountStatus.PENDING && requestDto.getEmployment() != null
+					&& requestDto.getEmployment().getEmploymentDetails() != null
 					&& requestDto.getEmployment().getEmploymentDetails().getEmail() != null
 					&& !requestDto.getEmployment().getEmploymentDetails().getEmail().isEmpty()) {
 				resendInvitationEmail(requestDto, user);
