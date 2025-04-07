@@ -1,6 +1,8 @@
 package com.skapp.community.common.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skapp.community.leaveplanner.model.LeaveRequest;
 import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.Holiday;
@@ -318,6 +320,29 @@ public class CommonModuleUtils {
 		}
 		catch (Exception e) {
 			log.error("setIfRequestValid: Error occurred - {}", e.getMessage(), e);
+		}
+	}
+
+	public static <T> T jsonNodeToValue(JsonNode node, Class<T> valueType, ObjectMapper mapper) {
+		if (node == null) {
+			try {
+				return valueType.getDeclaredConstructor().newInstance();
+			}
+			catch (Exception e) {
+				return null;
+			}
+		}
+
+		try {
+			return mapper.treeToValue(node, valueType);
+		}
+		catch (JsonProcessingException e) {
+			try {
+				return valueType.getDeclaredConstructor().newInstance();
+			}
+			catch (Exception ex) {
+				return null;
+			}
 		}
 	}
 
