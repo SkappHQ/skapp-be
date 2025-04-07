@@ -4,6 +4,7 @@ import com.skapp.community.leaveplanner.payload.AdminOnLeaveDto;
 import com.skapp.community.leaveplanner.payload.EmployeeLeaveRequestDto;
 import com.skapp.community.leaveplanner.payload.EmployeesOnLeaveFilterDto;
 import com.skapp.community.peopleplanner.model.Employee;
+import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeCountDto;
@@ -11,8 +12,8 @@ import com.skapp.community.peopleplanner.payload.response.EmployeeManagerDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeTeamDto;
 import com.skapp.community.peopleplanner.payload.response.PrimarySecondaryOrTeamSupervisorResponseDto;
 import com.skapp.community.peopleplanner.type.AccountStatus;
-import com.skapp.community.peopleplanner.type.EmployeeType;
 import com.skapp.community.peopleplanner.type.EmploymentAllocation;
+import com.skapp.community.peopleplanner.type.EmploymentType;
 import com.skapp.community.peopleplanner.type.Gender;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
@@ -27,6 +28,8 @@ public interface EmployeeRepository {
 	Optional<Employee> findEmployeeByEmployeeIdAndUserActiveNot(Long employeeId, boolean userState);
 
 	Page<Employee> findEmployees(EmployeeFilterDto employeeFilterDto, Pageable page);
+
+	List<Employee> findEmployeesForExport(EmployeeExportFilterDto employeeExportFilterDto);
 
 	List<EmployeeTeamDto> findTeamsByEmployees(List<Long> employeeIds);
 
@@ -66,7 +69,7 @@ public interface EmployeeRepository {
 
 	Long countByIsActiveAndTeamsAndGender(boolean isActive, List<Long> teamIds, Gender gender);
 
-	Long countByEmploymentTypeAndEmploymentAllocationAndTeams(EmployeeType employmentType,
+	Long countByEmploymentTypeAndEmploymentAllocationAndTeams(EmploymentType employmentType,
 			EmploymentAllocation employmentAllocation, List<Long> teamIds);
 
 	List<Employee> findByNameAndIsActiveAndTeam(String employeeName, Boolean isActive, Long teamId);
@@ -77,5 +80,9 @@ public interface EmployeeRepository {
 
 	PrimarySecondaryOrTeamSupervisorResponseDto isPrimarySecondaryOrTeamSupervisor(Employee employee,
 			Employee currentEmployee);
+
+	PrimarySecondaryOrTeamSupervisorResponseDto isPrimaryOrSecondarySupervisor(Employee employee);
+
+	Long findAllActiveAndPendingEmployeesCount();
 
 }

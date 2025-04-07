@@ -8,6 +8,7 @@ import com.skapp.community.common.model.User;
 import com.skapp.community.common.payload.response.PageDto;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.repository.NotificationDao;
+import com.skapp.community.common.service.OrganizationService;
 import com.skapp.community.common.service.UserService;
 import com.skapp.community.common.type.NotificationType;
 import com.skapp.community.common.type.Role;
@@ -65,6 +66,7 @@ import com.skapp.community.peopleplanner.repository.HolidayDao;
 import com.skapp.community.peopleplanner.repository.TeamDao;
 import com.skapp.community.peopleplanner.service.PeopleService;
 import com.skapp.community.peopleplanner.type.HolidayDuration;
+import com.skapp.community.peopleplanner.util.PeopleUtil;
 import com.skapp.community.timeplanner.model.TimeConfig;
 import com.skapp.community.timeplanner.repository.TimeConfigDao;
 import jakarta.validation.constraints.NotNull;
@@ -104,62 +106,45 @@ import static com.skapp.community.leaveplanner.constant.LeaveMessageConstant.LEA
 @RequiredArgsConstructor
 public class LeaveServiceImpl implements LeaveService {
 
-	@NonNull
 	private final UserService userService;
 
-	@NonNull
 	private final LeaveMapper leaveMapper;
 
-	@NonNull
 	private final LeaveRequestDao leaveRequestDao;
 
-	@NonNull
 	private final LeaveTypeDao leaveTypeDao;
 
-	@NonNull
 	private final MessageUtil messageUtil;
 
-	@NonNull
 	private final LeaveEntitlementDao leaveEntitlementDao;
 
-	@NonNull
 	private final LeaveRequestEntitlementDao leaveRequestEntitlementDao;
 
-	@NonNull
 	private final TimeConfigDao timeConfigDao;
 
-	@NonNull
 	private final HolidayDao holidayDao;
 
-	@NonNull
 	private final EmployeeDao employeeDao;
 
-	@NonNull
 	private final EmployeeManagerDao employeeManagerDao;
 
-	@NonNull
 	private final PageTransformer pageTransformer;
 
-	@NonNull
 	private final PeopleService peopleService;
 
-	@NonNull
 	private final TeamDao teamDao;
 
-	@NonNull
 	private final PeopleMapper peopleMapper;
 
-	@NonNull
 	private final EmployeeTeamDao employeeTeamDao;
 
-	@NonNull
 	private final LeaveEmailService leaveEmailService;
 
-	@NonNull
 	private final LeaveNotificationService leaveNotificationService;
 
-	@NonNull
 	private final NotificationDao notificationDao;
+
+	private final OrganizationService organizationService;
 
 	@Override
 	@Transactional
@@ -210,23 +195,25 @@ public class LeaveServiceImpl implements LeaveService {
 				leaveRequest.getStartDate(), leaveRequest.getEndDate(), leaveRequest.getLeaveState().toString(),
 				leaveRequest.getRequestDesc(), isSingleDay);
 
-		leaveEmailService.sendReceivedLeaveRequestManagerEmail(employeeManagers, user.getEmployee().getFirstName(),
-				user.getEmployee().getLastName(), leaveRequest.getLeaveState().toString(),
-				leaveRequest.getLeaveType().getName(), leaveRequest.getStartDate(), leaveRequest.getEndDate(),
-				isSingleDay);
-
 		leaveNotificationService.sendApplyLeaveRequestEmployeeNotification(user.getEmployee(),
 				leaveRequest.getLeaveRequestId(), leaveRequest.getLeaveState().toString(),
 				leaveRequest.getLeaveType().getName(), leaveRequest.getStartDate(), leaveRequest.getEndDate(),
 				isSingleDay);
 
-		leaveNotificationService.sendReceivedLeaveRequestManagerNotification(employeeManagers,
-				user.getEmployee().getFirstName(), user.getEmployee().getLastName(), leaveRequest.getLeaveRequestId(),
-				leaveRequest.getLeaveState().toString(), leaveRequest.getLeaveType().getName(),
-				leaveRequest.getStartDate(), leaveRequest.getEndDate(), isSingleDay);
-
 		if (Boolean.TRUE.equals(leaveType.getIsAutoApproval())) {
 			handleAutoApprovalLeave(leaveRequest);
+		}
+		else {
+			leaveEmailService.sendReceivedLeaveRequestManagerEmail(employeeManagers, user.getEmployee().getFirstName(),
+					user.getEmployee().getLastName(), leaveRequest.getLeaveState().toString(),
+					leaveRequest.getLeaveType().getName(), leaveRequest.getStartDate(), leaveRequest.getEndDate(),
+					isSingleDay);
+
+			leaveNotificationService.sendReceivedLeaveRequestManagerNotification(employeeManagers,
+					user.getEmployee().getFirstName(), user.getEmployee().getLastName(),
+					leaveRequest.getLeaveRequestId(), leaveRequest.getLeaveState().toString(),
+					leaveRequest.getLeaveType().getName(), leaveRequest.getStartDate(), leaveRequest.getEndDate(),
+					isSingleDay);
 		}
 
 		log.info("applyLeaveRequest: execution ended. Leave Request ID: {}", leaveRequest.getLeaveRequestId());
@@ -285,7 +272,9 @@ public class LeaveServiceImpl implements LeaveService {
 		leaveRequest.setReviewedDate(DateTimeUtils.getCurrentUtcDateTime());
 		LeaveRequest saveResponse = leaveRequestDao.save(leaveRequest);
 
-		sendLeaveUpdateEmailsAndNotifications(leaveRequest);
+		if (isInvokedByManager) {
+			sendLeaveUpdateEmailsAndNotifications(leaveRequest);
+		}
 
 		LeaveRequestByIdResponseDto responseDto = leaveMapper.leaveRequestToLeaveRequestByIdResponseDto(saveResponse);
 
@@ -353,7 +342,14 @@ public class LeaveServiceImpl implements LeaveService {
 		User currentUser = userService.getCurrentUser();
 		Long empId = currentUser.getUserId();
 
-		Pageable pageable = PageRequest.of(leaveRequestFilterDto.getPage(), leaveRequestFilterDto.getSize(),
+		int pageSize = leaveRequestFilterDto.getSize();
+
+		boolean isExport = leaveRequestFilterDto.getIsExport();
+		if (isExport) {
+			pageSize = (int) leaveRequestDao.count();
+		}
+
+		Pageable pageable = PageRequest.of(leaveRequestFilterDto.getPage(), pageSize,
 				Sort.by(leaveRequestFilterDto.getSortOrder(), leaveRequestFilterDto.getSortKey().toString()));
 
 		Page<LeaveRequest> leaveRequests = leaveRequestDao.findAllRequestsByEmployee(empId, leaveRequestFilterDto,
@@ -691,7 +687,7 @@ public class LeaveServiceImpl implements LeaveService {
 		List<Team> teams = teamDao.findByTeamIdIn(teamIds);
 		boolean isSuperAdminOrAttendanceAdmin = isUserSuperAdminOrLeaveAdmin(currentUser);
 
-		LeaveModuleUtil.validateTeamsExist(teamIds, teams);
+		PeopleUtil.validateTeamsExist(teamIds, teams);
 		if (!isSuperAdminOrAttendanceAdmin) {
 			validateUserBelongsToTeams(teams, currentUser);
 		}
@@ -806,7 +802,7 @@ public class LeaveServiceImpl implements LeaveService {
 		validateLeaveWithHoliday(leaveRequest.getStartDate(), leaveRequest.getEndDate(), holidayObjects, leaveRequest);
 
 		float weekDays = LeaveModuleUtil.getWorkingDaysBetweenTwoDates(leaveRequest.getStartDate(),
-				leaveRequest.getEndDate(), timeConfigs, holidayObjects);
+				leaveRequest.getEndDate(), timeConfigs, holidayObjects, organizationService.getOrganizationTimeZone());
 
 		if (weekDays <= 0) {
 			throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_LEAVE_ENTITLEMENT_NOT_APPLICABLE);
@@ -858,7 +854,7 @@ public class LeaveServiceImpl implements LeaveService {
 	public static int getNumberOfDaysBetweenLeaveRequestForGivenEntitlementRange(LocalDate leaveRequestStartDate,
 			LocalDate leaveRequestEndDate, LocalDate entitlementValidFrom, LocalDate entitlementValidTo,
 			List<TimeConfig> timeConfigs, List<LocalDate> holidays, List<Holiday> holidayObjects,
-			LeaveRequest leaveRequest) {
+			LeaveRequest leaveRequest, String organizationTimeZone) {
 
 		LocalDate startDate = leaveRequestStartDate.isAfter(leaveRequestEndDate) ? leaveRequestEndDate
 				: leaveRequestStartDate;
@@ -876,7 +872,7 @@ public class LeaveServiceImpl implements LeaveService {
 
 		LocalDate currentDate = overlapStart;
 		while (!currentDate.isAfter(overlapEnd)) {
-			if (CommonModuleUtils.checkIfDayIsWorkingDay(currentDate, timeConfigs)
+			if (CommonModuleUtils.checkIfDayIsWorkingDay(currentDate, timeConfigs, organizationTimeZone)
 					&& CommonModuleUtils.checkIfDayIsNotAHoliday(leaveRequest, holidayObjects, holidays, currentDate)) {
 				count++;
 			}
@@ -1041,12 +1037,15 @@ public class LeaveServiceImpl implements LeaveService {
 		LocalDate selectedEndDate = leaveRequest.getEndDate();
 		LocalDate currentDate = selectedStartDate;
 
+		String organizationTimeZone = organizationService.getOrganizationTimeZone();
+
 		for (LeaveEntitlement selectedEntitlement : leaveEntitlements) {
 			LocalDate validFrom = selectedEntitlement.getValidFrom();
 			LocalDate validTo = selectedEntitlement.getValidTo();
 
 			int numberOfWorkingDays = getNumberOfDaysBetweenLeaveRequestForGivenEntitlementRange(currentDate,
-					selectedEndDate, validFrom, validTo, timeConfigs, holidays, holidayObjects, leaveRequest);
+					selectedEndDate, validFrom, validTo, timeConfigs, holidays, holidayObjects, leaveRequest,
+					organizationTimeZone);
 
 			if (numberOfWorkingDays > 0) {
 				float numberOfDaysToDeduct = leaveRequest.getLeaveState().equals(LeaveState.HALFDAY_EVENING)
@@ -1150,7 +1149,7 @@ public class LeaveServiceImpl implements LeaveService {
 			List<Holiday> holidayObjects, LeaveRequest leaveRequest) {
 		return getNumberOfDaysBetweenLeaveRequestForGivenEntitlementRange(startCal, selectedEndDate,
 				leaveEntitlement.getValidFrom(), leaveEntitlement.getValidTo(), timeConfigs, holidayDates,
-				holidayObjects, leaveRequest);
+				holidayObjects, leaveRequest, organizationService.getOrganizationTimeZone());
 	}
 
 	private float calculateDaysToUtilize(float leaveDays, float entitlementRemainingDays, int workingDays,
@@ -1189,7 +1188,7 @@ public class LeaveServiceImpl implements LeaveService {
 
 		updateLeaveRequestByManager(leaveRequest.getLeaveRequestId(), managerUpdateDto, false);
 
-		if (leaveRequest.getStartDate() == leaveRequest.getEndDate()) {
+		if (leaveRequest.getStartDate().equals(leaveRequest.getEndDate())) {
 			leaveEmailService.sendAutoApprovedSingleDayLeaveRequestEmployeeEmail(leaveRequest);
 			leaveNotificationService.sendAutoApprovedSingleDayLeaveRequestEmployeeNotification(leaveRequest);
 

@@ -16,7 +16,6 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -26,7 +25,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmployeeManagerRepositoryImpl implements EmployeeManagerRepository {
 
-	@NonNull
 	private final EntityManager entityManager;
 
 	@Override
@@ -49,7 +47,7 @@ public class EmployeeManagerRepositoryImpl implements EmployeeManagerRepository 
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
 		Root<Employee> root = criteriaQuery.from(Employee.class);
-		Join<Employee, EmployeeManager> employeeManagerJoin = root.join(Employee_.managers);
+		Join<Employee, EmployeeManager> employeeManagerJoin = root.join(Employee_.employeeManagers);
 
 		List<Predicate> predicates = new ArrayList<>();
 

@@ -6,7 +6,6 @@ import com.skapp.community.common.model.OrganizationConfig;
 import com.skapp.community.common.model.OrganizationConfig_;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.model.User_;
-import com.skapp.community.common.payload.response.PageDto;
 import com.skapp.community.common.type.CriteriaBuilderSqlFunction;
 import com.skapp.community.common.type.CriteriaBuilderSqlLiteral;
 import com.skapp.community.common.type.OrganizationConfigType;
@@ -50,7 +49,6 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.validation.constraints.NotNull;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -72,10 +70,8 @@ import static com.skapp.community.leaveplanner.model.LeaveType_.TYPE_ID;
 @RequiredArgsConstructor
 public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepository {
 
-	@NonNull
 	private final EntityManager entityManager;
 
-	@NonNull
 	private final MessageUtil messageUtil;
 
 	@Override
@@ -199,8 +195,8 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 	}
 
 	@Override
-	public PageDto findLeaveEntitlementsByLeaveTypesAndActiveState(List<Long> leaveTypeIds, boolean isActive,
-			LocalDate leaveCycleEndDate, Pageable page) {
+	public Page<LeaveEntitlement> findLeaveEntitlementsByLeaveTypesAndActiveState(List<Long> leaveTypeIds,
+			boolean isActive, LocalDate leaveCycleEndDate, Pageable page) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<LeaveEntitlement> criteriaQuery = criteriaBuilder.createQuery(LeaveEntitlement.class);
 		Root<LeaveEntitlement> root = criteriaQuery.from(LeaveEntitlement.class);
@@ -220,13 +216,11 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		predicates.toArray(predArray);
 		criteriaQuery.where(predArray);
 
-		TypedQuery<LeaveEntitlement> typedQuery = entityManager.createQuery(criteriaQuery);
-		PageDto pageDto = new PageDto();
-		pageDto.setTotalItems(employeeIdsForCarryFoward.getTotalElements());
-		pageDto.setCurrentPage(page.getPageNumber());
-		pageDto.setTotalPages(employeeIdsForCarryFoward.getTotalPages());
-		pageDto.setItems(typedQuery.getResultList());
-		return pageDto;
+		TypedQuery<LeaveEntitlement> query = entityManager.createQuery(criteriaQuery);
+		int totalRows = query.getResultList().size();
+		query.setFirstResult(page.getPageNumber() * page.getPageSize());
+		query.setMaxResults(page.getPageSize());
+		return new PageImpl<>(query.getResultList(), page, totalRows);
 	}
 
 	@Override
@@ -240,10 +234,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 
 		List<Predicate> predicates = new ArrayList<>();
 		predicates.add(criteriaBuilder.equal(root.get(LeaveEntitlement_.isManual), true));
-		predicates.add(criteriaBuilder.or(
-				criteriaBuilder.notEqual(root.get(LeaveEntitlement_.reason),
-						LeaveModuleConstant.DISCARD_LEAVE_REQUEST_REASON),
-				criteriaBuilder.isNull(root.get(LeaveEntitlement_.reason))));
+
 		if (search != null) {
 			predicates.add(
 					criteriaBuilder.or(
@@ -338,11 +329,13 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 
 	@Override
 	public List<LeaveEntitlement> findLeaveEntitlementByValidDate(LocalDate validFrom, LocalDate validTo, Sort sort,
-			List<Long> ids) {
+			List<Long> ids, String keyword) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 
 		CriteriaQuery<LeaveEntitlement> criteriaQuery = criteriaBuilder.createQuery(LeaveEntitlement.class);
 		Root<LeaveEntitlement> root = criteriaQuery.from(LeaveEntitlement.class);
+
+		Join<LeaveEntitlement, Employee> employeeJoin = root.join(LeaveEntitlement_.employee);
 
 		List<Predicate> predicates = new ArrayList<>();
 
@@ -352,21 +345,64 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		predicates.add(dateBetween);
 		predicates.add(criteriaBuilder.equal(root.get(LeaveEntitlement_.isActive), true));
 		predicates.add(criteriaBuilder.equal(root.get(LeaveEntitlement_.isManual), false));
+
 		CriteriaBuilder.In<Long> inClause = criteriaBuilder
 			.in(root.get(LeaveEntitlement_.employee).get(Employee_.employeeId));
 		for (Long id : ids) {
 			inClause.value(id);
 		}
+
 		predicates.add(inClause);
+
+		if (keyword != null) {
+			predicates.add(
+					criteriaBuilder.or(
+							criteriaBuilder.like(
+									criteriaBuilder
+										.lower(root.get(LeaveEntitlement_.EMPLOYEE).get(Employee_.FIRST_NAME)),
+									keyword.toLowerCase() + "%"),
+							criteriaBuilder.like(
+									criteriaBuilder
+										.lower(root.get(LeaveEntitlement_.EMPLOYEE).get(Employee_.LAST_NAME)),
+									keyword.toLowerCase() + "%"),
+							criteriaBuilder.like(
+									criteriaBuilder.lower(
+											criteriaBuilder.concat(
+													criteriaBuilder.concat(root.get(LeaveEntitlement_.EMPLOYEE)
+														.get(Employee_.FIRST_NAME), " "),
+													root.get(LeaveEntitlement_.EMPLOYEE).get(Employee_.LAST_NAME))),
+									keyword.toLowerCase() + "%")
+
+					));
+		}
 
 		Predicate[] predArray = new Predicate[predicates.size()];
 		predicates.toArray(predArray);
 		criteriaQuery.where(predArray);
 		criteriaQuery.orderBy(QueryUtils.toOrders(sort, root, criteriaBuilder));
 
+		if (keyword != null) {
+			criteriaQuery.orderBy(
+					criteriaBuilder.asc(criteriaBuilder.selectCase()
+						.when(criteriaBuilder.like(criteriaBuilder.lower(employeeJoin.get(Employee_.FIRST_NAME)),
+								keyword.toLowerCase() + "%"), 1)
+						.when(criteriaBuilder.like(criteriaBuilder.lower(employeeJoin.get(Employee_.LAST_NAME)),
+								keyword.toLowerCase() + "%"), 2)
+						.otherwise(3)),
+					criteriaBuilder.asc(root.get(LeaveEntitlement_.EMPLOYEE).get(Employee_.FIRST_NAME)),
+					criteriaBuilder.asc(root.get(LeaveEntitlement_.EMPLOYEE).get(Employee_.LAST_NAME)),
+					criteriaBuilder.asc(root.get(Auditable_.CREATED_DATE)));
+		}
+		else {
+			criteriaQuery.orderBy(criteriaBuilder.asc(root.get(LeaveEntitlement_.EMPLOYEE).get(Employee_.FIRST_NAME)),
+					criteriaBuilder.asc(root.get(LeaveEntitlement_.EMPLOYEE).get(Employee_.LAST_NAME)),
+					criteriaBuilder.asc(root.get(Auditable_.CREATED_DATE)));
+		}
+
 		TypedQuery<LeaveEntitlement> query = entityManager.createQuery(criteriaQuery);
 
 		return query.getResultList();
+
 	}
 
 	@Override
@@ -382,7 +418,8 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		List<Predicate> predicates = new ArrayList<>();
 
 		predicates.add(criteriaBuilder.equal(user.get(User_.isActive), true));
-		predicates.add(criteriaBuilder.notEqual(employee.get(Employee_.ACCOUNT_STATUS), AccountStatus.TERMINATED));
+		predicates.add(criteriaBuilder
+			.not(employee.get(Employee_.ACCOUNT_STATUS).in(AccountStatus.TERMINATED, AccountStatus.DELETED)));
 		predicates.add(criteriaBuilder.equal(root.get(LeaveEntitlement_.isActive), true));
 		predicates.add(criteriaBuilder.equal(root.get(LeaveEntitlement_.LEAVE_TYPE).get(TYPE_ID), leaveTypeId));
 		predicates
@@ -405,7 +442,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		CriteriaQuery<Tuple> criteriaQuery = criteriaBuilder.createTupleQuery();
 		Root<LeaveEntitlement> root = criteriaQuery.from(LeaveEntitlement.class);
 		Join<LeaveEntitlement, Employee> employee = root.join(LeaveEntitlement_.employee);
-		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.teams);
+		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.employeeTeams);
 		Join<Employee, User> user = employee.join(Employee_.user);
 
 		List<Predicate> predicates = getTeamLeaveSummaryPredicates(criteriaBuilder, root, user, employeeTeam, teamId);
@@ -434,7 +471,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		CriteriaQuery<Tuple> criteriaQuery = criteriaBuilder.createTupleQuery();
 		Root<LeaveEntitlement> root = criteriaQuery.from(LeaveEntitlement.class);
 		Join<LeaveEntitlement, Employee> employee = root.join(LeaveEntitlement_.employee);
-		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.teams);
+		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.employeeTeams);
 		Join<Employee, User> user = employee.join(Employee_.user);
 
 		List<Predicate> predicates = getTeamLeaveSummaryPredicates(criteriaBuilder, root, user, employeeTeam, teamId);
@@ -512,7 +549,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		}
 		predicates.add(criteriaBuilder.equal(user.get(User_.isActive), true));
 		if (teamId != null) {
-			Join<Employee, EmployeeTeam> employeeTeam = employeeJoin.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeam = employeeJoin.join(Employee_.employeeTeams);
 			predicates.add(criteriaBuilder.equal(employeeTeam.get(EmployeeTeam_.team).get(Team_.teamId), teamId));
 		}
 		if (jobFamilyId != null) {
@@ -592,7 +629,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		}
 
 		if (team != null && teamId != null && teamId != -1) {
-			Join<Employee, EmployeeTeam> empTeam = employee.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> empTeam = employee.join(Employee_.employeeTeams);
 			Join<EmployeeTeam, Team> mainTeam = empTeam.join(EmployeeTeam_.team);
 			predicates.add(cb.equal(mainTeam.get(Team_.teamId), teamId));
 		}
@@ -617,7 +654,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		Join<Employee, User> user = employee.join(Employee_.user);
 		Join<LeaveEntitlement, LeaveType> leaveType = leaveEntitlement.join(LeaveEntitlement_.leaveType);
 		Join<Employee, JobFamily> jobFamily = employee.join(Employee_.jobFamily, JoinType.LEFT);
-		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.teams, JoinType.LEFT);
+		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.employeeTeams, JoinType.LEFT);
 		Join<EmployeeTeam, Team> team = employeeTeam.join(EmployeeTeam_.team, JoinType.LEFT);
 
 		Expression<String> employeeName = cb.concat(cb.concat(employee.get(Employee_.firstName), cb.literal(" ")),
@@ -645,7 +682,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		}
 
 		if (teamId != null && teamId != -1) {
-			Join<Employee, EmployeeTeam> empTeam = employee.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> empTeam = employee.join(Employee_.employeeTeams);
 			Join<EmployeeTeam, Team> mainTeam = empTeam.join(EmployeeTeam_.team);
 			predicates.add(cb.equal(mainTeam.get(Team_.teamId), teamId));
 		}
@@ -680,7 +717,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		Join<Employee, User> user = employee.join(Employee_.user);
 		Join<LeaveEntitlement, LeaveType> leaveType = leaveEntitlement.join(LeaveEntitlement_.leaveType);
 		Join<Employee, JobFamily> jobFamily = employee.join(Employee_.jobFamily, JoinType.LEFT);
-		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.teams, JoinType.LEFT);
+		Join<Employee, EmployeeTeam> employeeTeam = employee.join(Employee_.employeeTeams, JoinType.LEFT);
 		Join<EmployeeTeam, Team> team = employeeTeam.join(EmployeeTeam_.team, JoinType.LEFT);
 
 		Expression<String> teams = cb.function(CriteriaBuilderSqlFunction.GROUP_CONCAT.getFunctionName(), String.class,
@@ -724,7 +761,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		Join<Employee, User> countUser = countEmployee.join(Employee_.user);
 		Join<LeaveEntitlement, LeaveType> countLeaveType = countRoot.join(LeaveEntitlement_.leaveType);
 		Join<Employee, JobFamily> countJobFamily = countEmployee.join(Employee_.jobFamily, JoinType.LEFT);
-		Join<Employee, EmployeeTeam> countEmployeeTeam = countEmployee.join(Employee_.teams, JoinType.LEFT);
+		Join<Employee, EmployeeTeam> countEmployeeTeam = countEmployee.join(Employee_.employeeTeams, JoinType.LEFT);
 		Join<EmployeeTeam, Team> countTeam = countEmployeeTeam.join(EmployeeTeam_.team, JoinType.LEFT);
 
 		List<Predicate> countPredicates = createPredicatesForLeaveEntitlement(cb, countRoot, countEmployee, countUser,
@@ -794,7 +831,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		}
 
 		if (teamId != null && teamId != -1) {
-			Join<Employee, EmployeeTeam> empTeam = employee.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> empTeam = employee.join(Employee_.employeeTeams);
 			Join<EmployeeTeam, Team> mainTeam = empTeam.join(EmployeeTeam_.team);
 			predicates.add(cb.equal(mainTeam.get(Team_.teamId), teamId));
 		}
@@ -868,7 +905,7 @@ public class LeaveEntitlementRepositoryImpl implements LeaveEntitlementRepositor
 		CriteriaQuery<OrganizationConfig> criteriaQuery = criteriaBuilder.createQuery(OrganizationConfig.class);
 		Root<OrganizationConfig> root = criteriaQuery.from(OrganizationConfig.class);
 		criteriaQuery.where(criteriaBuilder.equal(root.get(OrganizationConfig_.ORGANIZATION_CONFIG_TYPE),
-				OrganizationConfigType.LEAVE_CYCLE));
+				OrganizationConfigType.LEAVE_CYCLE.name()));
 		TypedQuery<OrganizationConfig> query = entityManager.createQuery(criteriaQuery);
 		List<OrganizationConfig> resultList = query.getResultList();
 		if (resultList.isEmpty()) {

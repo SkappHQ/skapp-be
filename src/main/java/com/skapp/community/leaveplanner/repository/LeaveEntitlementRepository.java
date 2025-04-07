@@ -1,6 +1,5 @@
 package com.skapp.community.leaveplanner.repository;
 
-import com.skapp.community.common.payload.response.PageDto;
 import com.skapp.community.leaveplanner.model.LeaveEntitlement;
 import com.skapp.community.leaveplanner.model.LeaveType;
 import com.skapp.community.leaveplanner.payload.LeaveEntitlementsFilterDto;
@@ -33,7 +32,7 @@ public interface LeaveEntitlementRepository {
 	List<LeaveEntitlement> findLeaveEntitlements(Long typeId, boolean isActive, LocalDate leaveCycleEndDate,
 			Long employeeId);
 
-	PageDto findLeaveEntitlementsByLeaveTypesAndActiveState(List<Long> leaveTypes, boolean isActive,
+	Page<LeaveEntitlement> findLeaveEntitlementsByLeaveTypesAndActiveState(List<Long> leaveTypes, boolean isActive,
 			LocalDate leaveCycleEndDate, Pageable page);
 
 	Page<LeaveEntitlement> findAllCustomEntitlements(String keyword, Pageable pageable, int year,
@@ -42,7 +41,7 @@ public interface LeaveEntitlementRepository {
 	List<Long> findAllEmployeeIdsCreatedWithValidDates(LocalDate validFrom, LocalDate validTo, Sort creationDate);
 
 	List<LeaveEntitlement> findLeaveEntitlementByValidDate(LocalDate validFrom, LocalDate validTo, Sort sort,
-			List<Long> employeeIds);
+			List<Long> employeeIds, String keyword);
 
 	Float findAllEmployeesAnnualEntitlementDaysByDateRangeQuery(Long typeId, LocalDate firstDateOfYear,
 			LocalDate lastDateOfYear);

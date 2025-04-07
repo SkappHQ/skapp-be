@@ -23,10 +23,7 @@ import com.skapp.community.peopleplanner.repository.EmployeeDao;
 import com.skapp.community.peopleplanner.repository.JobFamilyDao;
 import com.skapp.community.peopleplanner.repository.JobFamilyTitleDao;
 import com.skapp.community.peopleplanner.repository.JobTitleDao;
-import com.skapp.community.peopleplanner.service.EmployeeTimelineService;
 import com.skapp.community.peopleplanner.service.JobService;
-import com.skapp.community.peopleplanner.type.EmployeeTimelineType;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -47,26 +44,17 @@ import static com.skapp.community.peopleplanner.util.PeopleUtil.makeFirstLetterU
 @RequiredArgsConstructor
 public class JobServiceImpl implements JobService {
 
-	@NonNull
 	private final JobFamilyDao jobFamilyDao;
 
-	@NonNull
 	private final JobTitleDao jobTitleDao;
 
-	@NonNull
 	private final JobFamilyTitleDao jobFamilyTitleDao;
 
-	@NonNull
 	private final EmployeeDao employeeDao;
 
-	@NonNull
 	private final PeopleMapper peopleMapper;
 
-	@NonNull
 	private final MessageUtil messageUtil;
-
-	@NonNull
-	private final EmployeeTimelineService employeeTimelineService;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -162,11 +150,9 @@ public class JobServiceImpl implements JobService {
 			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_JOB_FAMILY_NOT_FOUND);
 		}
 		JobFamily jobFamily = jobFamilyById.get();
-		String previousJobName = null;
 
 		if (updateJobFamilyRequestDto.getName() != null
 				&& isJobFamilyNameORTitleNameValid(updateJobFamilyRequestDto.getName())) {
-			previousJobName = jobFamily.getName();
 			jobFamily.setName(updateJobFamilyRequestDto.getName());
 		}
 
@@ -211,9 +197,6 @@ public class JobServiceImpl implements JobService {
 
 		jobFamily = jobFamilyDao.save(jobFamily);
 
-		modifyEmployeeHistoryJobFamily(updateJobFamilyRequestDto, jobFamily, previousJobName);
-		modifyEmployeeHistoryJobTitle(jobTitleNamePairs, jobFamily);
-
 		jobFamily.setJobTitles(filterActiveJobTitles(jobFamily.getJobTitles()));
 		JobFamilyResponseDto jobFamilyResponseDto = peopleMapper.jobFamilyToJobFamilyResponseDto(jobFamily);
 
@@ -251,9 +234,6 @@ public class JobServiceImpl implements JobService {
 					employee.setJobTitle(transferJobTitle);
 					employeeDao.save(employee);
 
-					employeeTimelineService.addEmployeeTimelineRecord(employee, EmployeeTimelineType.JOB_TITLE_CHANGED,
-							messageUtil.getMessage(PeopleMessageConstant.PEOPLE_ERROR_JOB_TITLE_CHANGED),
-							jobFamily.getName(), transferJobTitle.getName());
 				}
 				else {
 					throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_JOB_FAMILY_AND_JOB_TITLE_NOT_MATCH);
@@ -364,28 +344,6 @@ public class JobServiceImpl implements JobService {
 		return jobTitles;
 	}
 
-	private void modifyEmployeeHistoryJobFamily(UpdateJobFamilyRequestDto updateJobFamilyRequestDto,
-			JobFamily jobFamily, String previousJobName) {
-		if (previousJobName != null && !previousJobName.equals(updateJobFamilyRequestDto.getName())) {
-			List<Employee> employeesWithJobFamily = jobFamily.getEmployees();
-			employeesWithJobFamily
-				.forEach(employeeJobFamily -> employeeTimelineService.addEmployeeTimelineRecord(employeeJobFamily,
-						EmployeeTimelineType.JOB_FAMILY_CHANGED,
-						messageUtil.getMessage(PeopleMessageConstant.PEOPLE_ERROR_JOB_FAMILY_CHANGED), previousJobName,
-						updateJobFamilyRequestDto.getName()));
-		}
-	}
-
-	private void modifyEmployeeHistoryJobTitle(HashMap<JobTitle, String> jobTitleNamePairs, JobFamily jobFamily) {
-		jobTitleNamePairs.forEach((jobTitle, name) -> {
-			List<Employee> employeesWithJobTitles = employeeDao.findByJobFamilyAndJobTitle(jobFamily, jobTitle);
-			employeesWithJobTitles.forEach(employee -> employeeTimelineService.addEmployeeTimelineRecord(employee,
-					EmployeeTimelineType.JOB_TITLE_CHANGED,
-					messageUtil.getMessage(PeopleMessageConstant.PEOPLE_ERROR_JOB_TITLE_CHANGED), name,
-					jobTitle.getName()));
-		});
-	}
-
 	private void transferEmployeeJobTitles(List<TransferJobTitleRequestDto> transferJobTitleRequestDto,
 			JobTitle jobTitle) {
 		transferJobTitleRequestDto.forEach(transfer -> {
@@ -398,10 +356,6 @@ public class JobServiceImpl implements JobService {
 				if (employee.getJobFamily().getJobTitles().contains(transferJobTitle) && jobTitle != transferJobTitle) {
 					employee.setJobTitle(transferJobTitle);
 					employeeDao.save(employee);
-
-					employeeTimelineService.addEmployeeTimelineRecord(employee, EmployeeTimelineType.JOB_FAMILY_CHANGED,
-							messageUtil.getMessage(PeopleMessageConstant.PEOPLE_ERROR_JOB_FAMILY_CHANGED),
-							jobTitle.getName(), transferJobTitle.getName());
 				}
 				else {
 					throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_JOB_FAMILY_AND_JOB_TITLE_NOT_MATCH);

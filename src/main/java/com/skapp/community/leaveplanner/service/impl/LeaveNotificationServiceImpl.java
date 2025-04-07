@@ -377,13 +377,8 @@ public class LeaveNotificationServiceImpl implements LeaveNotificationService {
 	public void sendNudgeSingleDayLeaveRequestManagerNotification(LeaveRequest leaveRequest) {
 		LeaveEmailDynamicFields leaveEmailDynamicFields = new LeaveEmailDynamicFields();
 
-		leaveEmailDynamicFields.setEmployeeOrManagerName(
+		leaveEmailDynamicFields.setEmployeesName(
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
-		leaveEmailDynamicFields.setLeaveType(leaveRequest.getLeaveType().getName());
-		leaveEmailDynamicFields.setLeaveStartDate(leaveRequest.getStartDate().toString());
-		leaveEmailDynamicFields.setLeaveEndDate(leaveRequest.getEndDate().toString());
-		leaveEmailDynamicFields.setLeaveDuration(String.valueOf(leaveRequest.getLeaveState()));
-		leaveEmailDynamicFields.setComment(leaveRequest.getReviewerComment());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
 		managers.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
@@ -396,13 +391,8 @@ public class LeaveNotificationServiceImpl implements LeaveNotificationService {
 	public void sendNudgeMultiDayLeaveRequestManagerNotification(LeaveRequest leaveRequest) {
 		LeaveEmailDynamicFields leaveEmailDynamicFields = new LeaveEmailDynamicFields();
 
-		leaveEmailDynamicFields.setEmployeeOrManagerName(
+		leaveEmailDynamicFields.setEmployeesName(
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
-		leaveEmailDynamicFields.setLeaveType(leaveRequest.getLeaveType().getName());
-		leaveEmailDynamicFields.setLeaveStartDate(leaveRequest.getStartDate().toString());
-		leaveEmailDynamicFields.setLeaveEndDate(leaveRequest.getEndDate().toString());
-		leaveEmailDynamicFields.setLeaveDuration(String.valueOf(leaveRequest.getLeaveState()));
-		leaveEmailDynamicFields.setComment(leaveRequest.getReviewerComment());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
 		managers.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),

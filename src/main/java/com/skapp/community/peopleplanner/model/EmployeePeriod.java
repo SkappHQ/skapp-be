@@ -38,6 +38,16 @@ public class EmployeePeriod {
 	private LocalDate endDate;
 
 	@Column(name = "is_active")
-	private boolean isActive;
+	private Boolean isActive;
+
+	public EmployeePeriod(EmployeePeriod other) {
+		if (other != null) {
+			this.id = other.id;
+			this.startDate = other.startDate;
+			this.endDate = other.endDate;
+			this.isActive = other.isActive;
+			this.employee = other.employee;
+		}
+	}
 
 }

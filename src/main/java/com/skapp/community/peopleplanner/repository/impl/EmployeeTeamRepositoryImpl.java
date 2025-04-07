@@ -31,20 +31,18 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 
-	@NonNull
-	private EntityManager entityManager;
+	private final EntityManager entityManager;
 
 	@Override
 	public Long countAvailableEmployeesByTeamIdsAndDate(List<Long> teamsFilter, LocalDate currentDate,
@@ -94,9 +92,8 @@ public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 					employeeRoot.get(Employee_.employeeId).in(teamMembersSubquery)));
 		}
 		else {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeRoot.join(Employee_.teams);
-			predicates.add(criteriaBuilder.and(criteriaBuilder.not(isAdminPredicate),
-					employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamsFilter)));
+			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeRoot.join(Employee_.employeeTeams);
+			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamsFilter));
 		}
 
 		Subquery<Long> leaveSubquery = criteriaQuery.subquery(Long.class);
@@ -124,7 +121,7 @@ public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 		Root<Employee> employeeRoot = criteriaQuery.from(Employee.class);
 
 		Join<Employee, User> userJoin = employeeRoot.join(Employee_.user, JoinType.LEFT);
-		Join<Employee, EmployeeTeam> employeeTeamJoin = employeeRoot.join(Employee_.teams, JoinType.LEFT);
+		Join<Employee, EmployeeTeam> employeeTeamJoin = employeeRoot.join(Employee_.employeeTeams, JoinType.LEFT);
 
 		List<Predicate> predicates = new ArrayList<>();
 
@@ -181,8 +178,7 @@ public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 					criteriaBuilder.or(isAdminPredicate, employeeRoot.get(Employee_.employeeId).in(employeesSubquery)));
 		}
 		else {
-			predicates.add(criteriaBuilder.or(isAdminPredicate,
-					employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teams)));
+			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teams));
 		}
 
 		if (clockInType.contains(ClockInType.NOT_CLOCKED_INS) && !clockInType.contains(ClockInType.LATE_CLOCK_INS)) {
@@ -237,13 +233,13 @@ public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 		predicates.add(criteriaBuilder.isTrue(employeeRoot.get(Employee_.user).get(User_.isActive)));
 		predicates.add(criteriaBuilder.equal(employeeRoot.get(Employee_.ACCOUNT_STATUS), AccountStatus.ACTIVE));
 
-		if (isAdmin) {
-			Join<Employee, User> userJoin = employeeRoot.join(Employee_.user);
-			Predicate isActivePredicate = criteriaBuilder.isTrue(userJoin.get(User_.isActive));
-			predicates.add(isActivePredicate);
-		}
-		else {
-			if (teams != null && !teams.isEmpty() && teams.contains(-1L)) {
+		if (teams != null && !teams.isEmpty() && teams.contains(-1L)) {
+			if (isAdmin) {
+				Join<Employee, User> userJoin = employeeRoot.join(Employee_.user);
+				Predicate isActivePredicate = criteriaBuilder.isTrue(userJoin.get(User_.isActive));
+				predicates.add(isActivePredicate);
+			}
+			else {
 				Subquery<Long> managedEmployeesSubquery = criteriaQuery.subquery(Long.class);
 				Root<EmployeeManager> managerRoot = managedEmployeesSubquery.from(EmployeeManager.class);
 				managedEmployeesSubquery.select(managerRoot.get(EmployeeManager_.employee).get(Employee_.employeeId))
@@ -260,17 +256,16 @@ public class EmployeeTeamRepositoryImpl implements EmployeeTeamRepository {
 				predicates.add(criteriaBuilder.or(employeeRoot.get(Employee_.employeeId).in(managedEmployeesSubquery),
 						employeeRoot.get(Employee_.employeeId).in(supervisedTeamsSubquery)));
 			}
-			else if (teams != null && !teams.isEmpty()) {
-				// Filter by specific teams
-				Join<Employee, EmployeeTeam> employeeTeamJoin = employeeRoot.join(Employee_.teams, JoinType.LEFT);
-				Predicate teamPredicate = employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teams);
-				predicates.add(teamPredicate);
-			}
-
-			Join<Employee, User> userJoin = employeeRoot.join(Employee_.user);
-			Predicate isActivePredicate = criteriaBuilder.isTrue(userJoin.get(User_.isActive));
-			predicates.add(isActivePredicate);
 		}
+		else if (teams != null && !teams.isEmpty()) {
+			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeRoot.join(Employee_.employeeTeams, JoinType.LEFT);
+			Predicate teamPredicate = employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teams);
+			predicates.add(teamPredicate);
+		}
+
+		Join<Employee, User> userJoin = employeeRoot.join(Employee_.user);
+		Predicate isActivePredicate = criteriaBuilder.isTrue(userJoin.get(User_.isActive));
+		predicates.add(isActivePredicate);
 
 		criteriaQuery.select(employeeRoot).where(predicates.toArray(new Predicate[0])).distinct(true);
 

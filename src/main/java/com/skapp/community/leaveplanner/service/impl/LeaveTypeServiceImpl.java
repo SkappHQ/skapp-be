@@ -199,7 +199,7 @@ public class LeaveTypeServiceImpl implements LeaveTypeService {
 		annualLeaveType.setIsAutoApproval(false);
 		annualLeaveType.setIsActive(true);
 		annualLeaveType.setIsCarryForwardEnabled(false);
-		annualLeaveType.setIsCarryForwardRemainingBalanceEnabled(true);
+		annualLeaveType.setIsCarryForwardRemainingBalanceEnabled(false);
 
 		addLeaveType(annualLeaveType);
 		log.info("createDefaultLeaveType: execution ended");

@@ -1,11 +1,11 @@
 package com.skapp.community.timeplanner.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.skapp.community.common.exception.EntityNotFoundException;
 import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.mapper.CommonMapper;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
+import com.skapp.community.common.service.OrganizationService;
 import com.skapp.community.common.service.UserService;
 import com.skapp.community.common.type.Role;
 import com.skapp.community.common.util.DateTimeUtils;
@@ -13,7 +13,6 @@ import com.skapp.community.leaveplanner.mapper.LeaveMapper;
 import com.skapp.community.leaveplanner.model.LeaveRequest;
 import com.skapp.community.leaveplanner.repository.LeaveRequestDao;
 import com.skapp.community.leaveplanner.type.LeaveState;
-import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
 import com.skapp.community.peopleplanner.mapper.PeopleMapper;
 import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
@@ -24,6 +23,8 @@ import com.skapp.community.peopleplanner.repository.EmployeeDao;
 import com.skapp.community.peopleplanner.repository.EmployeeTeamDao;
 import com.skapp.community.peopleplanner.repository.HolidayDao;
 import com.skapp.community.peopleplanner.repository.TeamDao;
+import com.skapp.community.peopleplanner.type.AccountStatus;
+import com.skapp.community.peopleplanner.util.PeopleUtil;
 import com.skapp.community.timeplanner.constant.TimeMessageConstant;
 import com.skapp.community.timeplanner.model.TimeConfig;
 import com.skapp.community.timeplanner.model.TimeRecord;
@@ -39,12 +40,12 @@ import com.skapp.community.timeplanner.payload.response.ClockInSummaryResponseDt
 import com.skapp.community.timeplanner.payload.response.UtilizationPercentageDto;
 import com.skapp.community.timeplanner.repository.TimeConfigDao;
 import com.skapp.community.timeplanner.repository.TimeRecordDao;
+import com.skapp.community.timeplanner.service.AttendanceConfigService;
 import com.skapp.community.timeplanner.service.TimeAnalyticsService;
 import com.skapp.community.timeplanner.service.TimeService;
 import com.skapp.community.timeplanner.type.ClockInType;
 import com.skapp.community.timeplanner.type.RecordType;
 import com.skapp.community.timeplanner.type.TrendPeriod;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -54,6 +55,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
 import java.time.Year;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -64,47 +68,40 @@ import java.util.stream.Collectors;
 
 import static com.skapp.community.common.constant.CommonMessageConstant.COMMON_ERROR_USER_NOT_FOUND;
 import static com.skapp.community.timeplanner.constant.TimeMessageConstant.TIME_ERROR_MANAGER_OR_ABOVE_PERMISSIONS_REQUIRED;
+import static com.skapp.community.timeplanner.type.AttendanceConfigType.CLOCK_IN_ON_LEAVE_DAYS;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class TimeAnalyticsServiceImpl implements TimeAnalyticsService {
 
-	@NonNull
 	private final TimeRecordDao timeRecordDao;
 
-	@NonNull
 	private final TimeConfigDao timeConfigDao;
 
-	@NonNull
 	private final TeamDao teamDao;
 
-	@NonNull
 	private final UserService userService;
 
-	@NonNull
 	private final LeaveRequestDao leaveRequestDao;
 
-	@NonNull
 	private final EmployeeTeamDao employeeTeamDao;
 
-	@NonNull
 	private final EmployeeDao employeeDao;
 
-	@NonNull
 	private final HolidayDao holidayDao;
 
-	@NonNull
 	private final LeaveMapper leaveMapper;
 
-	@NonNull
 	private final CommonMapper commonMapper;
 
-	@NonNull
 	private final PeopleMapper peopleMapper;
 
-	@NonNull
 	private final TimeService timeService;
+
+	private final AttendanceConfigService attendanceConfigService;
+
+	private final OrganizationService organizationService;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -273,6 +270,20 @@ public class TimeAnalyticsServiceImpl implements TimeAnalyticsService {
 
 	private Optional<ClockInSummaryResponseDto> buildClockInSummaryResponse(ClockInSummaryFilterDto filterDto,
 			Employee employee) {
+
+		if (employee.getAccountStatus().equals(AccountStatus.PENDING)) {
+			return Optional.empty();
+		}
+
+		List<LeaveRequest> leaveRequestsList = leaveRequestDao
+			.findLeaveRequestsForTodayByUser(DateTimeUtils.getCurrentUtcDate(), employee.getEmployeeId());
+
+		boolean clockInOnLeaveDaysStatus = attendanceConfigService.getAttendanceConfigByType(CLOCK_IN_ON_LEAVE_DAYS);
+
+		if (!clockInOnLeaveDaysStatus && !leaveRequestsList.isEmpty()) {
+			return Optional.empty();
+		}
+
 		if (filterDto.getClockInType().contains(ClockInType.ALL_CLOCK_INS) || filterDto.getClockInType().isEmpty()) {
 			return createClockInSummaryResponse(filterDto, employee);
 		}
@@ -356,39 +367,15 @@ public class TimeAnalyticsServiceImpl implements TimeAnalyticsService {
 		List<Team> teams = teamDao.findByTeamIdIn(teamIds);
 		boolean isSuperAdminOrAttendanceAdmin = isUserSuperAdminOrAttendanceAdmin(currentUser);
 
-		validateTeamsExist(teamIds, teams);
+		PeopleUtil.validateTeamsExist(teamIds, teams);
 		if (!isSuperAdminOrAttendanceAdmin) {
-			validateUserIsSupervisor(teams, currentUser);
+			PeopleUtil.validateUserIsSupervisor(teams, currentUser);
 		}
 	}
 
 	private boolean isUserSuperAdminOrAttendanceAdmin(User user) {
 		EmployeeRole role = user.getEmployee().getEmployeeRole();
 		return role.getIsSuperAdmin() || Role.ATTENDANCE_ADMIN.equals(role.getAttendanceRole());
-	}
-
-	private void validateTeamsExist(List<Long> teamIds, List<Team> teams) {
-		List<Long> unavailableTeams = teamIds.stream()
-			.filter(teamId -> teams.stream().noneMatch(t -> t.getTeamId().equals(teamId)))
-			.toList();
-		if (!unavailableTeams.isEmpty()) {
-			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_TEAM_NOT_FOUND,
-					new String[] { unavailableTeams.toString() });
-		}
-	}
-
-	private void validateUserIsSupervisor(List<Team> teams, User user) {
-		List<Long> notSupervisingTeams = teams.stream()
-			.filter(team -> team.getEmployees()
-				.stream()
-				.noneMatch(emp -> emp.getEmployee().getEmployeeId().equals(user.getEmployee().getEmployeeId())
-						&& emp.getIsSupervisor()))
-			.map(Team::getTeamId)
-			.toList();
-		if (!notSupervisingTeams.isEmpty()) {
-			throw new ModuleException(PeopleMessageConstant.PEOPLE_ERROR_USER_IS_NOT_SUPERVISOR_FOR_SELECTED_TEAMS,
-					new String[] { notSupervisingTeams.toString() });
-		}
 	}
 
 	private List<TimeRecord> getTimeRecords(List<Long> teamIds) {
@@ -401,7 +388,13 @@ public class TimeAnalyticsServiceImpl implements TimeAnalyticsService {
 		if (timeConfig == null)
 			return false;
 
-		LocalTime recordStartTime = DateTimeUtils.epochMillisToUtcLocalTime(timeRecord.getClockInTime());
+		ZoneId orgTimeZone = ZoneId.of(organizationService.getOrganizationTimeZone());
+		LocalTime utcTime = DateTimeUtils.epochMillisToUtcLocalTime(timeRecord.getClockInTime());
+
+		ZonedDateTime orgDateTime = ZonedDateTime.of(LocalDate.now(orgTimeZone), utcTime, ZoneOffset.UTC)
+			.withZoneSameInstant(orgTimeZone);
+
+		LocalTime recordStartTime = orgDateTime.toLocalTime();
 		LocalTime lateThreshold = LocalTime.of(timeConfig.getStartHour(), timeConfig.getStartMinute());
 
 		LeaveRequest leaveRequest = leaveRequestDao.findByEmployeeAndDate(timeRecord.getEmployee().getEmployeeId(),

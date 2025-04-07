@@ -29,4 +29,6 @@ public interface TeamDao extends JpaRepository<Team, Long>, TeamRepository {
 
 	List<Team> findAllByIsActive(boolean isActive);
 
+	Team findByTeamId(Long teamId);
+
 }

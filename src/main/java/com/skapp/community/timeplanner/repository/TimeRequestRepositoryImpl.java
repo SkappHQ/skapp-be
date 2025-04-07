@@ -180,7 +180,7 @@ public class TimeRequestRepositoryImpl implements TimeRequestRepository {
 		List<Predicate> predicates = new ArrayList<>();
 
 		Join<TimeRequest, Employee> employee = timeRequestRoot.join(TimeRequest_.employee);
-		Join<Employee, EmployeeManager> managers = employee.join(Employee_.employees);
+		Join<Employee, EmployeeManager> managers = employee.join(Employee_.employeeManagers);
 		Join<EmployeeManager, Employee> manEmp = managers.join(EmployeeManager_.manager);
 		Join<Employee, User> user = employee.join(Employee_.user);
 
@@ -217,7 +217,7 @@ public class TimeRequestRepositoryImpl implements TimeRequestRepository {
 		Root<TimeRequest> timeRequestRoot = criteriaQuery.from(TimeRequest.class);
 
 		Join<TimeRequest, Employee> employee = timeRequestRoot.join(TimeRequest_.employee);
-		Join<Employee, EmployeeManager> managers = employee.join(Employee_.employees);
+		Join<Employee, EmployeeManager> managers = employee.join(Employee_.employeeManagers);
 		Join<EmployeeManager, Employee> managerEmployee = managers.join(EmployeeManager_.manager);
 		Join<Employee, User> user = employee.join(Employee_.user);
 

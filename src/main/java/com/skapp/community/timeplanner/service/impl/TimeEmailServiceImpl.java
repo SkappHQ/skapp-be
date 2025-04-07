@@ -227,6 +227,8 @@ public class TimeEmailServiceImpl implements TimeEmailService {
 
 		emailDynamicFields.setEmployeeOrManagerName(timeRequestResponse.getEmployee().getFirstName() + " "
 				+ timeRequestResponse.getEmployee().getLastName());
+		emailDynamicFields.setEmployeeOrManagerName(timeRequestResponse.getEmployee().getFirstName() + " "
+				+ timeRequestResponse.getEmployee().getLastName());
 		emailDynamicFields.setTimeEntryDate(
 				DateTimeUtils.epochMillisToUtcLocalDate(timeRequestResponse.getRequestedStartTime()).toString());
 		emailDynamicFields
@@ -338,6 +340,8 @@ public class TimeEmailServiceImpl implements TimeEmailService {
 		emailDynamicFields.setEndTime(DateTimeUtils.epochMillisToAmPmString(timeRequest.getRequestedEndTime()));
 		emailDynamicFields
 			.setManagerName(managerUser.getEmployee().getFirstName() + " " + managerUser.getEmployee().getLastName());
+		emailDynamicFields
+			.setEmployeeName(timeRequest.getEmployee().getFirstName() + " " + timeRequest.getEmployee().getLastName());
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(timeRequest.getEmployee()), managerUser);
@@ -354,7 +358,9 @@ public class TimeEmailServiceImpl implements TimeEmailService {
 		AttendanceEmailDynamicFields emailDynamicFields = new AttendanceEmailDynamicFields();
 
 		emailDynamicFields.setEmployeeOrManagerName(
-				timeRequest.getEmployee().getFirstName() + " " + timeRequest.getEmployee().getLastName());
+				managerUser.getEmployee().getFirstName() + " " + managerUser.getEmployee().getLastName());
+		emailDynamicFields
+			.setEmployeeName(timeRequest.getEmployee().getFirstName() + " " + timeRequest.getEmployee().getLastName());
 		emailDynamicFields
 			.setTimeEntryDate(DateTimeUtils.epochMillisToUtcLocalDate(timeRequest.getRequestedStartTime()).toString());
 		emailDynamicFields.setStartTime(DateTimeUtils.epochMillisToAmPmString(timeRequest.getRequestedStartTime()));

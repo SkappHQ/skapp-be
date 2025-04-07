@@ -24,19 +24,17 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class JobFamilyRepositoryImpl implements JobFamilyRepository {
 
-	@NonNull
 	private final EntityManager entityManager;
 
 	@Override
@@ -76,7 +74,7 @@ public class JobFamilyRepositoryImpl implements JobFamilyRepository {
 		predicates.add(criteriaBuilder.equal(jobFamilyRoot.get(JobFamily_.isActive), true));
 
 		if (teamIds != null && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeJoin.join(Employee_.teams, JoinType.LEFT);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = employeeJoin.join(Employee_.employeeTeams, JoinType.LEFT);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 

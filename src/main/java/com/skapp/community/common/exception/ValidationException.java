@@ -35,6 +35,12 @@ public class ValidationException extends RuntimeException {
 		this.validationErrors = null;
 	}
 
+	public ValidationException(MessageConstant messageKey, Object[] args) {
+		super(getMessageUtil().getMessage(messageKey.getMessageKey(), args));
+		this.messageKey = messageKey;
+		this.validationErrors = null;
+	}
+
 	public ValidationException(MessageConstant messageKey, List<String> validationErrors) {
 		super(getMessageUtil().getMessage(messageKey.getMessageKey(),
 				new Object[] { String.join(", ", validationErrors) }));

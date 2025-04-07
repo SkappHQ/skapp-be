@@ -23,23 +23,21 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.query.QueryUtils;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class TeamRepositoryImpl implements TeamRepository {
 
-	@NonNull
 	private final EntityManager entityManager;
 
 	@Override
@@ -150,7 +148,7 @@ public class TeamRepositoryImpl implements TeamRepository {
 		}
 
 		if (!teamIds.isEmpty() && !teamIds.contains(-1L)) {
-			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+			Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 			predicates.add(employeeTeamJoin.get(EmployeeTeam_.team).get(Team_.teamId).in(teamIds));
 		}
 
@@ -173,7 +171,7 @@ public class TeamRepositoryImpl implements TeamRepository {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
 		Root<Employee> root = criteriaQuery.from(Employee.class);
-		Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+		Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 		Join<Employee, User> user = root.join(Employee_.user);
 
 		List<Predicate> predicates = new ArrayList<>();
@@ -223,7 +221,7 @@ public class TeamRepositoryImpl implements TeamRepository {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
 		Root<Employee> root = criteriaQuery.from(Employee.class);
-		Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.teams);
+		Join<Employee, EmployeeTeam> employeeTeamJoin = root.join(Employee_.employeeTeams);
 		Join<Employee, User> user = root.join(Employee_.user);
 
 		List<Predicate> predicates = new ArrayList<>();
