@@ -315,7 +315,7 @@ public class RolesServiceImpl implements RolesService {
 
 		if (user.getEmployee() != null && user.getEmployee().getEmployeeRole() != null
 				&& user.getEmployee().getEmployeeRole().getIsSuperAdmin() && userRoles != null
-				&& userRoles.getIsSuperAdmin() != null && userRoles.getIsSuperAdmin()
+				&& Boolean.TRUE.equals(userRoles.getIsSuperAdmin())
 				&& (userRoles.getPeopleRole() != Role.PEOPLE_ADMIN || userRoles.getLeaveRole() != Role.LEAVE_ADMIN
 						|| userRoles.getAttendanceRole() != Role.ATTENDANCE_ADMIN)) {
 			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_SUPER_ADMIN_ROLES_CANNOT_BE_CHANGED);
