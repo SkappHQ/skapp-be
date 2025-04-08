@@ -730,119 +730,109 @@ public class PeopleServiceImpl implements PeopleService {
 			return new HashSet<>();
 		}
 
-		EmployeeEmploymentBasicDetailsManagerDetailsDto primarySupervisor = requestDto.getEmploymentDetails()
-			.getPrimarySupervisor();
-		EmployeeEmploymentBasicDetailsManagerDetailsDto secondarySupervisor = requestDto.getEmploymentDetails()
-			.getSecondarySupervisor();
-
+		Set<EmployeeManager> result = new HashSet<>();
 		Set<EmployeeManager> existingManagers = employee.getEmployeeManagers() != null
 				? new HashSet<>(employee.getEmployeeManagers()) : new HashSet<>();
-		Set<EmployeeManager> result = new HashSet<>();
 
-		boolean isPrimarySupervisorInRequest = requestDto.getEmploymentDetails().getPrimarySupervisor() != null;
-		boolean isSecondarySupervisorInRequest = requestDto.getEmploymentDetails().getSecondarySupervisor() != null;
+		processPrimarySupervisor(requestDto.getEmploymentDetails().getPrimarySupervisor(), employee, existingManagers,
+				result);
 
-		Set<Long> newManagerIds = new HashSet<>();
-		List<Long> primaryManagersToRemove = new ArrayList<>();
-		List<Long> secondaryManagersToRemove = new ArrayList<>();
+		processOtherSupervisors(requestDto.getEmploymentDetails().getOtherSupervisors(),
+				requestDto.getEmploymentDetails().getPrimarySupervisor(), employee, existingManagers, result);
 
-		if (isPrimarySupervisorInRequest) {
-			if (primarySupervisor.getEmployeeId() != null) {
-				newManagerIds.add(primarySupervisor.getEmployeeId());
+		return result;
+	}
 
-				for (EmployeeManager em : existingManagers) {
-					if (em.getManager() != null && em.getManagerType() == ManagerType.PRIMARY
-							&& !newManagerIds.contains(em.getManager().getEmployeeId())
-							&& em.getEmployee().equals(employee)) {
-						Long id = em.getId();
-						if (id != null) {
-							primaryManagersToRemove.add(id);
-						}
-					}
-				}
+	private void processPrimarySupervisor(EmployeeEmploymentBasicDetailsManagerDetailsDto primarySupervisor,
+			Employee employee, Set<EmployeeManager> existingManagers, Set<EmployeeManager> result) {
 
-				Employee manager = employeeDao.findEmployeeByEmployeeId(primarySupervisor.getEmployeeId());
-				if (manager != null) {
-					EmployeeManager primary = new EmployeeManager();
+		if (primarySupervisor == null) {
+			existingManagers.stream().filter(em -> em.getManagerType() == ManagerType.PRIMARY).forEach(result::add);
+			return;
+		}
 
-					CommonModuleUtils.setIfExists(() -> manager, primary::setManager);
-					CommonModuleUtils.setIfExists(() -> employee, primary::setEmployee);
-					CommonModuleUtils.setIfExists(() -> ManagerType.PRIMARY, primary::setManagerType);
-					CommonModuleUtils.setIfExists(() -> true, primary::setIsPrimaryManager);
+		if (primarySupervisor.getEmployeeId() == null) {
+			existingManagers.stream()
+				.filter(em -> em.getManagerType() == ManagerType.PRIMARY)
+				.map(EmployeeManager::getId)
+				.filter(Objects::nonNull)
+				.forEach(employeeManagerDao::deleteById);
+			return;
+		}
 
-					result.add(primary);
-				}
+		Long newPrimaryId = primarySupervisor.getEmployeeId();
 
-			}
-			else {
-				for (EmployeeManager em : existingManagers) {
-					if (em.getManagerType() == ManagerType.PRIMARY) {
-						Long id = em.getId();
-						if (id != null) {
-							employeeManagerDao.deleteById(id);
-						}
-					}
-				}
-			}
+		Optional<EmployeeManager> existingPrimary = existingManagers.stream()
+			.filter(em -> em.getManagerType() == ManagerType.PRIMARY && em.getManager() != null
+					&& newPrimaryId.equals(em.getManager().getEmployeeId()))
+			.findFirst();
+
+		if (existingPrimary.isPresent()) {
+			result.add(existingPrimary.get());
 		}
 		else {
-			existingManagers.stream().filter(em -> em.getManagerType() == ManagerType.PRIMARY).forEach(result::add);
+			Employee manager = employeeDao.findEmployeeByEmployeeId(newPrimaryId);
+			if (manager != null) {
+				EmployeeManager primary = new EmployeeManager();
+				primary.setManager(manager);
+				primary.setEmployee(employee);
+				primary.setManagerType(ManagerType.PRIMARY);
+				primary.setIsPrimaryManager(true);
+				result.add(primary);
+			}
+
+			existingManagers.stream()
+				.filter(em -> em.getManagerType() == ManagerType.PRIMARY
+						&& (em.getManager() == null || !newPrimaryId.equals(em.getManager().getEmployeeId())))
+				.map(EmployeeManager::getId)
+				.filter(Objects::nonNull)
+				.forEach(employeeManagerDao::deleteById);
+		}
+	}
+
+	private void processOtherSupervisors(List<EmployeeEmploymentBasicDetailsManagerDetailsDto> otherSupervisors,
+			EmployeeEmploymentBasicDetailsManagerDetailsDto primarySupervisor, Employee employee,
+			Set<EmployeeManager> existingManagers, Set<EmployeeManager> result) {
+
+		if (otherSupervisors == null || otherSupervisors.isEmpty()) {
+			existingManagers.stream().filter(em -> em.getManagerType() == ManagerType.SECONDARY).forEach(result::add);
+			return;
 		}
 
-		if (isSecondarySupervisorInRequest) {
-			if (secondarySupervisor.getEmployeeId() != null
-					&& (primarySupervisor == null || primarySupervisor.getEmployeeId() == null
-							|| !secondarySupervisor.getEmployeeId().equals(primarySupervisor.getEmployeeId()))) {
+		Long primaryId = primarySupervisor != null ? primarySupervisor.getEmployeeId() : null;
+		Set<Long> otherSupervisorIds = otherSupervisors.stream()
+			.map(EmployeeEmploymentBasicDetailsManagerDetailsDto::getEmployeeId)
+			.filter(Objects::nonNull)
+			.filter(id -> !id.equals(primaryId))
+			.collect(Collectors.toSet());
 
-				newManagerIds.add(secondarySupervisor.getEmployeeId());
+		Map<Long, EmployeeManager> existingSecondaryManagers = existingManagers.stream()
+			.filter(em -> em.getManagerType() == ManagerType.SECONDARY && em.getManager() != null)
+			.collect(Collectors.toMap(em -> em.getManager().getEmployeeId(), em -> em, (a, b) -> a));
 
-				for (EmployeeManager em : existingManagers) {
-					if (em.getManager() != null && em.getManagerType() == ManagerType.SECONDARY
-							&& !newManagerIds.contains(em.getManager().getEmployeeId())
-							&& em.getEmployee().equals(employee)) {
-						Long id = em.getId();
-						if (id != null) {
-							secondaryManagersToRemove.add(id);
-						}
-					}
-				}
-
-				Employee manager = employeeDao.findEmployeeByEmployeeId(secondarySupervisor.getEmployeeId());
+		otherSupervisorIds.forEach(id -> {
+			if (existingSecondaryManagers.containsKey(id)) {
+				result.add(existingSecondaryManagers.get(id));
+			}
+			else {
+				Employee manager = employeeDao.findEmployeeByEmployeeId(id);
 				if (manager != null) {
 					EmployeeManager secondary = new EmployeeManager();
-
-					CommonModuleUtils.setIfExists(() -> manager, secondary::setManager);
-					CommonModuleUtils.setIfExists(() -> employee, secondary::setEmployee);
-					CommonModuleUtils.setIfExists(() -> ManagerType.SECONDARY, secondary::setManagerType);
-					CommonModuleUtils.setIfExists(() -> false, secondary::setIsPrimaryManager);
-
+					secondary.setManager(manager);
+					secondary.setEmployee(employee);
+					secondary.setManagerType(ManagerType.SECONDARY);
+					secondary.setIsPrimaryManager(false);
 					result.add(secondary);
 				}
 			}
-			else {
-				for (EmployeeManager em : existingManagers) {
-					if (em.getManagerType() == ManagerType.SECONDARY) {
-						Long id = em.getId();
-						if (id != null) {
-							employeeManagerDao.deleteById(id);
-						}
-					}
-				}
-			}
-		}
-		else {
-			existingManagers.stream().filter(em -> em.getManagerType() == ManagerType.SECONDARY).forEach(result::add);
-		}
+		});
 
-		if (!primaryManagersToRemove.isEmpty()) {
-			employeeManagerDao.deleteAllById(primaryManagersToRemove);
-		}
-
-		if (!secondaryManagersToRemove.isEmpty()) {
-			employeeManagerDao.deleteAllById(secondaryManagersToRemove);
-		}
-
-		return result;
+		existingManagers.stream()
+			.filter(em -> em.getManagerType() == ManagerType.SECONDARY
+					&& (em.getManager() == null || !otherSupervisorIds.contains(em.getManager().getEmployeeId())))
+			.map(EmployeeManager::getId)
+			.filter(Objects::nonNull)
+			.forEach(employeeManagerDao::deleteById);
 	}
 
 	private List<EmployeeEmergency> processEmergencyContacts(CreateEmployeeRequestDto requestDto, Employee employee) {
