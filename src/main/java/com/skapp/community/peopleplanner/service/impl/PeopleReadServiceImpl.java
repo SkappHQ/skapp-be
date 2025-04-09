@@ -257,12 +257,11 @@ public class PeopleReadServiceImpl implements PeopleReadService {
 				.map(peopleMapper::employeeManagerToManagerDetailsDto)
 				.orElse(null));
 
-			dto.setSecondarySupervisor(employee.getEmployeeManagers()
+			dto.setOtherSupervisors(employee.getEmployeeManagers()
 				.stream()
 				.filter(m -> !m.getIsPrimaryManager())
-				.findFirst()
 				.map(peopleMapper::employeeManagerToManagerDetailsDto)
-				.orElse(null));
+				.toList());
 		}
 
 		Optional.ofNullable(employee.getEmployeePeriods())
@@ -330,7 +329,7 @@ public class PeopleReadServiceImpl implements PeopleReadService {
 
 		String employeeNumberField = field(EmployeeEmploymentBasicDetailsDto::getEmployeeNumber);
 		String primarySupervisorField = field(EmployeeEmploymentBasicDetailsDto::getPrimarySupervisor);
-		String secondarySupervisorField = field(EmployeeEmploymentBasicDetailsDto::getSecondarySupervisor);
+		String secondarySupervisorField = field(EmployeeEmploymentBasicDetailsDto::getOtherSupervisors);
 		String joinedDateField = field(EmployeeEmploymentBasicDetailsDto::getJoinedDate);
 		String probationStartDateField = field(EmployeeEmploymentBasicDetailsDto::getProbationStartDate);
 		String probationEndDateField = field(EmployeeEmploymentBasicDetailsDto::getProbationEndDate);

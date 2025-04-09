@@ -12,6 +12,7 @@ import com.skapp.community.peopleplanner.model.Team;
 import com.skapp.community.peopleplanner.payload.request.employee.CreateEmployeeRequestDto;
 import com.skapp.community.peopleplanner.payload.request.employee.EmployeeEmploymentDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.EmployeePersonalDetailsDto;
+import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentBasicDetailsManagerDetailsDto;
 import com.skapp.community.peopleplanner.payload.request.employee.employment.EmployeeEmploymentCareerProgressionDetailsDto;
 import com.skapp.community.peopleplanner.repository.EmployeeDao;
 import com.skapp.community.peopleplanner.repository.JobFamilyDao;
@@ -70,8 +71,13 @@ public class EmployeeValidationServiceImpl implements EmployeeValidationService 
 					}
 				}
 
-				if (employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor() != null) {
-					if (employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor().getEmployeeId() != null) {
+				if (employmentDetailsDto.getEmploymentDetails() != null) {
+					// Check if primary supervisor exists
+					if (user.getUserId() == null
+							&& employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor() != null
+							&& employmentDetailsDto.getEmploymentDetails()
+								.getPrimarySupervisor()
+								.getEmployeeId() != null) {
 						Optional<Employee> primarySupervisor = employeeDao.findById(
 								employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor().getEmployeeId());
 						if (primarySupervisor.isEmpty()) {
@@ -80,57 +86,55 @@ public class EmployeeValidationServiceImpl implements EmployeeValidationService 
 						}
 					}
 
-					if ((employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor() == null
-							|| employmentDetailsDto.getEmploymentDetails()
-								.getPrimarySupervisor()
-								.getEmployeeId() == null)
-							&& employmentDetailsDto.getEmploymentDetails().getSecondarySupervisor() != null
+					// Check for secondary supervisors without a primary
+					if (user.getUserId() == null
+							&& (employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor() == null
+									|| employmentDetailsDto.getEmploymentDetails()
+										.getPrimarySupervisor()
+										.getEmployeeId() == null)
+							&& employmentDetailsDto.getEmploymentDetails().getOtherSupervisors() != null
+							&& !employmentDetailsDto.getEmploymentDetails().getOtherSupervisors().isEmpty()
 							&& employmentDetailsDto.getEmploymentDetails()
-								.getSecondarySupervisor()
-								.getEmployeeId() != null) {
+								.getOtherSupervisors()
+								.stream()
+								.anyMatch(supervisor -> supervisor.getEmployeeId() != null)) {
 						throw new ValidationException(
-								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CANNOT_ADD_SECONDARY_SUPERVISOR_WITHOUT_PRIMARY_SUPERVISOR);
+								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_CANNOT_ADD_OTHER_SUPERVISORS_WITHOUT_PRIMARY_SUPERVISOR);
 					}
 
+					// Check if primary is the same as any secondary
 					if (employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor() != null
 							&& employmentDetailsDto.getEmploymentDetails()
 								.getPrimarySupervisor()
 								.getEmployeeId() != null
-							&& employmentDetailsDto.getEmploymentDetails().getSecondarySupervisor() != null
+							&& employmentDetailsDto.getEmploymentDetails().getOtherSupervisors() != null
+							&& !employmentDetailsDto.getEmploymentDetails().getOtherSupervisors().isEmpty()
 							&& employmentDetailsDto.getEmploymentDetails()
-								.getSecondarySupervisor()
-								.getEmployeeId() != null
-							&& Objects.equals(
-									employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor().getEmployeeId(),
-									employmentDetailsDto.getEmploymentDetails()
-										.getSecondarySupervisor()
-										.getEmployeeId())) {
+								.getOtherSupervisors()
+								.stream()
+								.anyMatch(supervisor -> supervisor.getEmployeeId() != null
+										&& Objects.equals(employmentDetailsDto.getEmploymentDetails()
+											.getPrimarySupervisor()
+											.getEmployeeId(), supervisor.getEmployeeId()))) {
 						throw new ValidationException(
-								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_PRIMARY_SECONDARY_SUPERVISOR_SAME);
+								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_PRIMARY_OTHER_SUPERVISORS_SAME);
 					}
 
-					if (employmentDetailsDto.getEmploymentDetails().getSecondarySupervisor() != null
-							&& employmentDetailsDto.getEmploymentDetails()
-								.getSecondarySupervisor()
-								.getEmployeeId() != null) {
-						Optional<Employee> secondarySupervisor = employeeDao.findById(
-								employmentDetailsDto.getEmploymentDetails().getSecondarySupervisor().getEmployeeId());
-						if (secondarySupervisor.isEmpty()) {
-							throw new ValidationException(
-									PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_SECONDARY_SUPERVISOR_EMPLOYEE_NOT_FOUND);
+					// Check if all secondary supervisors exist
+					if (employmentDetailsDto.getEmploymentDetails().getOtherSupervisors() != null
+							&& !employmentDetailsDto.getEmploymentDetails().getOtherSupervisors().isEmpty()) {
+						for (EmployeeEmploymentBasicDetailsManagerDetailsDto supervisor : employmentDetailsDto
+							.getEmploymentDetails()
+							.getOtherSupervisors()) {
+							if (supervisor.getEmployeeId() != null) {
+								Optional<Employee> secondarySupervisor = employeeDao
+									.findById(supervisor.getEmployeeId());
+								if (secondarySupervisor.isEmpty()) {
+									throw new ValidationException(
+											PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_OTHER_SUPERVISORS_EMPLOYEE_NOT_FOUND);
+								}
+							}
 						}
-					}
-
-					if (employmentDetailsDto.getEmploymentDetails().getJoinedDate() != null
-							&& employmentDetailsDto.getEmploymentDetails().getJoinedDate().isAfter(LocalDate.now())) {
-						throw new ValidationException(
-								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_EMPLOYMENT_JOINED_DATE_FUTURE_DATE);
-					}
-
-					if (employmentDetailsDto.getEmploymentDetails().getJoinedDate() != null
-							&& employmentDetailsDto.getEmploymentDetails().getJoinedDate().isAfter(LocalDate.now())) {
-						throw new ValidationException(
-								PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_EMPLOYMENT_JOINED_DATE_FUTURE_DATE);
 					}
 
 					LocalDate joinedDate = employmentDetailsDto.getEmploymentDetails().getJoinedDate();
