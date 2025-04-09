@@ -384,9 +384,9 @@ public class PeopleReadServiceImpl implements PeopleReadService {
 			return;
 		}
 
-		if (doesNotHaveRole(userRoles, Role.ATTENDANCE_ADMIN) || doesNotHaveRole(userRoles, Role.LEAVE_ADMIN)
-				|| doesNotHaveRole(userRoles, Role.ATTENDANCE_MANAGER)
-				|| doesNotHaveRole(userRoles, Role.LEAVE_MANAGER)) {
+		if (doesNotHaveRole(userRoles, Role.ATTENDANCE_ADMIN) && (doesNotHaveRole(userRoles, Role.ATTENDANCE_ADMIN)
+				|| doesNotHaveRole(userRoles, Role.LEAVE_ADMIN) || doesNotHaveRole(userRoles, Role.ATTENDANCE_MANAGER)
+				|| doesNotHaveRole(userRoles, Role.LEAVE_MANAGER))) {
 			setNull(dto, systemPermissionsField, emergencyField);
 			setNull(dto, personal_contactField, personal_familyField, personal_educationalField,
 					personal_socialMediaField, personal_healthAndOtherField);
