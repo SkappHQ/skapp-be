@@ -794,8 +794,15 @@ public class PeopleServiceImpl implements PeopleService {
 			EmployeeEmploymentBasicDetailsManagerDetailsDto primarySupervisor, Employee employee,
 			Set<EmployeeManager> existingManagers, Set<EmployeeManager> result) {
 
-		if (otherSupervisors == null || otherSupervisors.isEmpty()) {
+		if (otherSupervisors == null) {
 			existingManagers.stream().filter(em -> em.getManagerType() == ManagerType.SECONDARY).forEach(result::add);
+			return;
+		}
+
+		if (otherSupervisors.isEmpty()) {
+			existingManagers.stream()
+				.filter(em -> em.getManagerType() == ManagerType.SECONDARY)
+				.forEach(employeeManagerDao::delete);
 			return;
 		}
 
