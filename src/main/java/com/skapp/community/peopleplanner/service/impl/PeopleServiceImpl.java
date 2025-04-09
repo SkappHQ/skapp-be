@@ -977,24 +977,6 @@ public class PeopleServiceImpl implements PeopleService {
 
 		EmployeeEmploymentBasicDetailsDto employmentDetails = requestDto.getEmployment().getEmploymentDetails();
 
-		if (employmentDetails.getProbationStartDate() == null && employmentDetails.getProbationEndDate() == null) {
-			if (employee.getEmployeeId() != null && employee.getEmployeePeriods() != null
-					&& !employee.getEmployeePeriods().isEmpty()) {
-				List<Long> periodIds = employee.getEmployeePeriods()
-					.stream()
-					.map(EmployeePeriod::getId)
-					.filter(Objects::nonNull)
-					.toList();
-
-				if (!periodIds.isEmpty()) {
-					employeePeriodDao.deleteAllByIdIn(periodIds);
-				}
-
-				employee.getEmployeePeriods().clear();
-			}
-			return new HashSet<>();
-		}
-
 		Set<EmployeePeriod> existingPeriods = employee.getEmployeePeriods() != null ? employee.getEmployeePeriods()
 				: new HashSet<>();
 
