@@ -1597,13 +1597,6 @@ public class PeopleServiceImpl implements PeopleService {
 			}
 		}
 
-		if (employeeBulkDto.getSecondaryManager() != null) {
-			Optional<User> byEmail = userDao.findByEmail(employeeBulkDto.getSecondaryManager());
-			if (byEmail.isPresent()) {
-				Optional<Employee> secondaryManager = employeeDao.findById(byEmail.get().getUserId());
-				secondaryManager.ifPresent(value -> employeeDetailsDto.setSecondaryManager(value.getEmployeeId()));
-			}
-		}
 	}
 
 	public void setBulkEmployeeProgression(EmployeeBulkDto employeeBulkDto, Employee employee) {
@@ -2302,7 +2295,6 @@ public class PeopleServiceImpl implements PeopleService {
 		validateLastName(employeeBulkDto.getLastName(), errors);
 		validateUserEmail(employeeBulkDto.getWorkEmail(), errors);
 		validateUserSupervisor(employeeBulkDto.getPrimaryManager(), errors);
-		validateUserSupervisor(employeeBulkDto.getSecondaryManager(), errors);
 		validateCareerProgressionInBulk(employeeBulkDto.getEmployeeProgression(), errors);
 		validateStateInBulk(employeeBulkDto.getEmployeePersonalInfo().getState(), errors);
 
