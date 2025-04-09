@@ -100,13 +100,13 @@ public class PeopleReadServiceImpl implements PeopleReadService {
 		dto.setMiddleName(employee.getMiddleName());
 		dto.setLastName(employee.getLastName());
 		dto.setGender(employee.getGender());
-		dto.setNin(employee.getIdentificationNo());
 
 		Optional.ofNullable(employee.getPersonalInfo()).ifPresent(personalInfo -> {
 			dto.setDateOfBirth(personalInfo.getBirthDate());
 			dto.setNationality(personalInfo.getNationality());
 			dto.setPassportNumber(personalInfo.getPassportNo());
 			dto.setMaritalStatus(personalInfo.getMaritalStatus());
+			dto.setNin(personalInfo.getNin());
 		});
 
 		return dto;
