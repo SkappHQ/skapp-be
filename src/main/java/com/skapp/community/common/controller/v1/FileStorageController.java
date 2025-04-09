@@ -5,7 +5,6 @@ import com.skapp.community.common.service.FileStorageService;
 import com.skapp.community.common.type.FileType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -28,7 +27,6 @@ import java.io.IOException;
 @Tag(name = "File Storage Controller", description = "Operations related to file storage functionalities")
 public class FileStorageController {
 
-	@NonNull
 	final FileStorageService fileStorageService;
 
 	@Operation(summary = "Upload a file", description = "Uploads a file of the specified type.")

@@ -45,6 +45,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -219,8 +221,9 @@ class PeopleControllerIntegrationTest {
 		employeeEmploymentBasicDetailsSecondaryManagerDetailsDto.setLastName("Primary Manager Name 2");
 
 		employeeEmploymentBasicDetailsDto.setPrimarySupervisor(employeeEmploymentBasicDetailsPrimaryManagerDetailsDto);
-		employeeEmploymentBasicDetailsDto
-			.setSecondarySupervisor(employeeEmploymentBasicDetailsSecondaryManagerDetailsDto);
+		List<EmployeeEmploymentBasicDetailsManagerDetailsDto> otherSupervisorsList = new ArrayList<>();
+		otherSupervisorsList.add(employeeEmploymentBasicDetailsSecondaryManagerDetailsDto);
+		employeeEmploymentBasicDetailsDto.setOtherSupervisors(otherSupervisorsList);
 
 		Long[] teamIds = { 1L };
 		employeeEmploymentBasicDetailsDto.setTeamIds(teamIds);

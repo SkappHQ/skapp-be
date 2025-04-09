@@ -8,8 +8,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import java.util.concurrent.Executor;
 
 @Configuration
-@ConditionalOnMissingBean(name = "EpAsyncConfiguration")
-public class AsyncConfiguration {
+@ConditionalOnMissingBean(name = "EpAsyncConfig")
+public class AsyncConfig {
 
 	@Bean
 	public Executor getAsyncExecutor() {

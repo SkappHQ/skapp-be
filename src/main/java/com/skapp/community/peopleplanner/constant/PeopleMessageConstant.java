@@ -179,9 +179,9 @@ public enum PeopleMessageConstant implements MessageConstant {
 			"api.error.people.validation.primary-supervisor-employee-not-found"),
 	PEOPLE_ERROR_VALIDATION_PRIMARY_SUPERVISOR_MANAGER_TYPE_REQUIRED(
 			"api.error.people.validation.primary-supervisor-manager-type-required"),
-	PEOPLE_ERROR_VALIDATION_PRIMARY_SECONDARY_SUPERVISOR_SAME(
+	PEOPLE_ERROR_VALIDATION_PRIMARY_OTHER_SUPERVISORS_SAME(
 			"api.error.people.validation.primary-secondary-supervisor-same"),
-	PEOPLE_ERROR_VALIDATION_SECONDARY_SUPERVISOR_EMPLOYEE_NOT_FOUND(
+	PEOPLE_ERROR_VALIDATION_OTHER_SUPERVISORS_EMPLOYEE_NOT_FOUND(
 			"api.error.people.validation.secondary-supervisor-employee-not-found"),
 	PEOPLE_ERROR_PERSONAL_GENERAL_DETAILS_REQUIRED("api.error.people.personal-general-details-required"),
 	PEOPLE_ERROR_EMPLOYMENT_DETAILS_REQUIRED("api.error.people.employment-details-required"),
@@ -198,7 +198,7 @@ public enum PeopleMessageConstant implements MessageConstant {
 	PEOPLE_ERROR_CAREER_PROGRESSION_NOT_FOUND("api.error.people.career-progression-not-found"),
 	PEOPLE_ERROR_VALIDATION_ONLY_ONE_CURRENT_EMPLOYMENT_ALLOWED(
 			"api.error.people.validation-only-one-current-employment-allowed"),
-	PEOPLE_ERROR_VALIDATION_CANNOT_ADD_SECONDARY_SUPERVISOR_WITHOUT_PRIMARY_SUPERVISOR(
+	PEOPLE_ERROR_VALIDATION_CANNOT_ADD_OTHER_SUPERVISORS_WITHOUT_PRIMARY_SUPERVISOR(
 			"api.error.people.validation-cannot-add-secondary-supervisor-without-primary-supervisor"),;
 
 	private final String messageKey;
