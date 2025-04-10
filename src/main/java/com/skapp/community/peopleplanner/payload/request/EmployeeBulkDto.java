@@ -32,8 +32,6 @@ public class EmployeeBulkDto {
 
 	private String primaryManager;
 
-	private String secondaryManager;
-
 	private Set<String> teams;
 
 	private String jobFamily;
