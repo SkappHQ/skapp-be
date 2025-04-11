@@ -49,12 +49,6 @@ public class JwtServiceImpl implements JwtService {
 	@Value("${jwt.refresh-token.short-duration.expiration-time}")
 	private Long jwtShortDurationRefreshTokenExpirationMs;
 
-	@Value("${jwt.access-token.esign.temp-signing-key}")
-	private String jwtEsignTempSigningKey;
-
-	@Value("${jwt.access-token.esign.temp-expiration-time}")
-	private Long jwtEsignTempAccessTokenExpirationMs;
-
 	@Override
 	public String extractUserEmail(String token) {
 		String email = "";
@@ -76,25 +70,6 @@ public class JwtServiceImpl implements JwtService {
 	public String generateAccessToken(UserDetails userDetails, Long userId) {
 		Map<String, Object> claims = createAccessTokenClaims(userDetails, userId);
 		return generateToken(claims, userDetails, jwtAccessTokenExpirationMs);
-	}
-
-	@Override
-	public String generateTemporaryAccessToken(UserDetails userDetails, Map<String, Object> extraClaims) {
-		Map<String, Object> claims = new HashMap<>();
-
-		if (extraClaims != null) {
-			claims.putAll(extraClaims);
-		}
-
-		claims.put(AuthConstants.TOKEN_TYPE, TokenType.TEMP_ACCESS);
-
-		return Jwts.builder()
-			.claims(claims)
-			.subject(userDetails.getUsername())
-			.issuedAt(new Date(System.currentTimeMillis()))
-			.expiration(new Date(System.currentTimeMillis() + jwtEsignTempAccessTokenExpirationMs))
-			.signWith(getSigningKey())
-			.compact();
 	}
 
 	@Override
@@ -223,11 +198,6 @@ public class JwtServiceImpl implements JwtService {
 
 	public SecretKey getSigningKey() {
 		byte[] keyBytes = Decoders.BASE64.decode(jwtSigningKey);
-		return Keys.hmacShaKeyFor(keyBytes);
-	}
-
-	public SecretKey getTempSigningKey() {
-		byte[] keyBytes = Decoders.BASE64.decode(jwtEsignTempSigningKey);
 		return Keys.hmacShaKeyFor(keyBytes);
 	}
 
