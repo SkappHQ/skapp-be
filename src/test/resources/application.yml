@@ -63,8 +63,5 @@ jwt:
 encryptDecryptAlgorithm:
   secret: EncryptKey123456
 
-reset-database:
-  api-key: c78450e8-4c8d-41db-9f44-65a7c99a92d5
-
 app:
   version: 1.0
