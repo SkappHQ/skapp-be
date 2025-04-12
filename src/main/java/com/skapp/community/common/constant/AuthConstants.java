@@ -20,8 +20,6 @@ public class AuthConstants {
 
 	public static final String USER_ID = "userId";
 
-	public static final String RESET_DATABASE_API_HEADER = "X-Reset-Database-Key";
-
 	public static final String SYSTEM_VERSION = "system_version";
 
 	public static final String USER_VERSION = "user_version";
