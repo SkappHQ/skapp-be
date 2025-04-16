@@ -44,7 +44,6 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		if (isSingleDay) {
 			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_EMPLOYEE_APPLY_SINGLE_DAY_LEAVE,
 					leaveEmailDynamicFields, userEmail);
-
 		}
 		else {
 			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_EMPLOYEE_APPLY_MULTIPLE_DAY_LEAVE,
@@ -63,7 +62,7 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setLeaveStartDate(startDate.toString());
 		leaveEmailDynamicFields.setLeaveEndDate(endDate.toString());
 
-		managers = rolesServiceImpl.filterManagersByRoles(managers, List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+		managers = filterManagersByLeaveRoles(managers);
 
 		for (EmployeeManager manager : managers) {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
@@ -71,7 +70,6 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 			if (isSingleDay) {
 				emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_RECEIVED_SINGLE_DAY_LEAVE,
 						leaveEmailDynamicFields, manager.getManager().getUser().getEmail());
-
 			}
 			else {
 				emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_RECEIVED_MULTIPLE_DAY_LEAVE,
@@ -93,7 +91,6 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		if (isSingleDay) {
 			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_EMPLOYEE_CANCEL_SINGLE_DAY_LEAVE,
 					leaveEmailDynamicFields, userEmail);
-
 		}
 		else {
 			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_EMPLOYEE_CANCEL_MULTIPLE_DAY_LEAVE,
@@ -113,7 +110,7 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setLeaveStartDate(startDate.toString());
 		leaveEmailDynamicFields.setLeaveEndDate(endDate.toString());
 
-		managers = rolesServiceImpl.filterManagersByRoles(managers, List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+		managers = filterManagersByLeaveRoles(managers);
 
 		for (EmployeeManager manager : managers) {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
@@ -121,7 +118,6 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 			if (isSingleDay) {
 				emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_CANCEL_SINGLE_DAY_LEAVE,
 						leaveEmailDynamicFields, manager.getManager().getUser().getEmail());
-
 			}
 			else {
 				emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_CANCEL_MULTIPLE_DAY_LEAVE,
@@ -181,8 +177,7 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
-				List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+		otherManagers = filterManagersByLeaveRoles(otherManagers);
 
 		otherManagers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
@@ -209,8 +204,7 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
-				List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+		otherManagers = filterManagersByLeaveRoles(otherManagers);
 
 		otherManagers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
@@ -313,8 +307,7 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
-				List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+		otherManagers = filterManagersByLeaveRoles(otherManagers);
 
 		otherManagers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
@@ -341,8 +334,7 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
-				List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+		otherManagers = filterManagersByLeaveRoles(otherManagers);
 
 		otherManagers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
@@ -369,8 +361,7 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
-				List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+		otherManagers = filterManagersByLeaveRoles(otherManagers);
 
 		otherManagers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
@@ -397,8 +388,7 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
-				List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+		otherManagers = filterManagersByLeaveRoles(otherManagers);
 
 		otherManagers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
@@ -420,7 +410,7 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setComment(leaveRequest.getReviewerComment());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = rolesServiceImpl.filterManagersByRoles(managers, List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+		managers = filterManagersByLeaveRoles(managers);
 
 		managers.forEach(employeeManager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
@@ -443,7 +433,7 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setComment(leaveRequest.getReviewerComment());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = rolesServiceImpl.filterManagersByRoles(managers, List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+		managers = filterManagersByLeaveRoles(managers);
 
 		managers.forEach(employeeManager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
@@ -496,7 +486,7 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setComment(leaveRequest.getReviewerComment());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = rolesServiceImpl.filterManagersByRoles(managers, List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+		managers = filterManagersByLeaveRoles(managers);
 
 		managers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
@@ -519,7 +509,7 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setComment(leaveRequest.getReviewerComment());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = rolesServiceImpl.filterManagersByRoles(managers, List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+		managers = filterManagersByLeaveRoles(managers);
 
 		managers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
@@ -547,6 +537,10 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		return allManagers.stream()
 			.filter(manager -> !manager.getManager().getUser().getUserId().equals(currentManager.getUserId()))
 			.toList();
+	}
+
+	private List<EmployeeManager> filterManagersByLeaveRoles(List<EmployeeManager> managers) {
+		return rolesServiceImpl.filterManagersByRoles(managers, List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
 	}
 
 }

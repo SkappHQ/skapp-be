@@ -54,8 +54,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 
 		Set<EmployeeManager> employeeManagers = timeRequest.getEmployee().getEmployeeManagers();
 		List<EmployeeManager> employeeManagersList = List.copyOf(employeeManagers);
-		employeeManagersList = rolesServiceImpl.filterManagersByRoles(employeeManagersList,
-				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+		employeeManagersList = filterManagersByAttendanceRoles(employeeManagersList);
 
 		employeeManagersList
 			.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
@@ -107,8 +106,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 			.setEmployeeName(timeRequest.getEmployee().getFirstName() + " " + timeRequest.getEmployee().getLastName());
 
 		List<EmployeeManager> employeeManagers = employeeManagerDao.findByEmployee(timeRequest.getEmployee());
-		employeeManagers = rolesServiceImpl.filterManagersByRoles(employeeManagers,
-				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+		employeeManagers = filterManagersByAttendanceRoles(employeeManagers);
 
 		employeeManagers.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
 				timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -137,8 +135,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 			.setEmployeeName(timeRequest.getEmployee().getFirstName() + " " + timeRequest.getEmployee().getLastName());
 
 		List<EmployeeManager> employeeManagers = employeeManagerDao.findByEmployee(timeRequest.getEmployee());
-		employeeManagers = rolesServiceImpl.filterManagersByRoles(employeeManagers,
-				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+		employeeManagers = filterManagersByAttendanceRoles(employeeManagers);
 
 		employeeManagers.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
 				timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -210,8 +207,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		attendanceEmailDynamicFields.setLeaveStartDate(leaveRequest.getStartDate().toString());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = rolesServiceImpl.filterManagersByRoles(managers,
-				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+		managers = filterManagersByAttendanceRoles(managers);
 
 		managers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				leaveRequest.getLeaveRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -229,8 +225,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		attendanceEmailDynamicFields.setLeaveEndDate(leaveRequest.getEndDate().toString());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = rolesServiceImpl.filterManagersByRoles(managers,
-				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+		managers = filterManagersByAttendanceRoles(managers);
 
 		managers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				leaveRequest.getLeaveRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -248,8 +243,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		attendanceEmailDynamicFields.setLeaveType(leaveRequest.getLeaveType().getName());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = rolesServiceImpl.filterManagersByRoles(managers,
-				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+		managers = filterManagersByAttendanceRoles(managers);
 
 		managers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				leaveRequest.getLeaveRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -268,8 +262,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		attendanceEmailDynamicFields.setLeaveType(leaveRequest.getLeaveType().getName());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = rolesServiceImpl.filterManagersByRoles(managers,
-				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+		managers = filterManagersByAttendanceRoles(managers);
 
 		managers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				leaveRequest.getLeaveRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -287,8 +280,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(timeRequest.getEmployee()), user);
-		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
-				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+		otherManagers = filterManagersByAttendanceRoles(otherManagers);
 
 		otherManagers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -306,8 +298,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(timeRequest.getEmployee()), user);
-		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
-				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+		otherManagers = filterManagersByAttendanceRoles(otherManagers);
 
 		otherManagers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -319,6 +310,11 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		return allManagers.stream()
 			.filter(manager -> !manager.getManager().getUser().getUserId().equals(currentManager.getUserId()))
 			.toList();
+	}
+
+	private List<EmployeeManager> filterManagersByAttendanceRoles(List<EmployeeManager> managers) {
+		return rolesServiceImpl.filterManagersByRoles(managers,
+				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
 	}
 
 }
