@@ -45,7 +45,7 @@ public interface LeaveNotificationService {
 
 	void sendDeclinedSingleDayLeaveRequestManagerNotification(LeaveRequest leaveRequest);
 
-	void sendDeclinedMultiDayLeaveRequestManagerEmail(LeaveRequest leaveRequest);
+	void sendDeclinedMultiDayLeaveRequestManagerNotification(LeaveRequest leaveRequest);
 
 	void sendAutoApprovedSingleDayLeaveRequestEmployeeNotification(LeaveRequest leaveRequest);
 

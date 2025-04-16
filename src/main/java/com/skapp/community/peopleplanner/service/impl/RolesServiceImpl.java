@@ -14,6 +14,7 @@ import com.skapp.community.common.util.MessageUtil;
 import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
 import com.skapp.community.peopleplanner.mapper.PeopleMapper;
 import com.skapp.community.peopleplanner.model.Employee;
+import com.skapp.community.peopleplanner.model.EmployeeManager;
 import com.skapp.community.peopleplanner.model.EmployeeRole;
 import com.skapp.community.peopleplanner.model.ModuleRoleRestriction;
 import com.skapp.community.peopleplanner.model.Team;
@@ -313,9 +314,10 @@ public class RolesServiceImpl implements RolesService {
 			}
 		}
 
-		if (user.getEmployee() != null && user.getEmployee().getEmployeeRole() != null
-				&& user.getEmployee().getEmployeeRole().getIsSuperAdmin() && userRoles != null
-				&& Boolean.TRUE.equals(userRoles.getIsSuperAdmin())
+		if (Boolean.TRUE
+			.equals(user.getEmployee() != null && user.getEmployee().getEmployeeRole() != null
+					&& user.getEmployee().getEmployeeRole().getIsSuperAdmin() && userRoles != null
+					&& Boolean.TRUE.equals(userRoles.getIsSuperAdmin()))
 				&& (userRoles.getPeopleRole() != Role.PEOPLE_ADMIN || userRoles.getLeaveRole() != Role.LEAVE_ADMIN
 						|| userRoles.getAttendanceRole() != Role.ATTENDANCE_ADMIN)) {
 			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_SUPER_ADMIN_ROLES_CANNOT_BE_CHANGED);
@@ -383,6 +385,16 @@ public class RolesServiceImpl implements RolesService {
 		employee.setEmployeeRole(superAdminRoles);
 
 		log.info("saveSuperAdminRoles: execution ended");
+	}
+
+	@Override
+	public List<EmployeeManager> filterManagersByRoles(List<EmployeeManager> managers, List<Role> roles) {
+		return managers.stream()
+			.filter(manager -> roles.contains(manager.getManager().getEmployeeRole().getPeopleRole())
+					|| roles.contains(manager.getManager().getEmployeeRole().getAttendanceRole())
+					|| roles.contains(manager.getManager().getEmployeeRole().getLeaveRole())
+					|| roles.contains(manager.getManager().getEmployeeRole().getEsignRole()))
+			.toList();
 	}
 
 	protected boolean hasOnlyPeopleAdminPermissions(User currentUser) {

@@ -3,13 +3,14 @@ package com.skapp.community.leaveplanner.service.impl;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.service.EmailService;
 import com.skapp.community.common.type.EmailBodyTemplates;
+import com.skapp.community.common.type.Role;
 import com.skapp.community.leaveplanner.model.LeaveEntitlement;
 import com.skapp.community.leaveplanner.model.LeaveRequest;
 import com.skapp.community.leaveplanner.payload.email.LeaveEmailDynamicFields;
 import com.skapp.community.leaveplanner.service.LeaveEmailService;
 import com.skapp.community.peopleplanner.model.EmployeeManager;
 import com.skapp.community.peopleplanner.repository.EmployeeManagerDao;
-import lombok.NonNull;
+import com.skapp.community.peopleplanner.service.impl.RolesServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,11 +23,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LeaveEmailServiceImpl implements LeaveEmailService {
 
-	@NonNull
 	private final EmailService emailService;
 
-	@NonNull
 	private final EmployeeManagerDao employeeManagerDao;
+
+	private final RolesServiceImpl rolesServiceImpl;
 
 	@Override
 	public void sendApplyLeaveRequestEmployeeEmail(String firstName, String lastName, String userEmail,
@@ -61,6 +62,8 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setLeaveType(leaveTypeName);
 		leaveEmailDynamicFields.setLeaveStartDate(startDate.toString());
 		leaveEmailDynamicFields.setLeaveEndDate(endDate.toString());
+
+		managers = rolesServiceImpl.filterManagersByRoles(managers, List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
 
 		for (EmployeeManager manager : managers) {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
@@ -109,6 +112,8 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setLeaveType(leaveTypeName);
 		leaveEmailDynamicFields.setLeaveStartDate(startDate.toString());
 		leaveEmailDynamicFields.setLeaveEndDate(endDate.toString());
+
+		managers = rolesServiceImpl.filterManagersByRoles(managers, List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
 
 		for (EmployeeManager manager : managers) {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
@@ -176,6 +181,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
+		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
+				List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+
 		otherManagers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
@@ -201,6 +209,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
+		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
+				List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+
 		otherManagers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
@@ -302,6 +313,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
+		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
+				List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+
 		otherManagers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
@@ -327,6 +341,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
+		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
+				List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+
 		otherManagers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
@@ -352,6 +369,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
+		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
+				List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+
 		otherManagers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
@@ -377,6 +397,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
+		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
+				List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+
 		otherManagers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
@@ -397,6 +420,8 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setComment(leaveRequest.getReviewerComment());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
+		managers = rolesServiceImpl.filterManagersByRoles(managers, List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+
 		managers.forEach(employeeManager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
 					employeeManager.getManager().getFirstName() + " " + employeeManager.getManager().getLastName());
@@ -418,6 +443,8 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setComment(leaveRequest.getReviewerComment());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
+		managers = rolesServiceImpl.filterManagersByRoles(managers, List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+
 		managers.forEach(employeeManager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
 					employeeManager.getManager().getFirstName() + " " + employeeManager.getManager().getLastName());
@@ -469,6 +496,8 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setComment(leaveRequest.getReviewerComment());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
+		managers = rolesServiceImpl.filterManagersByRoles(managers, List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+
 		managers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
@@ -490,6 +519,8 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setComment(leaveRequest.getReviewerComment());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
+		managers = rolesServiceImpl.filterManagersByRoles(managers, List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+
 		managers.forEach(manager -> {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());

@@ -5,15 +5,16 @@ import com.skapp.community.common.service.NotificationService;
 import com.skapp.community.common.type.EmailBodyTemplates;
 import com.skapp.community.common.type.NotificationCategory;
 import com.skapp.community.common.type.NotificationType;
+import com.skapp.community.common.type.Role;
 import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.leaveplanner.model.LeaveRequest;
 import com.skapp.community.peopleplanner.model.EmployeeManager;
 import com.skapp.community.peopleplanner.repository.EmployeeManagerDao;
+import com.skapp.community.peopleplanner.service.impl.RolesServiceImpl;
 import com.skapp.community.timeplanner.model.TimeConfig;
 import com.skapp.community.timeplanner.model.TimeRequest;
 import com.skapp.community.timeplanner.payload.email.AttendanceEmailDynamicFields;
 import com.skapp.community.timeplanner.service.AttendanceNotificationService;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,11 +27,11 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AttendanceNotificationServiceImpl implements AttendanceNotificationService {
 
-	@NonNull
 	private final NotificationService notificationService;
 
-	@NonNull
 	private final EmployeeManagerDao employeeManagerDao;
+
+	private final RolesServiceImpl rolesServiceImpl;
 
 	@Override
 	public void sendTimeEntryRequestSubmittedEmployeeNotification(TimeRequest timeRequest) {
@@ -52,10 +53,15 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 			.setEmployeeName(timeRequest.getEmployee().getFirstName() + " " + timeRequest.getEmployee().getLastName());
 
 		Set<EmployeeManager> employeeManagers = timeRequest.getEmployee().getEmployeeManagers();
-		employeeManagers.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
-				timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
-				EmailBodyTemplates.ATTENDANCE_MODULE_RECEIVED_TIME_ENTRY_REQUEST_MANAGER, attendanceEmailDynamicFields,
-				NotificationCategory.ATTENDANCE));
+		List<EmployeeManager> employeeManagersList = List.copyOf(employeeManagers);
+		employeeManagersList = rolesServiceImpl.filterManagersByRoles(employeeManagersList,
+				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+
+		employeeManagersList
+			.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
+					timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
+					EmailBodyTemplates.ATTENDANCE_MODULE_RECEIVED_TIME_ENTRY_REQUEST_MANAGER,
+					attendanceEmailDynamicFields, NotificationCategory.ATTENDANCE));
 	}
 
 	@Override
@@ -101,6 +107,9 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 			.setEmployeeName(timeRequest.getEmployee().getFirstName() + " " + timeRequest.getEmployee().getLastName());
 
 		List<EmployeeManager> employeeManagers = employeeManagerDao.findByEmployee(timeRequest.getEmployee());
+		employeeManagers = rolesServiceImpl.filterManagersByRoles(employeeManagers,
+				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+
 		employeeManagers.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
 				timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
 				EmailBodyTemplates.ATTENDANCE_MODULE_PENDING_TIME_ENTRY_REQUEST_CANCELLED_MANAGER,
@@ -128,6 +137,9 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 			.setEmployeeName(timeRequest.getEmployee().getFirstName() + " " + timeRequest.getEmployee().getLastName());
 
 		List<EmployeeManager> employeeManagers = employeeManagerDao.findByEmployee(timeRequest.getEmployee());
+		employeeManagers = rolesServiceImpl.filterManagersByRoles(employeeManagers,
+				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+
 		employeeManagers.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
 				timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
 				EmailBodyTemplates.ATTENDANCE_MODULE_TIME_ENTRY_REQUEST_AUTO_APPROVED_MANAGER,
@@ -198,6 +210,9 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		attendanceEmailDynamicFields.setLeaveStartDate(leaveRequest.getStartDate().toString());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
+		managers = rolesServiceImpl.filterManagersByRoles(managers,
+				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+
 		managers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				leaveRequest.getLeaveRequestId().toString(), NotificationType.TIME_ENTRY,
 				EmailBodyTemplates.ATTENDANCE_MODULE_NON_WORKING_DAY_SINGLE_DAY_PENDING_LEAVE_REQUEST_CANCELED_MANAGER,
@@ -214,6 +229,9 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		attendanceEmailDynamicFields.setLeaveEndDate(leaveRequest.getEndDate().toString());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
+		managers = rolesServiceImpl.filterManagersByRoles(managers,
+				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+
 		managers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				leaveRequest.getLeaveRequestId().toString(), NotificationType.TIME_ENTRY,
 				EmailBodyTemplates.ATTENDANCE_MODULE_NON_WORKING_DAY_MULTI_DAY_PENDING_LEAVE_REQUEST_CANCELED_MANAGER,
@@ -230,6 +248,9 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		attendanceEmailDynamicFields.setLeaveType(leaveRequest.getLeaveType().getName());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
+		managers = rolesServiceImpl.filterManagersByRoles(managers,
+				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+
 		managers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				leaveRequest.getLeaveRequestId().toString(), NotificationType.TIME_ENTRY,
 				EmailBodyTemplates.ATTENDANCE_MODULE_NON_WORKING_DAY_SINGLE_DAY_APPROVED_LEAVE_REQUEST_REVOKED_MANAGER,
@@ -247,6 +268,9 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		attendanceEmailDynamicFields.setLeaveType(leaveRequest.getLeaveType().getName());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
+		managers = rolesServiceImpl.filterManagersByRoles(managers,
+				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+
 		managers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				leaveRequest.getLeaveRequestId().toString(), NotificationType.TIME_ENTRY,
 				EmailBodyTemplates.ATTENDANCE_MODULE_NON_WORKING_DAY_MULTI_DAY_APPROVED_LEAVE_REQUEST_REVOKED_MANAGER,
@@ -263,6 +287,9 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(timeRequest.getEmployee()), user);
+		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
+				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+
 		otherManagers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
 				EmailBodyTemplates.ATTENDANCE_MODULE_TIME_ENTRY_REQUEST_APPROVED_OTHER_MANAGER,
@@ -279,6 +306,9 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(timeRequest.getEmployee()), user);
+		otherManagers = rolesServiceImpl.filterManagersByRoles(otherManagers,
+				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
+
 		otherManagers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
 				EmailBodyTemplates.ATTENDANCE_MODULE_TIME_ENTRY_REQUEST_DECLINED_OTHER_MANAGER,
