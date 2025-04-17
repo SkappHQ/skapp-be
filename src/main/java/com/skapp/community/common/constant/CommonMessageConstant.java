@@ -122,7 +122,8 @@ public enum CommonMessageConstant implements MessageConstant {
 	COMMON_ERROR_SAME_PASSWORD("api.error.common.same-password"),
 	COMMON_ERROR_SYSTEM_VERSION_MISMATCH("api.error.common.system-version-mismatch"),
 	COMMON_ERROR_USER_VERSION_MISMATCH("api.error.common.user-version-mismatch"),
-	COMMON_ERROR_VALIDATION_STATE("api.error.common.validation.state"),;
+	COMMON_ERROR_VALIDATION_STATE("api.error.common.validation.state"),
+	COMMON_ERROR_FAILED_TO_HASH("api.error.common.failed-to-hash");
 
 	private final String messageKey;
 
