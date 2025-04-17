@@ -78,8 +78,6 @@ public class SecurityConfig {
 						"/v1/app-setup-status", "/robots.txt", "/ws/**", "/v1/auth/forgot/password",
 						"/v1/people/search/email-exists", "/health")
 				.permitAll()
-				.requestMatchers("/v1/reset-database")
-				.permitAll()
 				.anyRequest()
 				.authenticated());
 
@@ -95,8 +93,7 @@ public class SecurityConfig {
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowedOrigins(List.of("*"));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-		configuration
-			.setAllowedHeaders(Arrays.asList("authorization", "content-type", AuthConstants.RESET_DATABASE_API_HEADER));
+		configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type"));
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
 		return source;

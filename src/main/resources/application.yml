@@ -6,8 +6,5 @@ spring:
     resources:
       add-mappings: false
 
-reset-database:
-  api-key: ${RESET_DATABASE_API_KEY}
-
 app:
   version: 1.0.2
