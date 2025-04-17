@@ -35,6 +35,4 @@ public interface RolesService {
 
 	EmployeeRole setupBulkEmployeeRoles(Employee employee);
 
-	List<EmployeeManager> filterManagersByRoles(List<EmployeeManager> managers, List<Role> roles);
-
 }

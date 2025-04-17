@@ -387,16 +387,6 @@ public class RolesServiceImpl implements RolesService {
 		log.info("saveSuperAdminRoles: execution ended");
 	}
 
-	@Override
-	public List<EmployeeManager> filterManagersByRoles(List<EmployeeManager> managers, List<Role> roles) {
-		return managers.stream()
-			.filter(manager -> roles.contains(manager.getManager().getEmployeeRole().getPeopleRole())
-					|| roles.contains(manager.getManager().getEmployeeRole().getAttendanceRole())
-					|| roles.contains(manager.getManager().getEmployeeRole().getLeaveRole())
-					|| roles.contains(manager.getManager().getEmployeeRole().getEsignRole()))
-			.toList();
-	}
-
 	protected boolean hasOnlyPeopleAdminPermissions(User currentUser) {
 		return Boolean.FALSE.equals(currentUser.getEmployee().getEmployeeRole().getIsSuperAdmin())
 				&& currentUser.getEmployee().getEmployeeRole().getPeopleRole() == Role.PEOPLE_ADMIN;

@@ -5,12 +5,11 @@ import com.skapp.community.common.service.NotificationService;
 import com.skapp.community.common.type.EmailBodyTemplates;
 import com.skapp.community.common.type.NotificationCategory;
 import com.skapp.community.common.type.NotificationType;
-import com.skapp.community.common.type.Role;
 import com.skapp.community.common.util.DateTimeUtils;
 import com.skapp.community.leaveplanner.model.LeaveRequest;
 import com.skapp.community.peopleplanner.model.EmployeeManager;
 import com.skapp.community.peopleplanner.repository.EmployeeManagerDao;
-import com.skapp.community.peopleplanner.service.impl.RolesServiceImpl;
+import com.skapp.community.peopleplanner.util.PeopleUtil;
 import com.skapp.community.timeplanner.model.TimeConfig;
 import com.skapp.community.timeplanner.model.TimeRequest;
 import com.skapp.community.timeplanner.payload.email.AttendanceEmailDynamicFields;
@@ -30,8 +29,6 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 	private final NotificationService notificationService;
 
 	private final EmployeeManagerDao employeeManagerDao;
-
-	private final RolesServiceImpl rolesServiceImpl;
 
 	@Override
 	public void sendTimeEntryRequestSubmittedEmployeeNotification(TimeRequest timeRequest) {
@@ -54,7 +51,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 
 		Set<EmployeeManager> employeeManagers = timeRequest.getEmployee().getEmployeeManagers();
 		List<EmployeeManager> employeeManagersList = List.copyOf(employeeManagers);
-		employeeManagersList = filterManagersByAttendanceRoles(employeeManagersList);
+		employeeManagersList = PeopleUtil.filterManagersByAttendanceRoles(employeeManagersList);
 
 		employeeManagersList
 			.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
@@ -106,7 +103,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 			.setEmployeeName(timeRequest.getEmployee().getFirstName() + " " + timeRequest.getEmployee().getLastName());
 
 		List<EmployeeManager> employeeManagers = employeeManagerDao.findByEmployee(timeRequest.getEmployee());
-		employeeManagers = filterManagersByAttendanceRoles(employeeManagers);
+		employeeManagers = PeopleUtil.filterManagersByAttendanceRoles(employeeManagers);
 
 		employeeManagers.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
 				timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -135,7 +132,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 			.setEmployeeName(timeRequest.getEmployee().getFirstName() + " " + timeRequest.getEmployee().getLastName());
 
 		List<EmployeeManager> employeeManagers = employeeManagerDao.findByEmployee(timeRequest.getEmployee());
-		employeeManagers = filterManagersByAttendanceRoles(employeeManagers);
+		employeeManagers = PeopleUtil.filterManagersByAttendanceRoles(employeeManagers);
 
 		employeeManagers.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
 				timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -207,7 +204,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		attendanceEmailDynamicFields.setLeaveStartDate(leaveRequest.getStartDate().toString());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = filterManagersByAttendanceRoles(managers);
+		managers = PeopleUtil.filterManagersByAttendanceRoles(managers);
 
 		managers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				leaveRequest.getLeaveRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -225,7 +222,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		attendanceEmailDynamicFields.setLeaveEndDate(leaveRequest.getEndDate().toString());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = filterManagersByAttendanceRoles(managers);
+		managers = PeopleUtil.filterManagersByAttendanceRoles(managers);
 
 		managers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				leaveRequest.getLeaveRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -243,7 +240,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		attendanceEmailDynamicFields.setLeaveType(leaveRequest.getLeaveType().getName());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = filterManagersByAttendanceRoles(managers);
+		managers = PeopleUtil.filterManagersByAttendanceRoles(managers);
 
 		managers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				leaveRequest.getLeaveRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -262,7 +259,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		attendanceEmailDynamicFields.setLeaveType(leaveRequest.getLeaveType().getName());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = filterManagersByAttendanceRoles(managers);
+		managers = PeopleUtil.filterManagersByAttendanceRoles(managers);
 
 		managers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				leaveRequest.getLeaveRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -280,7 +277,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(timeRequest.getEmployee()), user);
-		otherManagers = filterManagersByAttendanceRoles(otherManagers);
+		otherManagers = PeopleUtil.filterManagersByAttendanceRoles(otherManagers);
 
 		otherManagers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -298,7 +295,7 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(timeRequest.getEmployee()), user);
-		otherManagers = filterManagersByAttendanceRoles(otherManagers);
+		otherManagers = PeopleUtil.filterManagersByAttendanceRoles(otherManagers);
 
 		otherManagers.forEach(manager -> notificationService.createNotification(manager.getEmployee(),
 				timeRequest.getTimeRequestId().toString(), NotificationType.TIME_ENTRY,
@@ -310,11 +307,6 @@ public class AttendanceNotificationServiceImpl implements AttendanceNotification
 		return allManagers.stream()
 			.filter(manager -> !manager.getManager().getUser().getUserId().equals(currentManager.getUserId()))
 			.toList();
-	}
-
-	private List<EmployeeManager> filterManagersByAttendanceRoles(List<EmployeeManager> managers) {
-		return rolesServiceImpl.filterManagersByRoles(managers,
-				List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
 	}
 
 }
