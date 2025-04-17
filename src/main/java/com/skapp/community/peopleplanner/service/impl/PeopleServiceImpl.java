@@ -494,7 +494,9 @@ public class PeopleServiceImpl implements PeopleService {
 		personalInfo.setSocialMediaDetails(mapper.valueToTree(socialMedia));
 
 		// Extra Info
-		EmployeeExtraInfoDto extraInfo = Optional.ofNullable(employee.getPersonalInfo().getExtraInfo())
+		EmployeeExtraInfoDto extraInfo = Optional.of(employee)
+			.map(Employee::getPersonalInfo)
+			.map(EmployeePersonalInfo::getExtraInfo)
 			.map(node -> CommonModuleUtils.jsonNodeToValue(node, EmployeeExtraInfoDto.class, mapper))
 			.orElseGet(EmployeeExtraInfoDto::new);
 
