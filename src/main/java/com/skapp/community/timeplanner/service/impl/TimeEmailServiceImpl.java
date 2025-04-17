@@ -54,9 +54,7 @@ public class TimeEmailServiceImpl implements TimeEmailService {
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
 
-		managers = PeopleUtil.filterManagersByAttendanceRoles(managers);
-
-		managers.forEach(manager -> {
+		PeopleUtil.filterManagersByAttendanceRoles(managers).forEach(manager -> {
 			emailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
 			emailService.sendEmail(
@@ -105,9 +103,8 @@ public class TimeEmailServiceImpl implements TimeEmailService {
 		emailDynamicFields.setNonWorkingDates(nonWorkingDays);
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = PeopleUtil.filterManagersByAttendanceRoles(managers);
 
-		managers.forEach(manager -> {
+		PeopleUtil.filterManagersByAttendanceRoles(managers).forEach(manager -> {
 			emailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
 			emailService.sendEmail(
@@ -142,9 +139,8 @@ public class TimeEmailServiceImpl implements TimeEmailService {
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = PeopleUtil.filterManagersByAttendanceRoles(managers);
 
-		managers.forEach(manager -> {
+		PeopleUtil.filterManagersByAttendanceRoles(managers).forEach(manager -> {
 			emailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
 			emailService.sendEmail(
@@ -179,9 +175,8 @@ public class TimeEmailServiceImpl implements TimeEmailService {
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = PeopleUtil.filterManagersByAttendanceRoles(managers);
 
-		managers.forEach(manager -> {
+		PeopleUtil.filterManagersByAttendanceRoles(managers).forEach(manager -> {
 			emailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
 			emailService.sendEmail(
@@ -219,9 +214,8 @@ public class TimeEmailServiceImpl implements TimeEmailService {
 		emailDynamicFields.setEndTime(DateTimeUtils.epochMillisToAmPmString(timeRequest.getRequestedEndTime()));
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(timeRequest.getEmployee());
-		managers = PeopleUtil.filterManagersByAttendanceRoles(managers);
 
-		managers.forEach(manager -> {
+		PeopleUtil.filterManagersByAttendanceRoles(managers).forEach(manager -> {
 			emailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
 			emailService.sendEmail(EmailBodyTemplates.ATTENDANCE_MODULE_RECEIVED_TIME_ENTRY_REQUEST_MANAGER,
@@ -295,9 +289,8 @@ public class TimeEmailServiceImpl implements TimeEmailService {
 		emailDynamicFields.setEndTime(DateTimeUtils.epochMillisToAmPmString(timeRequest.getRequestedEndTime()));
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(timeRequest.getEmployee());
-		managers = PeopleUtil.filterManagersByAttendanceRoles(managers);
 
-		managers.forEach(manager -> {
+		PeopleUtil.filterManagersByAttendanceRoles(managers).forEach(manager -> {
 			emailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
 			emailService.sendEmail(EmailBodyTemplates.ATTENDANCE_MODULE_PENDING_TIME_ENTRY_REQUEST_CANCELLED_MANAGER,
@@ -333,9 +326,8 @@ public class TimeEmailServiceImpl implements TimeEmailService {
 		emailDynamicFields.setEndTime(DateTimeUtils.epochMillisToAmPmString(timeRequest.getRequestedEndTime()));
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(timeRequest.getEmployee());
-		managers = PeopleUtil.filterManagersByAttendanceRoles(managers);
 
-		managers.forEach(manager -> {
+		PeopleUtil.filterManagersByAttendanceRoles(managers).forEach(manager -> {
 			emailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
 			emailService.sendEmail(EmailBodyTemplates.ATTENDANCE_MODULE_TIME_ENTRY_REQUEST_AUTO_APPROVED_MANAGER,
@@ -358,9 +350,8 @@ public class TimeEmailServiceImpl implements TimeEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(timeRequest.getEmployee()), managerUser);
-		otherManagers = PeopleUtil.filterManagersByAttendanceRoles(otherManagers);
 
-		otherManagers.forEach(manager -> {
+		PeopleUtil.filterManagersByAttendanceRoles(otherManagers).forEach(manager -> {
 			emailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
 			emailService.sendEmail(EmailBodyTemplates.ATTENDANCE_MODULE_TIME_ENTRY_REQUEST_APPROVED_OTHER_MANAGER,
@@ -385,9 +376,8 @@ public class TimeEmailServiceImpl implements TimeEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(timeRequest.getEmployee()), managerUser);
-		otherManagers = PeopleUtil.filterManagersByAttendanceRoles(otherManagers);
 
-		otherManagers.forEach(manager -> {
+		PeopleUtil.filterManagersByAttendanceRoles(otherManagers).forEach(manager -> {
 			emailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
 			emailService.sendEmail(EmailBodyTemplates.ATTENDANCE_MODULE_TIME_ENTRY_REQUEST_DECLINED_OTHER_MANAGER,

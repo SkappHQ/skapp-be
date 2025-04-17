@@ -70,11 +70,10 @@ public class LeaveNotificationServiceImpl implements LeaveNotificationService {
 			emailBodyTemplates = EmailBodyTemplates.LEAVE_MODULE_MANAGER_RECEIVED_MULTIPLE_DAY_LEAVE;
 		}
 
-		employeeManagers = PeopleUtil.filterManagersByLeaveRoles(employeeManagers);
-
-		employeeManagers.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
-				leaveRequestId.toString(), NotificationType.LEAVE_REQUEST, emailBodyTemplates, leaveEmailDynamicFields,
-				NotificationCategory.LEAVE));
+		PeopleUtil.filterManagersByLeaveRoles(employeeManagers)
+			.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
+					leaveRequestId.toString(), NotificationType.LEAVE_REQUEST, emailBodyTemplates,
+					leaveEmailDynamicFields, NotificationCategory.LEAVE));
 	}
 
 	@Override
@@ -118,11 +117,10 @@ public class LeaveNotificationServiceImpl implements LeaveNotificationService {
 			emailBodyTemplates = EmailBodyTemplates.LEAVE_MODULE_MANAGER_CANCEL_MULTIPLE_DAY_LEAVE;
 		}
 
-		employeeManagers = PeopleUtil.filterManagersByLeaveRoles(employeeManagers);
-
-		employeeManagers.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
-				leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST, emailBodyTemplates,
-				leaveEmailDynamicFields, NotificationCategory.LEAVE));
+		PeopleUtil.filterManagersByLeaveRoles(employeeManagers)
+			.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
+					leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST, emailBodyTemplates,
+					leaveEmailDynamicFields, NotificationCategory.LEAVE));
 	}
 
 	@Override
@@ -161,12 +159,12 @@ public class LeaveNotificationServiceImpl implements LeaveNotificationService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers = PeopleUtil.filterManagersByLeaveRoles(otherManagers);
 
-		otherManagers.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
-				leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
-				EmailBodyTemplates.LEAVE_MODULE_MANAGER_APPROVED_SINGLE_DAY_LEAVE, leaveEmailDynamicFields,
-				NotificationCategory.LEAVE));
+		PeopleUtil.filterManagersByLeaveRoles(otherManagers)
+			.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
+					leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
+					EmailBodyTemplates.LEAVE_MODULE_MANAGER_APPROVED_SINGLE_DAY_LEAVE, leaveEmailDynamicFields,
+					NotificationCategory.LEAVE));
 	}
 
 	@Override
@@ -181,12 +179,12 @@ public class LeaveNotificationServiceImpl implements LeaveNotificationService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers = PeopleUtil.filterManagersByLeaveRoles(otherManagers);
 
-		otherManagers.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
-				leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
-				EmailBodyTemplates.LEAVE_MODULE_MANAGER_APPROVED_MULTI_DAY_LEAVE, leaveEmailDynamicFields,
-				NotificationCategory.LEAVE));
+		PeopleUtil.filterManagersByLeaveRoles(otherManagers)
+			.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
+					leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
+					EmailBodyTemplates.LEAVE_MODULE_MANAGER_APPROVED_MULTI_DAY_LEAVE, leaveEmailDynamicFields,
+					NotificationCategory.LEAVE));
 	}
 
 	@Override
@@ -225,12 +223,12 @@ public class LeaveNotificationServiceImpl implements LeaveNotificationService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers = PeopleUtil.filterManagersByLeaveRoles(otherManagers);
 
-		otherManagers.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
-				leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
-				EmailBodyTemplates.LEAVE_MODULE_MANAGER_REVOKED_SINGLE_DAY_LEAVE, leaveEmailDynamicFields,
-				NotificationCategory.LEAVE));
+		PeopleUtil.filterManagersByLeaveRoles(otherManagers)
+			.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
+					leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
+					EmailBodyTemplates.LEAVE_MODULE_MANAGER_REVOKED_SINGLE_DAY_LEAVE, leaveEmailDynamicFields,
+					NotificationCategory.LEAVE));
 	}
 
 	@Override
@@ -244,12 +242,12 @@ public class LeaveNotificationServiceImpl implements LeaveNotificationService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers = PeopleUtil.filterManagersByLeaveRoles(otherManagers);
 
-		otherManagers.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
-				leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
-				EmailBodyTemplates.LEAVE_MODULE_MANAGER_REVOKED_MULTI_DAY_LEAVE, leaveEmailDynamicFields,
-				NotificationCategory.LEAVE));
+		PeopleUtil.filterManagersByLeaveRoles(otherManagers)
+			.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
+					leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
+					EmailBodyTemplates.LEAVE_MODULE_MANAGER_REVOKED_MULTI_DAY_LEAVE, leaveEmailDynamicFields,
+					NotificationCategory.LEAVE));
 	}
 
 	@Override
@@ -288,12 +286,12 @@ public class LeaveNotificationServiceImpl implements LeaveNotificationService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers = PeopleUtil.filterManagersByLeaveRoles(otherManagers);
 
-		otherManagers.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
-				leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
-				EmailBodyTemplates.LEAVE_MODULE_MANAGER_DECLINED_SINGLE_DAY_LEAVE, leaveEmailDynamicFields,
-				NotificationCategory.LEAVE));
+		PeopleUtil.filterManagersByLeaveRoles(otherManagers)
+			.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
+					leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
+					EmailBodyTemplates.LEAVE_MODULE_MANAGER_DECLINED_SINGLE_DAY_LEAVE, leaveEmailDynamicFields,
+					NotificationCategory.LEAVE));
 	}
 
 	@Override
@@ -307,12 +305,12 @@ public class LeaveNotificationServiceImpl implements LeaveNotificationService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers = PeopleUtil.filterManagersByLeaveRoles(otherManagers);
 
-		otherManagers.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
-				leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
-				EmailBodyTemplates.LEAVE_MODULE_MANAGER_DECLINED_MULTI_DAY_LEAVE, leaveEmailDynamicFields,
-				NotificationCategory.LEAVE));
+		PeopleUtil.filterManagersByLeaveRoles(otherManagers)
+			.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
+					leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
+					EmailBodyTemplates.LEAVE_MODULE_MANAGER_DECLINED_MULTI_DAY_LEAVE, leaveEmailDynamicFields,
+					NotificationCategory.LEAVE));
 	}
 
 	@Override
@@ -351,12 +349,12 @@ public class LeaveNotificationServiceImpl implements LeaveNotificationService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers = PeopleUtil.filterManagersByLeaveRoles(otherManagers);
 
-		otherManagers.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
-				leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
-				EmailBodyTemplates.LEAVE_MODULE_MANAGER_AUTO_APPROVED_SINGLE_DAY_LEAVE, leaveEmailDynamicFields,
-				NotificationCategory.LEAVE));
+		PeopleUtil.filterManagersByLeaveRoles(otherManagers)
+			.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
+					leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
+					EmailBodyTemplates.LEAVE_MODULE_MANAGER_AUTO_APPROVED_SINGLE_DAY_LEAVE, leaveEmailDynamicFields,
+					NotificationCategory.LEAVE));
 	}
 
 	@Override
@@ -371,12 +369,12 @@ public class LeaveNotificationServiceImpl implements LeaveNotificationService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers = PeopleUtil.filterManagersByLeaveRoles(otherManagers);
 
-		otherManagers.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
-				leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
-				EmailBodyTemplates.LEAVE_MODULE_MANAGER_AUTO_APPROVED_MULTI_DAY_LEAVE, leaveEmailDynamicFields,
-				NotificationCategory.LEAVE));
+		PeopleUtil.filterManagersByLeaveRoles(otherManagers)
+			.forEach(manager -> notificationService.createNotification(leaveRequest.getEmployee(),
+					leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST,
+					EmailBodyTemplates.LEAVE_MODULE_MANAGER_AUTO_APPROVED_MULTI_DAY_LEAVE, leaveEmailDynamicFields,
+					NotificationCategory.LEAVE));
 	}
 
 	@Override
@@ -399,12 +397,12 @@ public class LeaveNotificationServiceImpl implements LeaveNotificationService {
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = PeopleUtil.filterManagersByLeaveRoles(managers);
 
-		managers.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
-				leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST_NUDGE,
-				EmailBodyTemplates.LEAVE_MODULE_MANAGER_NUDGE_SINGLE_DAY_LEAVE, leaveEmailDynamicFields,
-				NotificationCategory.LEAVE));
+		PeopleUtil.filterManagersByLeaveRoles(managers)
+			.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
+					leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST_NUDGE,
+					EmailBodyTemplates.LEAVE_MODULE_MANAGER_NUDGE_SINGLE_DAY_LEAVE, leaveEmailDynamicFields,
+					NotificationCategory.LEAVE));
 	}
 
 	@Override
@@ -415,12 +413,12 @@ public class LeaveNotificationServiceImpl implements LeaveNotificationService {
 				leaveRequest.getEmployee().getFirstName() + " " + leaveRequest.getEmployee().getLastName());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers = PeopleUtil.filterManagersByLeaveRoles(managers);
 
-		managers.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
-				leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST_NUDGE,
-				EmailBodyTemplates.LEAVE_MODULE_MANAGER_NUDGE_MULTI_DAY_LEAVE, leaveEmailDynamicFields,
-				NotificationCategory.LEAVE));
+		PeopleUtil.filterManagersByLeaveRoles(managers)
+			.forEach(employeeManager -> notificationService.createNotification(employeeManager.getManager(),
+					leaveRequest.getLeaveRequestId().toString(), NotificationType.LEAVE_REQUEST_NUDGE,
+					EmailBodyTemplates.LEAVE_MODULE_MANAGER_NUDGE_MULTI_DAY_LEAVE, leaveEmailDynamicFields,
+					NotificationCategory.LEAVE));
 
 		notificationService.createNotification(leaveRequest.getEmployee(), leaveRequest.getLeaveRequestId().toString(),
 				NotificationType.LEAVE_REQUEST_NUDGE, EmailBodyTemplates.LEAVE_MODULE_MANAGER_NUDGE_MULTI_DAY_LEAVE,
