@@ -3,7 +3,6 @@ package com.skapp.community.common.controller.v1;
 import com.skapp.community.common.payload.request.TestEmailServerRequestDto;
 import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.service.EmailService;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/v1/email")
 public class EmailController {
 
-	@NonNull
 	private final EmailService emailService;
 
 	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN')")

@@ -100,13 +100,13 @@ public class PeopleReadServiceImpl implements PeopleReadService {
 		dto.setMiddleName(employee.getMiddleName());
 		dto.setLastName(employee.getLastName());
 		dto.setGender(employee.getGender());
-		dto.setNin(employee.getIdentificationNo());
 
 		Optional.ofNullable(employee.getPersonalInfo()).ifPresent(personalInfo -> {
 			dto.setDateOfBirth(personalInfo.getBirthDate());
 			dto.setNationality(personalInfo.getNationality());
 			dto.setPassportNumber(personalInfo.getPassportNo());
 			dto.setMaritalStatus(personalInfo.getMaritalStatus());
+			dto.setNin(personalInfo.getNin());
 		});
 
 		return dto;
@@ -257,12 +257,11 @@ public class PeopleReadServiceImpl implements PeopleReadService {
 				.map(peopleMapper::employeeManagerToManagerDetailsDto)
 				.orElse(null));
 
-			dto.setSecondarySupervisor(employee.getEmployeeManagers()
+			dto.setOtherSupervisors(employee.getEmployeeManagers()
 				.stream()
 				.filter(m -> !m.getIsPrimaryManager())
-				.findFirst()
 				.map(peopleMapper::employeeManagerToManagerDetailsDto)
-				.orElse(null));
+				.toList());
 		}
 
 		Optional.ofNullable(employee.getEmployeePeriods())
@@ -330,7 +329,7 @@ public class PeopleReadServiceImpl implements PeopleReadService {
 
 		String employeeNumberField = field(EmployeeEmploymentBasicDetailsDto::getEmployeeNumber);
 		String primarySupervisorField = field(EmployeeEmploymentBasicDetailsDto::getPrimarySupervisor);
-		String secondarySupervisorField = field(EmployeeEmploymentBasicDetailsDto::getSecondarySupervisor);
+		String secondarySupervisorField = field(EmployeeEmploymentBasicDetailsDto::getOtherSupervisors);
 		String joinedDateField = field(EmployeeEmploymentBasicDetailsDto::getJoinedDate);
 		String probationStartDateField = field(EmployeeEmploymentBasicDetailsDto::getProbationStartDate);
 		String probationEndDateField = field(EmployeeEmploymentBasicDetailsDto::getProbationEndDate);
@@ -384,9 +383,9 @@ public class PeopleReadServiceImpl implements PeopleReadService {
 			return;
 		}
 
-		if (doesNotHaveRole(userRoles, Role.ATTENDANCE_ADMIN) || doesNotHaveRole(userRoles, Role.LEAVE_ADMIN)
-				|| doesNotHaveRole(userRoles, Role.ATTENDANCE_MANAGER)
-				|| doesNotHaveRole(userRoles, Role.LEAVE_MANAGER)) {
+		if (doesNotHaveRole(userRoles, Role.PEOPLE_ADMIN) && (doesNotHaveRole(userRoles, Role.ATTENDANCE_ADMIN)
+				|| doesNotHaveRole(userRoles, Role.LEAVE_ADMIN) || doesNotHaveRole(userRoles, Role.ATTENDANCE_MANAGER)
+				|| doesNotHaveRole(userRoles, Role.LEAVE_MANAGER))) {
 			setNull(dto, systemPermissionsField, emergencyField);
 			setNull(dto, personal_contactField, personal_familyField, personal_educationalField,
 					personal_socialMediaField, personal_healthAndOtherField);

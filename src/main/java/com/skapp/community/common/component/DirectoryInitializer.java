@@ -5,7 +5,6 @@ import com.skapp.community.common.exception.FileUploadException;
 import com.skapp.community.common.util.FileUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -21,7 +20,6 @@ import java.util.List;
 @Profile("!test")
 public class DirectoryInitializer {
 
-	@NonNull
 	private final FileStorageConfig fileStorageConfig;
 
 	@PostConstruct
@@ -37,7 +35,6 @@ public class DirectoryInitializer {
 			log.info("Directories initialized!");
 		}
 		catch (Exception e) {
-			// Throw a FileUploadException to terminate the application gracefully
 			throw new FileUploadException(
 					"Terminating the application. Critical error during startup due to Storage folder creation failure :"
 							+ e.getMessage());
