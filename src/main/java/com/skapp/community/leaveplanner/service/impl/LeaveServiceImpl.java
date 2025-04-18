@@ -667,7 +667,7 @@ public class LeaveServiceImpl implements LeaveService {
 			leaveNotificationService.sendDeclinedMultiDayLeaveRequestEmployeeNotification(leaveRequest);
 
 			leaveEmailService.sendDeclinedMultiDayLeaveRequestManagerEmail(leaveRequest);
-			leaveNotificationService.sendDeclinedMultiDayLeaveRequestManagerEmail(leaveRequest);
+			leaveNotificationService.sendDeclinedMultiDayLeaveRequestManagerNotification(leaveRequest);
 		}
 	}
 

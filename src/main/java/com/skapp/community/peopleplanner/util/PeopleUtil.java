@@ -3,7 +3,9 @@ package com.skapp.community.peopleplanner.util;
 import com.skapp.community.common.exception.EntityNotFoundException;
 import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.model.User;
+import com.skapp.community.common.type.Role;
 import com.skapp.community.peopleplanner.constant.PeopleMessageConstant;
+import com.skapp.community.peopleplanner.model.EmployeeManager;
 import com.skapp.community.peopleplanner.model.Team;
 
 import java.util.List;
@@ -49,6 +51,23 @@ public class PeopleUtil {
 			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_TEAM_NOT_FOUND,
 					new String[] { unavailableTeams.toString() });
 		}
+	}
+
+	public static List<EmployeeManager> filterManagersByRoles(List<EmployeeManager> managers, List<Role> roles) {
+		return managers.stream()
+			.filter(manager -> roles.contains(manager.getManager().getEmployeeRole().getPeopleRole())
+					|| roles.contains(manager.getManager().getEmployeeRole().getAttendanceRole())
+					|| roles.contains(manager.getManager().getEmployeeRole().getLeaveRole())
+					|| roles.contains(manager.getManager().getEmployeeRole().getEsignRole()))
+			.toList();
+	}
+
+	public static List<EmployeeManager> filterManagersByLeaveRoles(List<EmployeeManager> managers) {
+		return filterManagersByRoles(managers, List.of(Role.LEAVE_ADMIN, Role.LEAVE_MANAGER));
+	}
+
+	public static List<EmployeeManager> filterManagersByAttendanceRoles(List<EmployeeManager> managers) {
+		return filterManagersByRoles(managers, List.of(Role.ATTENDANCE_ADMIN, Role.ATTENDANCE_MANAGER));
 	}
 
 }
