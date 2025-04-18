@@ -7,11 +7,10 @@ import java.util.concurrent.TimeUnit;
 
 @Getter
 @RequiredArgsConstructor
-public enum CacheKeys {
+public enum CacheKeys implements CacheKey {
 
 	SYSTEM_VERSION_CACHE_KEY("system_version_cache:latest_version", 7, TimeUnit.DAYS),
-	USER_VERSION_CACHE_KEY("user_version_cache:%s:latest_version", 7, TimeUnit.DAYS), // userId
-	UUID_CACHE_KEY("uuid_cache:%s", 5, TimeUnit.MINUTES);
+	USER_VERSION_CACHE_KEY("user_version_cache:%s:latest_version", 7, TimeUnit.DAYS); // userId
 
 	private final String key;
 
