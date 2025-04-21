@@ -13,13 +13,3 @@ The official [Skapp](https://skapp.com/) backend community project.
 ### Logo and Trademark Policy
 
 - Please read our [Trademark Policy](https://github.com/SkappHQ/skapp-be/blob/main/TRADEMARK_POLICY.md)
-
-### API Endpoint
-API Endpoint: http://localhost:8008/
-
-### Git Pre-commit Hook Configuration
-
-To ensure that pre-commit hooks are used in your project, run the following command to set the path for the Git hooks directory:
-
-```bash
-git config core.hooksPath .githooks
