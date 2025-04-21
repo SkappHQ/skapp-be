@@ -494,7 +494,9 @@ public class PeopleServiceImpl implements PeopleService {
 		personalInfo.setSocialMediaDetails(mapper.valueToTree(socialMedia));
 
 		// Extra Info
-		EmployeeExtraInfoDto extraInfo = Optional.ofNullable(employee.getPersonalInfo().getExtraInfo())
+		EmployeeExtraInfoDto extraInfo = Optional.of(employee)
+			.map(Employee::getPersonalInfo)
+			.map(EmployeePersonalInfo::getExtraInfo)
 			.map(node -> CommonModuleUtils.jsonNodeToValue(node, EmployeeExtraInfoDto.class, mapper))
 			.orElseGet(EmployeeExtraInfoDto::new);
 
@@ -1016,7 +1018,6 @@ public class PeopleServiceImpl implements PeopleService {
 				}
 
 				employee.getEmployeeProgressions().clear();
-
 				employee.setEmploymentType(null);
 				employee.setJobFamily(null);
 				employee.setJobTitle(null);
@@ -1067,42 +1068,27 @@ public class PeopleServiceImpl implements PeopleService {
 			CommonModuleUtils.setIfExists(dto::getEndDate, progression::setEndDate);
 			CommonModuleUtils.setIfExists(dto::getIsCurrentEmployment, progression::setIsCurrent);
 
-			if (progression.getProgressionId() != null) {
-				List<EmployeeProgression> employeeProgression = employee.getEmployeeProgressions()
-					.stream()
-					.filter(p -> p.getProgressionId().equals(progression.getProgressionId()))
-					.toList();
-
-				employeeProgression.forEach(empProgression -> {
-					if (Boolean.FALSE.equals(progression.getIsCurrent())) {
-						employee.setEmploymentType(null);
-						employee.setJobFamily(null);
-						employee.setJobTitle(null);
-					}
-
-					if (Boolean.TRUE.equals(progression.getIsCurrent())) {
-						CommonModuleUtils.setIfExists(empProgression::getEmploymentType, employee::setEmploymentType);
-						CommonModuleUtils.setIfExists(
-								() -> jobFamilyDao.getJobFamilyById(empProgression.getJobFamilyId()),
-								employee::setJobFamily);
-						CommonModuleUtils.setIfExists(() -> jobTitleDao.getJobTitleById(empProgression.getJobTitleId()),
-								employee::setJobTitle);
-					}
-				});
-			}
-
-			if (Boolean.TRUE.equals(dto.getIsCurrentEmployment())) {
-				CommonModuleUtils.setIfExists(dto::getEmploymentType, employee::setEmploymentType);
-				CommonModuleUtils.setIfExists(() -> jobFamilyDao.getJobFamilyById(dto.getJobFamilyId()),
-						employee::setJobFamily);
-				CommonModuleUtils.setIfExists(() -> jobTitleDao.getJobTitleById(dto.getJobTitleId()),
-						employee::setJobTitle);
-			}
-
 			return progression;
 		}).collect(Collectors.toList());
 
-		result.addAll(existingProgressionMap.values());
+		employee.setEmploymentType(null);
+		employee.setJobFamily(null);
+		employee.setJobTitle(null);
+
+		for (EmployeeEmploymentCareerProgressionDetailsDto dto : requestDto.getEmployment().getCareerProgression()) {
+			if (Boolean.TRUE.equals(dto.getIsCurrentEmployment())) {
+				employee.setEmploymentType(dto.getEmploymentType());
+
+				if (dto.getJobFamilyId() != null) {
+					employee.setJobFamily(jobFamilyDao.getJobFamilyById(dto.getJobFamilyId()));
+				}
+
+				if (dto.getJobTitleId() != null) {
+					employee.setJobTitle(jobTitleDao.getJobTitleById(dto.getJobTitleId()));
+				}
+			}
+		}
+
 		return result;
 	}
 

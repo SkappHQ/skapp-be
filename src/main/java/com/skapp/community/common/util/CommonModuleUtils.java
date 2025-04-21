@@ -319,7 +319,7 @@ public class CommonModuleUtils {
 			}
 		}
 		catch (Exception e) {
-			log.error("setIfRequestValid: Error occurred - {}", e.getMessage(), e);
+			log.error("setIfRequestValid: Error occurred - {}", e.getMessage());
 		}
 	}
 

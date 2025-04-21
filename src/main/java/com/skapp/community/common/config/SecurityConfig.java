@@ -3,7 +3,6 @@ package com.skapp.community.common.config;
 import com.skapp.community.common.component.AuthEntryPoint;
 import com.skapp.community.common.component.ExceptionLoggingFilter;
 import com.skapp.community.common.component.JwtAuthFilter;
-import com.skapp.community.common.constant.AuthConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;

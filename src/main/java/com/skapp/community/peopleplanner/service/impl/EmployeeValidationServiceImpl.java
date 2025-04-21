@@ -380,18 +380,6 @@ public class EmployeeValidationServiceImpl implements EmployeeValidationService 
 			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_CAREER_PROGRESSION_NOT_FOUND);
 		}
 
-		if (Boolean.TRUE.equals(progression.getIsCurrentEmployment())) {
-			boolean anotherCurrentExists = employee.getEmployeeProgressions()
-				.stream()
-				.anyMatch(p -> !p.getProgressionId().equals(progression.getProgressionId())
-						&& Boolean.TRUE.equals(p.getIsCurrent()));
-
-			if (anotherCurrentExists) {
-				throw new ValidationException(
-						PeopleMessageConstant.PEOPLE_ERROR_VALIDATION_ONLY_ONE_CURRENT_EMPLOYMENT_ALLOWED);
-			}
-		}
-
 		validateEndDateRules(progression);
 	}
 
