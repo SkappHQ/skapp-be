@@ -9,7 +9,7 @@ import com.skapp.community.leaveplanner.payload.email.LeaveEmailDynamicFields;
 import com.skapp.community.leaveplanner.service.LeaveEmailService;
 import com.skapp.community.peopleplanner.model.EmployeeManager;
 import com.skapp.community.peopleplanner.repository.EmployeeManagerDao;
-import lombok.NonNull;
+import com.skapp.community.peopleplanner.util.PeopleUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,10 +22,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LeaveEmailServiceImpl implements LeaveEmailService {
 
-	@NonNull
 	private final EmailService emailService;
 
-	@NonNull
 	private final EmployeeManagerDao employeeManagerDao;
 
 	@Override
@@ -43,7 +41,6 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		if (isSingleDay) {
 			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_EMPLOYEE_APPLY_SINGLE_DAY_LEAVE,
 					leaveEmailDynamicFields, userEmail);
-
 		}
 		else {
 			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_EMPLOYEE_APPLY_MULTIPLE_DAY_LEAVE,
@@ -62,13 +59,12 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setLeaveStartDate(startDate.toString());
 		leaveEmailDynamicFields.setLeaveEndDate(endDate.toString());
 
-		for (EmployeeManager manager : managers) {
+		for (EmployeeManager manager : PeopleUtil.filterManagersByLeaveRoles(managers)) {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
 			if (isSingleDay) {
 				emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_RECEIVED_SINGLE_DAY_LEAVE,
 						leaveEmailDynamicFields, manager.getManager().getUser().getEmail());
-
 			}
 			else {
 				emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_RECEIVED_MULTIPLE_DAY_LEAVE,
@@ -90,7 +86,6 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		if (isSingleDay) {
 			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_EMPLOYEE_CANCEL_SINGLE_DAY_LEAVE,
 					leaveEmailDynamicFields, userEmail);
-
 		}
 		else {
 			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_EMPLOYEE_CANCEL_MULTIPLE_DAY_LEAVE,
@@ -110,13 +105,12 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setLeaveStartDate(startDate.toString());
 		leaveEmailDynamicFields.setLeaveEndDate(endDate.toString());
 
-		for (EmployeeManager manager : managers) {
+		for (EmployeeManager manager : PeopleUtil.filterManagersByLeaveRoles(managers)) {
 			leaveEmailDynamicFields.setEmployeeOrManagerName(
 					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
 			if (isSingleDay) {
 				emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_CANCEL_SINGLE_DAY_LEAVE,
 						leaveEmailDynamicFields, manager.getManager().getUser().getEmail());
-
 			}
 			else {
 				emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_CANCEL_MULTIPLE_DAY_LEAVE,
@@ -176,12 +170,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers.forEach(manager -> {
-			leaveEmailDynamicFields.setEmployeeOrManagerName(
-					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
-			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_APPROVED_SINGLE_DAY_LEAVE,
-					leaveEmailDynamicFields, manager.getManager().getUser().getEmail());
-		});
+
+		createLeaveEmailForManagers(otherManagers, leaveEmailDynamicFields,
+				EmailBodyTemplates.LEAVE_MODULE_MANAGER_APPROVED_SINGLE_DAY_LEAVE);
 	}
 
 	@Override
@@ -201,12 +192,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers.forEach(manager -> {
-			leaveEmailDynamicFields.setEmployeeOrManagerName(
-					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
-			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_APPROVED_MULTI_DAY_LEAVE,
-					leaveEmailDynamicFields, manager.getManager().getUser().getEmail());
-		});
+
+		createLeaveEmailForManagers(otherManagers, leaveEmailDynamicFields,
+				EmailBodyTemplates.LEAVE_MODULE_MANAGER_APPROVED_MULTI_DAY_LEAVE);
 	}
 
 	@Override
@@ -302,12 +290,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers.forEach(manager -> {
-			leaveEmailDynamicFields.setEmployeeOrManagerName(
-					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
-			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_REVOKED_SINGLE_DAY_LEAVE,
-					leaveEmailDynamicFields, manager.getManager().getUser().getEmail());
-		});
+
+		createLeaveEmailForManagers(otherManagers, leaveEmailDynamicFields,
+				EmailBodyTemplates.LEAVE_MODULE_MANAGER_REVOKED_SINGLE_DAY_LEAVE);
 	}
 
 	@Override
@@ -327,12 +312,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers.forEach(manager -> {
-			leaveEmailDynamicFields.setEmployeeOrManagerName(
-					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
-			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_REVOKED_MULTI_DAY_LEAVE,
-					leaveEmailDynamicFields, manager.getManager().getUser().getEmail());
-		});
+
+		createLeaveEmailForManagers(otherManagers, leaveEmailDynamicFields,
+				EmailBodyTemplates.LEAVE_MODULE_MANAGER_REVOKED_MULTI_DAY_LEAVE);
 	}
 
 	@Override
@@ -352,12 +334,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers.forEach(manager -> {
-			leaveEmailDynamicFields.setEmployeeOrManagerName(
-					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
-			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_DECLINED_SINGLE_DAY_LEAVE,
-					leaveEmailDynamicFields, manager.getManager().getUser().getEmail());
-		});
+
+		createLeaveEmailForManagers(otherManagers, leaveEmailDynamicFields,
+				EmailBodyTemplates.LEAVE_MODULE_MANAGER_DECLINED_SINGLE_DAY_LEAVE);
 	}
 
 	@Override
@@ -377,12 +356,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 
 		List<EmployeeManager> otherManagers = getOtherManagers(
 				employeeManagerDao.findByEmployee(leaveRequest.getEmployee()), leaveRequest.getReviewer().getUser());
-		otherManagers.forEach(manager -> {
-			leaveEmailDynamicFields.setEmployeeOrManagerName(
-					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
-			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_DECLINED_MULTI_DAY_LEAVE,
-					leaveEmailDynamicFields, manager.getManager().getUser().getEmail());
-		});
+
+		createLeaveEmailForManagers(otherManagers, leaveEmailDynamicFields,
+				EmailBodyTemplates.LEAVE_MODULE_MANAGER_DECLINED_MULTI_DAY_LEAVE);
 	}
 
 	@Override
@@ -397,12 +373,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setComment(leaveRequest.getReviewerComment());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers.forEach(employeeManager -> {
-			leaveEmailDynamicFields.setEmployeeOrManagerName(
-					employeeManager.getManager().getFirstName() + " " + employeeManager.getManager().getLastName());
-			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_NUDGE_SINGLE_DAY_LEAVE,
-					leaveEmailDynamicFields, employeeManager.getManager().getUser().getEmail());
-		});
+
+		createLeaveEmailForManagers(managers, leaveEmailDynamicFields,
+				EmailBodyTemplates.LEAVE_MODULE_MANAGER_NUDGE_SINGLE_DAY_LEAVE);
 	}
 
 	@Override
@@ -418,12 +391,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setComment(leaveRequest.getReviewerComment());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers.forEach(employeeManager -> {
-			leaveEmailDynamicFields.setEmployeeOrManagerName(
-					employeeManager.getManager().getFirstName() + " " + employeeManager.getManager().getLastName());
-			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_NUDGE_MULTI_DAY_LEAVE,
-					leaveEmailDynamicFields, employeeManager.getManager().getUser().getEmail());
-		});
+
+		createLeaveEmailForManagers(managers, leaveEmailDynamicFields,
+				EmailBodyTemplates.LEAVE_MODULE_MANAGER_NUDGE_MULTI_DAY_LEAVE);
 	}
 
 	@Override
@@ -469,12 +439,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setComment(leaveRequest.getReviewerComment());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers.forEach(manager -> {
-			leaveEmailDynamicFields.setEmployeeOrManagerName(
-					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
-			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_AUTO_APPROVED_SINGLE_DAY_LEAVE,
-					leaveEmailDynamicFields, manager.getManager().getUser().getEmail());
-		});
+
+		createLeaveEmailForManagers(managers, leaveEmailDynamicFields,
+				EmailBodyTemplates.LEAVE_MODULE_MANAGER_AUTO_APPROVED_SINGLE_DAY_LEAVE);
 	}
 
 	@Override
@@ -490,12 +457,9 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		leaveEmailDynamicFields.setComment(leaveRequest.getReviewerComment());
 
 		List<EmployeeManager> managers = employeeManagerDao.findByEmployee(leaveRequest.getEmployee());
-		managers.forEach(manager -> {
-			leaveEmailDynamicFields.setEmployeeOrManagerName(
-					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
-			emailService.sendEmail(EmailBodyTemplates.LEAVE_MODULE_MANAGER_AUTO_APPROVED_MULTI_DAY_LEAVE,
-					leaveEmailDynamicFields, manager.getManager().getUser().getEmail());
-		});
+
+		createLeaveEmailForManagers(managers, leaveEmailDynamicFields,
+				EmailBodyTemplates.LEAVE_MODULE_MANAGER_AUTO_APPROVED_MULTI_DAY_LEAVE);
 	}
 
 	@Override
@@ -516,6 +480,16 @@ public class LeaveEmailServiceImpl implements LeaveEmailService {
 		return allManagers.stream()
 			.filter(manager -> !manager.getManager().getUser().getUserId().equals(currentManager.getUserId()))
 			.toList();
+	}
+
+	private void createLeaveEmailForManagers(List<EmployeeManager> managers,
+			LeaveEmailDynamicFields leaveEmailDynamicFields, EmailBodyTemplates emailBodyTemplates) {
+		PeopleUtil.filterManagersByLeaveRoles(managers).forEach(manager -> {
+			leaveEmailDynamicFields.setEmployeeOrManagerName(
+					manager.getManager().getFirstName() + " " + manager.getManager().getLastName());
+			emailService.sendEmail(emailBodyTemplates, leaveEmailDynamicFields,
+					manager.getManager().getUser().getEmail());
+		});
 	}
 
 }
