@@ -1149,6 +1149,28 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		return 0L;
 	}
 
+	@Override
+	public Employee findFirstSuperAdmin() {
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
+		Root<Employee> root = criteriaQuery.from(Employee.class);
+
+		List<Predicate> predicates = new ArrayList<>();
+
+		Join<Employee, User> userJoin = root.join(Employee_.user);
+		Join<Employee, EmployeeRole> roleJoin = root.join(Employee_.employeeRole);
+		predicates.add(criteriaBuilder.equal(userJoin.get(User_.isActive), true));
+		predicates.add(criteriaBuilder.equal(roleJoin.get(EmployeeRole_.isSuperAdmin), true));
+
+		criteriaQuery.where(predicates.toArray(new Predicate[0]));
+		criteriaQuery.select(root).distinct(true);
+		criteriaQuery.orderBy(criteriaBuilder.asc(root.get(Employee_.employeeId)));
+
+		TypedQuery<Employee> typedQuery = entityManager.createQuery(criteriaQuery);
+		typedQuery.setMaxResults(1);
+		return typedQuery.getSingleResult();
+	}
+
 	private Predicate findByEmailName(String keyword, CriteriaBuilder criteriaBuilder, Root<Employee> employee,
 			Join<Employee, User> userJoin) {
 		keyword = getSearchString(keyword);

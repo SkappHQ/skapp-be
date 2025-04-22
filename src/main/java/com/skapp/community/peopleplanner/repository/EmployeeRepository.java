@@ -85,4 +85,6 @@ public interface EmployeeRepository {
 
 	Long findAllActiveAndPendingEmployeesCount();
 
+	Employee findFirstSuperAdmin();
+
 }
