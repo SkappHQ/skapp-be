@@ -53,6 +53,8 @@ import java.util.stream.Stream;
 @Slf4j
 public class FileStorageServiceImpl implements FileStorageService {
 
+	private static final String ALGORITHM = "AES";
+
 	private final FileStorageConfig fileStorageConfig;
 
 	private final OrganizationDao organizationDao;
@@ -62,8 +64,6 @@ public class FileStorageServiceImpl implements FileStorageService {
 	private final MessageUtil messageUtil;
 
 	private final UserService userService;
-
-	private static final String ALGORITHM = "AES";
 
 	@Value("${file.storage.encryption-key}")
 	private String fileStorageEncryptionKey;
@@ -97,7 +97,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 					&& FileUtil.isSupportedFormat(file.getOriginalFilename())) {
 
 				checkIfFileWithSameNameExists(targetDir,
-						FileUtil.getFileNameWithoutExtention(targetFilePath.getFileName().toString())
+						FileUtil.getFileNameWithoutExtension(targetFilePath.getFileName().toString())
 								+ FileConfigConstants.THUMBNAIL_SUFFIX);
 
 				Path thumbnailFilePath = targetDir
@@ -343,7 +343,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 			if (targetDir != null) {
 				Path image = targetDir.resolve(fileName);
 				deleteAllFiles(image);
-				Path imageThumbnail = targetDir.resolve(FileUtil.getFileNameWithoutExtention(employee.getAuthPic())
+				Path imageThumbnail = targetDir.resolve(FileUtil.getFileNameWithoutExtension(employee.getAuthPic())
 						+ FileConfigConstants.THUMBNAIL_SUFFIX + "."
 						+ FileUtil.getFileExtension(employee.getAuthPic()));
 				deleteAllFiles(imageThumbnail);

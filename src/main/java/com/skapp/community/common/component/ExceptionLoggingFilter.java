@@ -27,11 +27,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ExceptionLoggingFilter implements Filter {
 
-	private final ObjectMapper objectMapper;
-
 	private static final String RED_COLOR = "\u001B[31m";
 
 	private static final String RESET_COLOR = "\u001B[0m";
+
+	private final ObjectMapper objectMapper;
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException {

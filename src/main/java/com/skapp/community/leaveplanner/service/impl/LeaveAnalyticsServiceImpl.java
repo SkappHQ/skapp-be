@@ -177,6 +177,54 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 
 	private final OrganizationService organizationService;
 
+	public static Map<String, Float> mapMonthKeysToName(LocalDate startDate, LocalDate endDate,
+			Map<Integer, Double> leaveData) {
+		Map<String, Float> totalLeavesWithMonthsResultsSet = new LinkedHashMap<>();
+		int startMonth = startDate.getMonthValue();
+		int numberOfMonths = LeaveModuleUtil.getNumberOfMonthsBetweenTwoDates(startDate, endDate);
+
+		for (int month = startMonth; month <= numberOfMonths + startMonth; month++) {
+			int monthIndex = month > 12 ? month - 12 : month;
+			totalLeavesWithMonthsResultsSet.put(Month.of(monthIndex).getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
+					leaveData == null || leaveData.get(monthIndex) == null ? 0
+							: leaveData.get(monthIndex).floatValue());
+		}
+		return totalLeavesWithMonthsResultsSet;
+	}
+
+	public static int addUpWorkingDaysForAllEmployee(List<Employee> employees, LocalDate startDate, LocalDate endDate,
+			List<TimeConfig> timeConfigs, List<LocalDate> holidays, String organizationTimeZone) {
+		int totalWorkingDays = 0;
+		for (Employee employee : employees) {
+			if (employee.getJoinDate() != null && startDate.isBefore(employee.getJoinDate())
+					&& employee.getTerminationDate() != null && endDate.isAfter(employee.getTerminationDate())) {
+				totalWorkingDays = totalWorkingDays
+						+ CommonModuleUtils.getWorkingDaysBetweenTwoDates(employee.getJoinDate(),
+								employee.getTerminationDate(), timeConfigs, holidays, organizationTimeZone);
+			}
+			else if (employee.getJoinDate() != null && startDate.isBefore(employee.getJoinDate())
+					&& employee.getTerminationDate() == null) {
+				totalWorkingDays = totalWorkingDays + CommonModuleUtils.getWorkingDaysBetweenTwoDates(
+						employee.getJoinDate(), endDate, timeConfigs, holidays, organizationTimeZone);
+			}
+			else if (employee.getJoinDate() != null && startDate.isAfter(employee.getJoinDate())
+					&& employee.getTerminationDate() == null) {
+				totalWorkingDays = totalWorkingDays + CommonModuleUtils.getWorkingDaysBetweenTwoDates(startDate,
+						endDate, timeConfigs, holidays, organizationTimeZone);
+			}
+			else if (employee.getJoinDate() != null && startDate.isAfter(employee.getJoinDate())
+					&& employee.getTerminationDate() != null && endDate.isAfter(employee.getTerminationDate())) {
+				totalWorkingDays = totalWorkingDays + CommonModuleUtils.getWorkingDaysBetweenTwoDates(startDate,
+						employee.getTerminationDate(), timeConfigs, holidays, organizationTimeZone);
+			}
+			else {
+				totalWorkingDays = totalWorkingDays + CommonModuleUtils.getWorkingDaysBetweenTwoDates(startDate,
+						endDate, timeConfigs, holidays, organizationTimeZone);
+			}
+		}
+		return totalWorkingDays;
+	}
+
 	@Override
 	public ResponseEntityDto getLeaveTrends(LeaveTrendFilterDto leaveTrendFilterDto) {
 		LocalDate startDate = getStartDate(leaveTrendFilterDto);
@@ -448,21 +496,6 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		else {
 			return startDate.getMonthValue();
 		}
-	}
-
-	public static Map<String, Float> mapMonthKeysToName(LocalDate startDate, LocalDate endDate,
-			Map<Integer, Double> leaveData) {
-		Map<String, Float> totalLeavesWithMonthsResultsSet = new LinkedHashMap<>();
-		int startMonth = startDate.getMonthValue();
-		int numberOfMonths = LeaveModuleUtil.getNumberOfMonthsBetweenTwoDates(startDate, endDate);
-
-		for (int month = startMonth; month <= numberOfMonths + startMonth; month++) {
-			int monthIndex = month > 12 ? month - 12 : month;
-			totalLeavesWithMonthsResultsSet.put(Month.of(monthIndex).getDisplayName(TextStyle.SHORT, Locale.ENGLISH),
-					leaveData == null || leaveData.get(monthIndex) == null ? 0
-							: leaveData.get(monthIndex).floatValue());
-		}
-		return totalLeavesWithMonthsResultsSet;
 	}
 
 	/**
@@ -994,39 +1027,6 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 				(absenceRateForTwoMonthsBack / numOfWorkingDaysSinceTwoMonthsBackToOneMonth) * 100);
 
 		return new ResponseEntityDto(false, absenceRateAnalyticsDtos);
-	}
-
-	public static int addUpWorkingDaysForAllEmployee(List<Employee> employees, LocalDate startDate, LocalDate endDate,
-			List<TimeConfig> timeConfigs, List<LocalDate> holidays, String organizationTimeZone) {
-		int totalWorkingDays = 0;
-		for (Employee employee : employees) {
-			if (employee.getJoinDate() != null && startDate.isBefore(employee.getJoinDate())
-					&& employee.getTerminationDate() != null && endDate.isAfter(employee.getTerminationDate())) {
-				totalWorkingDays = totalWorkingDays
-						+ CommonModuleUtils.getWorkingDaysBetweenTwoDates(employee.getJoinDate(),
-								employee.getTerminationDate(), timeConfigs, holidays, organizationTimeZone);
-			}
-			else if (employee.getJoinDate() != null && startDate.isBefore(employee.getJoinDate())
-					&& employee.getTerminationDate() == null) {
-				totalWorkingDays = totalWorkingDays + CommonModuleUtils.getWorkingDaysBetweenTwoDates(
-						employee.getJoinDate(), endDate, timeConfigs, holidays, organizationTimeZone);
-			}
-			else if (employee.getJoinDate() != null && startDate.isAfter(employee.getJoinDate())
-					&& employee.getTerminationDate() == null) {
-				totalWorkingDays = totalWorkingDays + CommonModuleUtils.getWorkingDaysBetweenTwoDates(startDate,
-						endDate, timeConfigs, holidays, organizationTimeZone);
-			}
-			else if (employee.getJoinDate() != null && startDate.isAfter(employee.getJoinDate())
-					&& employee.getTerminationDate() != null && endDate.isAfter(employee.getTerminationDate())) {
-				totalWorkingDays = totalWorkingDays + CommonModuleUtils.getWorkingDaysBetweenTwoDates(startDate,
-						employee.getTerminationDate(), timeConfigs, holidays, organizationTimeZone);
-			}
-			else {
-				totalWorkingDays = totalWorkingDays + CommonModuleUtils.getWorkingDaysBetweenTwoDates(startDate,
-						endDate, timeConfigs, holidays, organizationTimeZone);
-			}
-		}
-		return totalWorkingDays;
 	}
 
 	private float getAbsenceRateForCurrentDate(LocalDate firstDateOfYear, LocalDate comparisonEndDate,

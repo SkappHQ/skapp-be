@@ -78,6 +78,51 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 	@NonNull
 	private EntityManager entityManager;
 
+	public static List<LocalDate> getAllDaysBetween(DayOfWeek day, LocalDate startDate, LocalDate endDate) {
+		List<LocalDate> removingDays = new ArrayList<>();
+
+		LocalDate currentDay = startDate.with(java.time.temporal.TemporalAdjusters.nextOrSame(day));
+
+		while (!currentDay.isAfter(endDate)) {
+			removingDays.add(currentDay);
+			currentDay = currentDay.plusWeeks(1);
+		}
+
+		return removingDays;
+	}
+
+	public static float getLeaveCount(List<LeaveRequest> leaveRequests, List<LocalDate> holidays,
+			List<TimeConfig> timeConfigs, String organizationTimeZone) {
+		float leaveCount = 0;
+		for (LeaveRequest leaveRequest : leaveRequests) {
+			if (leaveRequest.getLeaveState().equals(LeaveState.FULLDAY)
+					&& leaveRequest.getEndDate().isAfter(leaveRequest.getStartDate())) {
+				leaveCount = leaveCount + getAllDaysBetween(leaveRequest.getStartDate(), leaveRequest.getEndDate(),
+						holidays, timeConfigs, organizationTimeZone);
+			}
+			else if (!holidays.contains(leaveRequest.getStartDate()) && !CommonModuleUtils
+				.checkIfDayIsWorkingDay(leaveRequest.getStartDate(), timeConfigs, organizationTimeZone)) {
+				leaveCount = leaveRequest.getLeaveState().equals(LeaveState.FULLDAY) ? leaveCount + 1
+						: (float) (leaveCount + 0.5);
+			}
+		}
+		return leaveCount;
+	}
+
+	public static Integer getAllDaysBetween(LocalDate startDate, LocalDate endDate, List<LocalDate> holidays,
+			List<TimeConfig> timeConfigs, String organizationTimeZone) {
+		int daysBetween = 0;
+
+		while (!holidays.contains(startDate)
+				&& !CommonModuleUtils.checkIfDayIsWorkingDay(startDate, timeConfigs, organizationTimeZone)
+				&& (startDate.isBefore(endDate) || startDate.isEqual(endDate))) {
+			daysBetween = daysBetween + 1;
+			startDate = startDate.plusDays(1);
+		}
+
+		return daysBetween;
+	}
+
 	@Override
 	public List<EmployeeLeaveRequestReportExportDto> generateLeaveRequestDetailedReport(List<Long> leaveTypeIds,
 			LocalDate startDate, LocalDate endDate, Long jobFamilyId, Long teamId, List<String> statuses) {
@@ -1007,51 +1052,6 @@ public class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
 						keyword),
 				criteriaBuilder.like(criteriaBuilder.lower(userJoin.get(User_.EMAIL)), keyword),
 				criteriaBuilder.like(criteriaBuilder.lower(employee.get(Employee_.LAST_NAME)), keyword));
-	}
-
-	public static List<LocalDate> getAllDaysBetween(DayOfWeek day, LocalDate startDate, LocalDate endDate) {
-		List<LocalDate> removingDays = new ArrayList<>();
-
-		LocalDate currentDay = startDate.with(java.time.temporal.TemporalAdjusters.nextOrSame(day));
-
-		while (!currentDay.isAfter(endDate)) {
-			removingDays.add(currentDay);
-			currentDay = currentDay.plusWeeks(1);
-		}
-
-		return removingDays;
-	}
-
-	public static float getLeaveCount(List<LeaveRequest> leaveRequests, List<LocalDate> holidays,
-			List<TimeConfig> timeConfigs, String organizationTimeZone) {
-		float leaveCount = 0;
-		for (LeaveRequest leaveRequest : leaveRequests) {
-			if (leaveRequest.getLeaveState().equals(LeaveState.FULLDAY)
-					&& leaveRequest.getEndDate().isAfter(leaveRequest.getStartDate())) {
-				leaveCount = leaveCount + getAllDaysBetween(leaveRequest.getStartDate(), leaveRequest.getEndDate(),
-						holidays, timeConfigs, organizationTimeZone);
-			}
-			else if (!holidays.contains(leaveRequest.getStartDate()) && !CommonModuleUtils
-				.checkIfDayIsWorkingDay(leaveRequest.getStartDate(), timeConfigs, organizationTimeZone)) {
-				leaveCount = leaveRequest.getLeaveState().equals(LeaveState.FULLDAY) ? leaveCount + 1
-						: (float) (leaveCount + 0.5);
-			}
-		}
-		return leaveCount;
-	}
-
-	public static Integer getAllDaysBetween(LocalDate startDate, LocalDate endDate, List<LocalDate> holidays,
-			List<TimeConfig> timeConfigs, String organizationTimeZone) {
-		int daysBetween = 0;
-
-		while (!holidays.contains(startDate)
-				&& !CommonModuleUtils.checkIfDayIsWorkingDay(startDate, timeConfigs, organizationTimeZone)
-				&& (startDate.isBefore(endDate) || startDate.isEqual(endDate))) {
-			daysBetween = daysBetween + 1;
-			startDate = startDate.plusDays(1);
-		}
-
-		return daysBetween;
 	}
 
 }

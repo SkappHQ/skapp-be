@@ -29,10 +29,10 @@ public class Team {
 	@Column(name = "team_name", length = 50)
 	private String teamName;
 
-	@OneToMany(mappedBy = "team", cascade = CascadeType.ALL)
-	List<EmployeeTeam> employees;
-
 	@Column(name = "is_active")
 	private boolean isActive = true;
+
+	@OneToMany(mappedBy = "team", cascade = CascadeType.ALL)
+	private List<EmployeeTeam> employees;
 
 }

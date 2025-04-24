@@ -28,6 +28,8 @@ import static org.mockito.Mockito.when;
 @AutoConfigureMockMvc
 class JobServiceImplUnitTest {
 
+	JobServiceImpl jobService;
+
 	@Mock
 	private JobFamilyDao jobFamilyDao;
 
@@ -45,8 +47,6 @@ class JobServiceImplUnitTest {
 
 	@Mock
 	private MessageUtil messageUtil;
-
-	JobServiceImpl jobService;
 
 	@BeforeEach
 	void setup() {

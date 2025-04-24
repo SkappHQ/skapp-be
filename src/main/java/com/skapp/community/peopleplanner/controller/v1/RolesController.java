@@ -66,7 +66,7 @@ public class RolesController {
 	}
 
 	@GetMapping("/super-admin-count")
-	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_ADMIN')")
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_MANAGER')")
 	public ResponseEntity<ResponseEntityDto> getSuperAdminCount() {
 		ResponseEntityDto response = rolesService.getSuperAdminCount();
 		return new ResponseEntity<>(response, HttpStatus.OK);

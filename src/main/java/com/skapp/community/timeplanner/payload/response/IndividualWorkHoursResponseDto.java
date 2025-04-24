@@ -10,10 +10,10 @@ import java.util.List;
 @Setter
 public class IndividualWorkHoursResponseDto {
 
+	List<EmployeeWorkHours> employeeWorkHours;
+
 	private int month;
 
 	private String monthName;
-
-	List<EmployeeWorkHours> employeeWorkHours;
 
 }

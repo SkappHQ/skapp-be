@@ -1,12 +1,11 @@
 package com.skapp.community.common.constant;
 
+import lombok.experimental.UtilityClass;
+
 import java.util.List;
 
+@UtilityClass
 public class FileConfigConstants {
-
-	private FileConfigConstants() {
-		throw new IllegalStateException("Illegal instantiate");
-	}
 
 	public static final String FILE_UPLOAD_PATH = "file.storage";
 

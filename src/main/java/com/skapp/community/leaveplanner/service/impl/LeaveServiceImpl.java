@@ -146,6 +146,37 @@ public class LeaveServiceImpl implements LeaveService {
 
 	private final OrganizationService organizationService;
 
+	public static int getNumberOfDaysBetweenLeaveRequestForGivenEntitlementRange(LocalDate leaveRequestStartDate,
+			LocalDate leaveRequestEndDate, LocalDate entitlementValidFrom, LocalDate entitlementValidTo,
+			List<TimeConfig> timeConfigs, List<LocalDate> holidays, List<Holiday> holidayObjects,
+			LeaveRequest leaveRequest, String organizationTimeZone) {
+
+		LocalDate startDate = leaveRequestStartDate.isAfter(leaveRequestEndDate) ? leaveRequestEndDate
+				: leaveRequestStartDate;
+		LocalDate endDate = leaveRequestEndDate.isBefore(leaveRequestStartDate) ? leaveRequestStartDate
+				: leaveRequestEndDate;
+		LocalDate entitlementStart = entitlementValidFrom.isAfter(entitlementValidTo) ? entitlementValidTo
+				: entitlementValidFrom;
+		LocalDate entitlementEnd = entitlementValidTo.isBefore(entitlementValidFrom) ? entitlementValidFrom
+				: entitlementValidTo;
+
+		LocalDate overlapStart = startDate.isAfter(entitlementStart) ? startDate : entitlementStart;
+		LocalDate overlapEnd = endDate.isBefore(entitlementEnd) ? endDate : entitlementEnd;
+
+		int count = 0;
+
+		LocalDate currentDate = overlapStart;
+		while (!currentDate.isAfter(overlapEnd)) {
+			if (CommonModuleUtils.checkIfDayIsWorkingDay(currentDate, timeConfigs, organizationTimeZone)
+					&& CommonModuleUtils.checkIfDayIsNotAHoliday(leaveRequest, holidayObjects, holidays, currentDate)) {
+				count++;
+			}
+			currentDate = currentDate.plusDays(1);
+		}
+
+		return count;
+	}
+
 	@Override
 	@Transactional
 	public ResponseEntityDto applyLeaveRequest(@NonNull LeaveRequestDto leaveRequestDto) {
@@ -849,37 +880,6 @@ public class LeaveServiceImpl implements LeaveService {
 			}
 		});
 		return remainingCount[0];
-	}
-
-	public static int getNumberOfDaysBetweenLeaveRequestForGivenEntitlementRange(LocalDate leaveRequestStartDate,
-			LocalDate leaveRequestEndDate, LocalDate entitlementValidFrom, LocalDate entitlementValidTo,
-			List<TimeConfig> timeConfigs, List<LocalDate> holidays, List<Holiday> holidayObjects,
-			LeaveRequest leaveRequest, String organizationTimeZone) {
-
-		LocalDate startDate = leaveRequestStartDate.isAfter(leaveRequestEndDate) ? leaveRequestEndDate
-				: leaveRequestStartDate;
-		LocalDate endDate = leaveRequestEndDate.isBefore(leaveRequestStartDate) ? leaveRequestStartDate
-				: leaveRequestEndDate;
-		LocalDate entitlementStart = entitlementValidFrom.isAfter(entitlementValidTo) ? entitlementValidTo
-				: entitlementValidFrom;
-		LocalDate entitlementEnd = entitlementValidTo.isBefore(entitlementValidFrom) ? entitlementValidFrom
-				: entitlementValidTo;
-
-		LocalDate overlapStart = startDate.isAfter(entitlementStart) ? startDate : entitlementStart;
-		LocalDate overlapEnd = endDate.isBefore(entitlementEnd) ? endDate : entitlementEnd;
-
-		int count = 0;
-
-		LocalDate currentDate = overlapStart;
-		while (!currentDate.isAfter(overlapEnd)) {
-			if (CommonModuleUtils.checkIfDayIsWorkingDay(currentDate, timeConfigs, organizationTimeZone)
-					&& CommonModuleUtils.checkIfDayIsNotAHoliday(leaveRequest, holidayObjects, holidays, currentDate)) {
-				count++;
-			}
-			currentDate = currentDate.plusDays(1);
-		}
-
-		return count;
 	}
 
 	private void managerUpdateLeaveRequestStatus(LeaveRequest leaveRequest, LeaveRequestStatus updateStatus) {

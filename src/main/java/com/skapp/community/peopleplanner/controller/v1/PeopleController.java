@@ -129,7 +129,7 @@ public class PeopleController {
 
 	@Operation(summary = "Check if an employee is a primary, secondary or team supervisor ",
 			description = "This endpoint checks if the given employee is supervising an employee or team.")
-	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_ADMIN')")
+	@PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN','ROLE_PEOPLE_MANAGER')")
 	@GetMapping(value = "/{employeeId}/has-supervisory-roles")
 	public ResponseEntity<ResponseEntityDto> hasSupervisoryRoles(@PathVariable Long employeeId) {
 		return new ResponseEntity<>(peopleService.hasSupervisoryRoles(employeeId), HttpStatus.OK);

@@ -13,12 +13,12 @@ import java.util.List;
 @AllArgsConstructor
 public class EmployeeEntitlementTeamJobRoleDto {
 
+	List<EmployeeLeaveEntitlementsDto> employeeLeaveEntitlementsDtos;
+
 	private Long employeeId;
 
 	private String employeeName;
 
 	private String teams;
-
-	List<EmployeeLeaveEntitlementsDto> employeeLeaveEntitlementsDtos;
 
 }

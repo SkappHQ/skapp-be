@@ -1,10 +1,9 @@
 package com.skapp.community.peopleplanner.constant;
 
-public class PeopleConstants {
+import lombok.experimental.UtilityClass;
 
-	private PeopleConstants() {
-		throw new IllegalStateException("Illegal instantiate");
-	}
+@UtilityClass
+public class PeopleConstants {
 
 	public static final int HOLIDAY_NAME_MAX_LENGTH = 50;
 
