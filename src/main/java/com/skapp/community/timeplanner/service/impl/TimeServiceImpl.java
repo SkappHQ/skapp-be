@@ -192,6 +192,20 @@ public class TimeServiceImpl implements TimeService {
 
 	private final OrganizationService organizationService;
 
+	public static JsonNode createTimeConfigJsonNode(Map<String, Float> hoursMap) {
+		ObjectMapper mapper = new ObjectMapper();
+		ArrayNode timeBlocksNode = mapper.createArrayNode();
+
+		for (Map.Entry<String, Float> entry : hoursMap.entrySet()) {
+			ObjectNode block = mapper.createObjectNode();
+			block.put(TimeConfigFieldName.TIME_BLOCK.getFieldName(), entry.getKey());
+			block.put(TimeConfigFieldName.HOURS.getFieldName(), entry.getValue());
+			timeBlocksNode.add(block);
+		}
+
+		return timeBlocksNode;
+	}
+
 	@Override
 	public ResponseEntityDto updateTimeConfigs(TimeConfigDto timeConfigDto) {
 		log.info("updateTimeConfigs : execution started");
@@ -1965,20 +1979,6 @@ public class TimeServiceImpl implements TimeService {
 		AttendanceSummaryDto attendanceSummaryDto = timeRecordDao.getEmployeeAttendanceSummary(employeeIds, startDate,
 				endDate);
 		return attendanceSummaryDto.getTotalWorkHours();
-	}
-
-	public static JsonNode createTimeConfigJsonNode(Map<String, Float> hoursMap) {
-		ObjectMapper mapper = new ObjectMapper();
-		ArrayNode timeBlocksNode = mapper.createArrayNode();
-
-		for (Map.Entry<String, Float> entry : hoursMap.entrySet()) {
-			ObjectNode block = mapper.createObjectNode();
-			block.put(TimeConfigFieldName.TIME_BLOCK.getFieldName(), entry.getKey());
-			block.put(TimeConfigFieldName.HOURS.getFieldName(), entry.getValue());
-			timeBlocksNode.add(block);
-		}
-
-		return timeBlocksNode;
 	}
 
 	private void recordClockInAndClockOut(User currentUser, long timeInMillis, TimeRecordActionTypes actionType) {

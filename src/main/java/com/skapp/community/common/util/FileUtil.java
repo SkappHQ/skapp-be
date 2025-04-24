@@ -1,16 +1,14 @@
 package com.skapp.community.common.util;
 
 import com.skapp.community.common.constant.FileConfigConstants;
+import lombok.experimental.UtilityClass;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+@UtilityClass
 public class FileUtil {
-
-	private FileUtil() {
-		throw new IllegalStateException("Illegal instantiate");
-	}
 
 	public static Path getParentDirectory() {
 		return Paths.get("../../").toAbsolutePath().getParent();
@@ -49,7 +47,7 @@ public class FileUtil {
 		return FileConfigConstants.SUPPORTED_FORMATS.contains(fileExtension);
 	}
 
-	public static String getFileNameWithoutExtention(String originalFileName) {
+	public static String getFileNameWithoutExtension(String originalFileName) {
 		return originalFileName.substring(0, originalFileName.indexOf("."));
 	}
 

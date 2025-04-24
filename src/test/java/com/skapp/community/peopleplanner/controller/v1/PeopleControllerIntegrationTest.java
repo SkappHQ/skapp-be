@@ -87,6 +87,50 @@ class PeopleControllerIntegrationTest {
 
 	private String authToken;
 
+	private static EmployeeEmploymentBasicDetailsDto getEmployeeEmploymentBasicDetailsDto() {
+		EmployeeEmploymentBasicDetailsDto employeeEmploymentBasicDetailsDto = new EmployeeEmploymentBasicDetailsDto();
+		employeeEmploymentBasicDetailsDto.setEmail("username9@gmail.com");
+		employeeEmploymentBasicDetailsDto.setWorkTimeZone("AST");
+
+		EmployeeEmploymentBasicDetailsManagerDetailsDto employeeEmploymentBasicDetailsPrimaryManagerDetailsDto = new EmployeeEmploymentBasicDetailsManagerDetailsDto();
+		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setEmployeeId(1L);
+		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setFirstName("Primary Manager Name 1");
+		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setLastName("Primary Manager Name 2");
+
+		EmployeeEmploymentBasicDetailsManagerDetailsDto employeeEmploymentBasicDetailsSecondaryManagerDetailsDto = new EmployeeEmploymentBasicDetailsManagerDetailsDto();
+		employeeEmploymentBasicDetailsSecondaryManagerDetailsDto.setEmployeeId(1L);
+		employeeEmploymentBasicDetailsSecondaryManagerDetailsDto.setFirstName("Primary Manager Name 1");
+		employeeEmploymentBasicDetailsSecondaryManagerDetailsDto.setLastName("Primary Manager Name 2");
+
+		employeeEmploymentBasicDetailsDto.setPrimarySupervisor(employeeEmploymentBasicDetailsPrimaryManagerDetailsDto);
+		List<EmployeeEmploymentBasicDetailsManagerDetailsDto> otherSupervisorsList = new ArrayList<>();
+		otherSupervisorsList.add(employeeEmploymentBasicDetailsSecondaryManagerDetailsDto);
+		employeeEmploymentBasicDetailsDto.setOtherSupervisors(otherSupervisorsList);
+
+		Long[] teamIds = { 1L };
+		employeeEmploymentBasicDetailsDto.setTeamIds(teamIds);
+
+		employeeEmploymentBasicDetailsDto.setProbationStartDate(LocalDate.parse("2021-10-10"));
+		employeeEmploymentBasicDetailsDto.setProbationEndDate(LocalDate.parse("2021-12-28"));
+		employeeEmploymentBasicDetailsDto
+			.setJoinedDate(DateTimeUtils.getUtcLocalDate(DateTimeUtils.getCurrentYear() - 1, 1, 1));
+
+		employeeEmploymentBasicDetailsDto.setEmploymentAllocation(EmploymentAllocation.FULL_TIME);
+		return employeeEmploymentBasicDetailsDto;
+	}
+
+	private static EmployeeEmploymentBasicDetailsDto getEmploymentBasicDetailsDto() {
+		EmployeeEmploymentBasicDetailsDto employeeEmploymentBasicDetailsDto = new EmployeeEmploymentBasicDetailsDto();
+		employeeEmploymentBasicDetailsDto.setEmail("username20@gmail.com");
+
+		EmployeeEmploymentBasicDetailsManagerDetailsDto employeeEmploymentBasicDetailsPrimaryManagerDetailsDto = new EmployeeEmploymentBasicDetailsManagerDetailsDto();
+		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setEmployeeId(25L);
+		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setFirstName("Primary Manager Name 1");
+		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setLastName("Primary Manager Name 2");
+		employeeEmploymentBasicDetailsDto.setPrimarySupervisor(employeeEmploymentBasicDetailsPrimaryManagerDetailsDto);
+		return employeeEmploymentBasicDetailsDto;
+	}
+
 	@BeforeEach
 	void setup() {
 		setupSecurityContext();
@@ -203,50 +247,6 @@ class PeopleControllerIntegrationTest {
 		createEmployeeRequestDto.setSystemPermissions(employeeSystemPermissionsDto);
 
 		return createEmployeeRequestDto;
-	}
-
-	private static EmployeeEmploymentBasicDetailsDto getEmployeeEmploymentBasicDetailsDto() {
-		EmployeeEmploymentBasicDetailsDto employeeEmploymentBasicDetailsDto = new EmployeeEmploymentBasicDetailsDto();
-		employeeEmploymentBasicDetailsDto.setEmail("username9@gmail.com");
-		employeeEmploymentBasicDetailsDto.setWorkTimeZone("AST");
-
-		EmployeeEmploymentBasicDetailsManagerDetailsDto employeeEmploymentBasicDetailsPrimaryManagerDetailsDto = new EmployeeEmploymentBasicDetailsManagerDetailsDto();
-		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setEmployeeId(1L);
-		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setFirstName("Primary Manager Name 1");
-		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setLastName("Primary Manager Name 2");
-
-		EmployeeEmploymentBasicDetailsManagerDetailsDto employeeEmploymentBasicDetailsSecondaryManagerDetailsDto = new EmployeeEmploymentBasicDetailsManagerDetailsDto();
-		employeeEmploymentBasicDetailsSecondaryManagerDetailsDto.setEmployeeId(1L);
-		employeeEmploymentBasicDetailsSecondaryManagerDetailsDto.setFirstName("Primary Manager Name 1");
-		employeeEmploymentBasicDetailsSecondaryManagerDetailsDto.setLastName("Primary Manager Name 2");
-
-		employeeEmploymentBasicDetailsDto.setPrimarySupervisor(employeeEmploymentBasicDetailsPrimaryManagerDetailsDto);
-		List<EmployeeEmploymentBasicDetailsManagerDetailsDto> otherSupervisorsList = new ArrayList<>();
-		otherSupervisorsList.add(employeeEmploymentBasicDetailsSecondaryManagerDetailsDto);
-		employeeEmploymentBasicDetailsDto.setOtherSupervisors(otherSupervisorsList);
-
-		Long[] teamIds = { 1L };
-		employeeEmploymentBasicDetailsDto.setTeamIds(teamIds);
-
-		employeeEmploymentBasicDetailsDto.setProbationStartDate(LocalDate.parse("2021-10-10"));
-		employeeEmploymentBasicDetailsDto.setProbationEndDate(LocalDate.parse("2021-12-28"));
-		employeeEmploymentBasicDetailsDto
-			.setJoinedDate(DateTimeUtils.getUtcLocalDate(DateTimeUtils.getCurrentYear() - 1, 1, 1));
-
-		employeeEmploymentBasicDetailsDto.setEmploymentAllocation(EmploymentAllocation.FULL_TIME);
-		return employeeEmploymentBasicDetailsDto;
-	}
-
-	private static EmployeeEmploymentBasicDetailsDto getEmploymentBasicDetailsDto() {
-		EmployeeEmploymentBasicDetailsDto employeeEmploymentBasicDetailsDto = new EmployeeEmploymentBasicDetailsDto();
-		employeeEmploymentBasicDetailsDto.setEmail("username20@gmail.com");
-
-		EmployeeEmploymentBasicDetailsManagerDetailsDto employeeEmploymentBasicDetailsPrimaryManagerDetailsDto = new EmployeeEmploymentBasicDetailsManagerDetailsDto();
-		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setEmployeeId(25L);
-		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setFirstName("Primary Manager Name 1");
-		employeeEmploymentBasicDetailsPrimaryManagerDetailsDto.setLastName("Primary Manager Name 2");
-		employeeEmploymentBasicDetailsDto.setPrimarySupervisor(employeeEmploymentBasicDetailsPrimaryManagerDetailsDto);
-		return employeeEmploymentBasicDetailsDto;
 	}
 
 	@Nested

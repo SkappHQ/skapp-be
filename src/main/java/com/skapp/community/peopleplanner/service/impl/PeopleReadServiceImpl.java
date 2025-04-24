@@ -366,12 +366,12 @@ public class PeopleReadServiceImpl implements PeopleReadService {
 			return;
 		}
 
-		if (isCurrentUser) {
+		if (isCurrentUser && doesNotHaveRole(userRoles, Role.PEOPLE_ADMIN, Role.PEOPLE_MANAGER)) {
 			setNull(dto, systemPermissionsField);
 			return;
 		}
 
-		if (doesNotHaveRole(userRoles, Role.PEOPLE_ADMIN)) {
+		if (doesNotHaveRole(userRoles, Role.PEOPLE_ADMIN) && doesNotHaveRole(userRoles, Role.PEOPLE_MANAGER)) {
 			setNull(dto, systemPermissionsField);
 			setNull(dto, personal_contactField, personal_familyField, personal_educationalField,
 					personal_socialMediaField, personal_healthAndOtherField);
@@ -383,9 +383,10 @@ public class PeopleReadServiceImpl implements PeopleReadService {
 			return;
 		}
 
-		if (doesNotHaveRole(userRoles, Role.PEOPLE_ADMIN) && (doesNotHaveRole(userRoles, Role.ATTENDANCE_ADMIN)
-				|| doesNotHaveRole(userRoles, Role.LEAVE_ADMIN) || doesNotHaveRole(userRoles, Role.ATTENDANCE_MANAGER)
-				|| doesNotHaveRole(userRoles, Role.LEAVE_MANAGER))) {
+		if ((doesNotHaveRole(userRoles, Role.PEOPLE_ADMIN) && doesNotHaveRole(userRoles, Role.PEOPLE_MANAGER))
+				&& (doesNotHaveRole(userRoles, Role.ATTENDANCE_ADMIN) || doesNotHaveRole(userRoles, Role.LEAVE_ADMIN)
+						|| doesNotHaveRole(userRoles, Role.ATTENDANCE_MANAGER)
+						|| doesNotHaveRole(userRoles, Role.LEAVE_MANAGER))) {
 			setNull(dto, systemPermissionsField, emergencyField);
 			setNull(dto, personal_contactField, personal_familyField, personal_educationalField,
 					personal_socialMediaField, personal_healthAndOtherField);

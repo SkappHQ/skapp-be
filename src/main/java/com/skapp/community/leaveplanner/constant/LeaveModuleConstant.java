@@ -1,10 +1,9 @@
 package com.skapp.community.leaveplanner.constant;
 
-public class LeaveModuleConstant {
+import lombok.experimental.UtilityClass;
 
-	private LeaveModuleConstant() {
-		throw new IllegalStateException("Illegal instantiate");
-	}
+@UtilityClass
+public class LeaveModuleConstant {
 
 	public static final String DISCARD_LEAVE_REQUEST_REASON = "discard";
 

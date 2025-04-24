@@ -52,6 +52,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
+	private static final String NOTIFICATION_LANGUAGE = "en";
+
 	private final PushNotificationService pushNotificationService;
 
 	private final NotificationDao notificationDao;
@@ -59,8 +61,6 @@ public class NotificationServiceImpl implements NotificationService {
 	private final UserService userService;
 
 	private final PageTransformer pageTransformer;
-
-	private static final String NOTIFICATION_LANGUAGE = "en";
 
 	private final EmployeeDao employeeDao;
 

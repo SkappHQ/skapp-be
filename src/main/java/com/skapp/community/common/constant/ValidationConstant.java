@@ -1,10 +1,9 @@
 package com.skapp.community.common.constant;
 
-public class ValidationConstant {
+import lombok.experimental.UtilityClass;
 
-	private ValidationConstant() {
-		throw new IllegalStateException("Illegal instantiate");
-	}
+@UtilityClass
+public class ValidationConstant {
 
 	/**
 	 * This pattern validates the hexadecimal color code should consist of letters A-F and

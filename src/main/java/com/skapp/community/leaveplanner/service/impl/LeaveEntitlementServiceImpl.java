@@ -122,6 +122,67 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 
 	private final BulkContextService bulkContextService;
 
+	public static void processLeaveEntitlements(LeaveMapper mapStructMapper, PeopleMapper peopleMapper,
+			Map<Long, LeaveEntitlementResponseDto> responseDtoList, LeaveEntitlement entitlement) {
+
+		if (entitlement.getTotalDaysAllocated() <= 0) {
+			return;
+		}
+
+		long typeID = entitlement.getLeaveType().getTypeId();
+		LeaveEntitlementResponseDto filterResponseListDto = responseDtoList.get(typeID);
+
+		if (filterResponseListDto != null) {
+			filterResponseListDto.setTotalDaysAllocated(
+					filterResponseListDto.getTotalDaysAllocated() + entitlement.getTotalDaysAllocated());
+			filterResponseListDto
+				.setTotalDaysUsed(filterResponseListDto.getTotalDaysUsed() + entitlement.getTotalDaysUsed());
+			filterResponseListDto.setBalanceInDays(
+					filterResponseListDto.getTotalDaysAllocated() - filterResponseListDto.getTotalDaysUsed());
+			if (filterResponseListDto.getValidFrom().isAfter(entitlement.getValidFrom())) {
+				filterResponseListDto.setValidFrom(getEntitlementValidFromDate(entitlement.getValidFrom()));
+			}
+			if (filterResponseListDto.getValidTo().isBefore(entitlement.getValidTo())) {
+				filterResponseListDto.setValidTo(getEntitlementValidToDate(entitlement.getValidTo()));
+			}
+		}
+		else {
+			Float totalAllocatedDays = entitlement.getTotalDaysAllocated();
+			Float totalUsedDays = entitlement.getTotalDaysUsed();
+			Float leaveBalanceInDays = totalAllocatedDays - totalUsedDays;
+			LocalDate validFrom = getEntitlementValidFromDate(entitlement.getValidFrom());
+			LocalDate validTo = getEntitlementValidToDate(entitlement.getValidTo());
+			LeaveTypeBasicDetailsResponseDto leaveTypeBasicDetailsResponseDto = mapStructMapper
+				.leaveTypeToLeaveTypeBasicDetailsResponseDto(entitlement.getLeaveType());
+			EmployeeBasicDetailsResponseDto employee = peopleMapper
+				.employeeToEmployeeBasicDetailsResponseDto(entitlement.getEmployee());
+
+			responseDtoList.put(typeID,
+					new LeaveEntitlementResponseDto(entitlement.getEntitlementId(), leaveTypeBasicDetailsResponseDto,
+							validFrom, validTo, entitlement.isActive(), totalAllocatedDays, totalUsedDays,
+							leaveBalanceInDays, entitlement.getReason(), entitlement.isManual(),
+							entitlement.isOverride(), employee));
+		}
+	}
+
+	public static LocalDate getEntitlementValidFromDate(LocalDate date) {
+		LeaveCycleDetailsDto leaveCycleDetailsDto = new LeaveCycleDetailsDto();
+		int cycleEndYear = LeaveModuleUtil.getLeaveCycleEndYear(leaveCycleDetailsDto.getStartMonth() - 1,
+				leaveCycleDetailsDto.getStartDate());
+		int leaveCycleStartYear = leaveCycleDetailsDto.getStartMonth() == 1 && leaveCycleDetailsDto.getStartDate() == 1
+				? cycleEndYear : cycleEndYear - 1;
+		return date == null ? DateTimeUtils.getUtcLocalDate(leaveCycleStartYear,
+				leaveCycleDetailsDto.getStartMonth() - 1, leaveCycleDetailsDto.getStartDate()) : date;
+	}
+
+	public static LocalDate getEntitlementValidToDate(LocalDate date) {
+		LeaveCycleDetailsDto leaveCycleDetailsDto = new LeaveCycleDetailsDto();
+		int cycleEndYear = LeaveModuleUtil.getLeaveCycleEndYear(leaveCycleDetailsDto.getStartMonth() - 1,
+				leaveCycleDetailsDto.getStartDate());
+		return date == null ? DateTimeUtils.getUtcLocalDate(cycleEndYear, leaveCycleDetailsDto.getEndMonth() - 1,
+				leaveCycleDetailsDto.getEndDate()) : date;
+	}
+
 	@Override
 	public String processLeaveEntitlements(LeaveEntitlementsDto leaveEntitlementsDto) {
 		log.info("processLeaveEntitlements: execution started");
@@ -319,7 +380,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 		}
 
 		LeaveEntitlement leaveEntitlement = optionalLeaveEntitlement.get();
-		if (leaveEntitlement.isActive() && Boolean.TRUE.equals(leaveEntitlement.isManual())) {
+		if (leaveEntitlement.isActive() && leaveEntitlement.isManual()) {
 			if (leaveEntitlement.getTotalDaysUsed() > 0) {
 				throw new ModuleException(LeaveMessageConstant.LEAVE_ERROR_ENTITLEMENT_IN_USE_CANT_DELETED);
 			}
@@ -615,7 +676,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 								.findByEmployeeEmployeeIdAndLeaveTypeTypeIdAndCycleEndDate(
 										employeeToForward.getEmployeeId(), leaveType.getTypeId(), leaveCycleEndDate);
 							if (carryForwardInfoOpt.isPresent()
-									&& Boolean.TRUE.equals(!leaveType.getIsCarryForwardRemainingBalanceEnabled())) {
+									&& !leaveType.getIsCarryForwardRemainingBalanceEnabled()) {
 								carryForwardInfo = carryForwardInfoOpt.get();
 								daysToForward = carryForwardDaysMax > 0
 										? carryForwardDaysMax - carryForwardInfoOpt.get().getDays()
@@ -873,67 +934,6 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 				leaveMapper.leaveEntitlementsToSummarizedLeaveEntitlementBalanceDto(leaveEntitlements));
 	}
 
-	public static void processLeaveEntitlements(LeaveMapper mapStructMapper, PeopleMapper peopleMapper,
-			Map<Long, LeaveEntitlementResponseDto> responseDtoList, LeaveEntitlement entitlement) {
-
-		if (entitlement.getTotalDaysAllocated() <= 0) {
-			return;
-		}
-
-		long typeID = entitlement.getLeaveType().getTypeId();
-		LeaveEntitlementResponseDto filterResponseListDto = responseDtoList.get(typeID);
-
-		if (filterResponseListDto != null) {
-			filterResponseListDto.setTotalDaysAllocated(
-					filterResponseListDto.getTotalDaysAllocated() + entitlement.getTotalDaysAllocated());
-			filterResponseListDto
-				.setTotalDaysUsed(filterResponseListDto.getTotalDaysUsed() + entitlement.getTotalDaysUsed());
-			filterResponseListDto.setBalanceInDays(
-					filterResponseListDto.getTotalDaysAllocated() - filterResponseListDto.getTotalDaysUsed());
-			if (filterResponseListDto.getValidFrom().isAfter(entitlement.getValidFrom())) {
-				filterResponseListDto.setValidFrom(getEntitlementValidFromDate(entitlement.getValidFrom()));
-			}
-			if (filterResponseListDto.getValidTo().isBefore(entitlement.getValidTo())) {
-				filterResponseListDto.setValidTo(getEntitlementValidToDate(entitlement.getValidTo()));
-			}
-		}
-		else {
-			Float totalAllocatedDays = entitlement.getTotalDaysAllocated();
-			Float totalUsedDays = entitlement.getTotalDaysUsed();
-			Float leaveBalanceInDays = totalAllocatedDays - totalUsedDays;
-			LocalDate validFrom = getEntitlementValidFromDate(entitlement.getValidFrom());
-			LocalDate validTo = getEntitlementValidToDate(entitlement.getValidTo());
-			LeaveTypeBasicDetailsResponseDto leaveTypeBasicDetailsResponseDto = mapStructMapper
-				.leaveTypeToLeaveTypeBasicDetailsResponseDto(entitlement.getLeaveType());
-			EmployeeBasicDetailsResponseDto employee = peopleMapper
-				.employeeToEmployeeBasicDetailsResponseDto(entitlement.getEmployee());
-
-			responseDtoList.put(typeID,
-					new LeaveEntitlementResponseDto(entitlement.getEntitlementId(), leaveTypeBasicDetailsResponseDto,
-							validFrom, validTo, entitlement.isActive(), totalAllocatedDays, totalUsedDays,
-							leaveBalanceInDays, entitlement.getReason(), entitlement.isManual(),
-							entitlement.isOverride(), employee));
-		}
-	}
-
-	public static LocalDate getEntitlementValidFromDate(LocalDate date) {
-		LeaveCycleDetailsDto leaveCycleDetailsDto = new LeaveCycleDetailsDto();
-		int cycleEndYear = LeaveModuleUtil.getLeaveCycleEndYear(leaveCycleDetailsDto.getStartMonth() - 1,
-				leaveCycleDetailsDto.getStartDate());
-		int leaveCycleStartYear = leaveCycleDetailsDto.getStartMonth() == 1 && leaveCycleDetailsDto.getStartDate() == 1
-				? cycleEndYear : cycleEndYear - 1;
-		return date == null ? DateTimeUtils.getUtcLocalDate(leaveCycleStartYear,
-				leaveCycleDetailsDto.getStartMonth() - 1, leaveCycleDetailsDto.getStartDate()) : date;
-	}
-
-	public static LocalDate getEntitlementValidToDate(LocalDate date) {
-		LeaveCycleDetailsDto leaveCycleDetailsDto = new LeaveCycleDetailsDto();
-		int cycleEndYear = LeaveModuleUtil.getLeaveCycleEndYear(leaveCycleDetailsDto.getStartMonth() - 1,
-				leaveCycleDetailsDto.getStartDate());
-		return date == null ? DateTimeUtils.getUtcLocalDate(cycleEndYear, leaveCycleDetailsDto.getEndMonth() - 1,
-				leaveCycleDetailsDto.getEndDate()) : date;
-	}
-
 	private boolean isCustomLeaveEntitlementInCorrectYearRange(int year) {
 		return leaveCycleService.isInCurrentCycle(year) || leaveCycleService.isInPreviousCycle(year)
 				|| leaveCycleService.isInNextCycle(year);
@@ -1155,8 +1155,7 @@ public class LeaveEntitlementServiceImpl implements LeaveEntitlementService {
 		}
 		else if (entitlementDetailsDto.getEntitlements()
 			.stream()
-			.anyMatch(entitlement -> CommonModuleUtils
-				.isValidFloat(entitlement.getTotalDaysAllocated()) == Boolean.FALSE)) {
+			.anyMatch(entitlement -> !CommonModuleUtils.isValidFloat(entitlement.getTotalDaysAllocated()))) {
 			validationMap.replace(LeaveModuleConstant.VALID_FORMAT, false);
 		}
 		else {

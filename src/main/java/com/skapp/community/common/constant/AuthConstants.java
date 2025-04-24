@@ -1,10 +1,9 @@
 package com.skapp.community.common.constant;
 
-public class AuthConstants {
+import lombok.experimental.UtilityClass;
 
-	private AuthConstants() {
-		throw new IllegalStateException("Illegal instantiate");
-	}
+@UtilityClass
+public class AuthConstants {
 
 	public static final String AUTH_ROLE = "ROLE_";
 

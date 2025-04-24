@@ -10,9 +10,9 @@ import java.util.List;
 @Setter
 public class HolidayBulkRequestDto {
 
+	List<HolidayRequestDto> holidayDtoList;
+
 	@NotNull
 	private int year;
-
-	List<HolidayRequestDto> holidayDtoList;
 
 }

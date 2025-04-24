@@ -21,8 +21,6 @@ import static com.skapp.community.common.constant.ValidationConstant.TIME_ZONE_V
 @UtilityClass
 public class Validation {
 
-	private static final int MAX_NAME_LENGTH = 50;
-
 	public static final String SPECIAL_CHAR_REGEX = "^[a-zA-Z ]*$";
 
 	public static final String ALPHANUMERIC_REGEX = "^[a-zA-Z0-9]*$";
@@ -32,8 +30,6 @@ public class Validation {
 	public static final String NUMERIC_REGEX = "^[0-9]*$";
 
 	public static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
-
-	private static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[~`\\-_={}\\[\\]@$!%*?&.^()|])[A-Za-z\\d~`\\-_={}\\[\\]@$!%*?&.^()|]{8,}$";
 
 	public static final String NAME_REGEX = "[\\p{L}\\p{M}\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u00FF"
 			+ "\\u0100-\\u017F\\u0142\\u00AF\\u0027\\u002D\\u005E\\u0060\\u007E\\u00E7\\u00C7\\u02DA ]*";
@@ -50,6 +46,10 @@ public class Validation {
 	public static final String VALID_IDENTIFICATION_NUMBER_REGEXP = "^[a-zA-Z0-9\\-_]*$";
 
 	public static final String VALID_NIN_NUMBER_REGEXP = "^[a-zA-Z0-9]*$";
+
+	private static final int MAX_NAME_LENGTH = 50;
+
+	private static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[~`\\-_={}\\[\\]@$!%*?&.^()|])[A-Za-z\\d~`\\-_={}\\[\\]@$!%*?&.^()|]{8,}$";
 
 	public static void isValidFirstName(String firstName) throws ValidationException {
 		if (!StringUtils.hasText(firstName)) {

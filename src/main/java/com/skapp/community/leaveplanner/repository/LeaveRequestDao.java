@@ -275,7 +275,7 @@ public interface LeaveRequestDao
 					          ON lr.employee_id = user.user_id
 					 WHERE (leaveDate BETWEEN ?1 AND ?2) AND (leaveDate BETWEEN lr.start_date AND lr.end_date) AND ((leaveDate NOT IN ?4) OR (NOT EXISTS (SELECT 1 FROM holiday WHERE is_active=1))) AND ((WEEKDAY(leaveDate) IN ?3) OR (NOT EXISTS (SELECT 1 FROM time_config))) AND lr.`status` IN ('APPROVED', 'PENDING') AND (NOT (user.`is_active` = '0'))
 					;
-					 """)
+					""")
 	Float findAllEmployeeRequestsByDateRangeQuery(LocalDate startDate, LocalDate endDate,
 			List<Integer> workingDaysIndex, List<LocalDate> holidayDates);
 
