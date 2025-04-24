@@ -26,6 +26,7 @@ import com.skapp.community.peopleplanner.model.Team;
 import com.skapp.community.peopleplanner.model.Team_;
 import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
+import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDtoV2;
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeCountDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeManagerDto;
@@ -52,6 +53,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
@@ -1147,6 +1149,115 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 	@Override
 	public Long findAllActiveAndPendingEmployeesCount() {
 		return 0L;
+	}
+
+	@Override
+	public Page<Employee> findEmployeesV2(EmployeeFilterDtoV2 employeeFilterDto, Pageable pageable) {
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+
+		CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
+		Root<Employee> root = criteriaQuery.from(Employee.class);
+		Join<Employee, User> userJoin = root.join(Employee_.user);
+
+		List<Predicate> predicates = buildPredicates(employeeFilterDto, criteriaBuilder, root, userJoin);
+		criteriaQuery.where(predicates.toArray(new Predicate[0]));
+
+		List<Order> orderList = new ArrayList<>();
+
+		if (employeeFilterDto.getSearchKeyword() != null && !employeeFilterDto.getSearchKeyword().isEmpty()) {
+			Order sortingOrder = criteriaBuilder.asc(criteriaBuilder.selectCase()
+				.when(criteriaBuilder.like(root.get(Employee_.FIRST_NAME),
+						getSearchString(employeeFilterDto.getSearchKeyword())), 1)
+				.when(criteriaBuilder.like(root.get(Employee_.LAST_NAME),
+						getSearchString(employeeFilterDto.getSearchKeyword())), 2)
+				.otherwise(3));
+			orderList.add(sortingOrder);
+		}
+
+		if (employeeFilterDto.getSortOrder() == Sort.Direction.ASC) {
+			orderList.add(criteriaBuilder.asc(root.get(Employee_.FIRST_NAME)));
+			orderList.add(criteriaBuilder.asc(root.get(Employee_.LAST_NAME)));
+		}
+		else {
+			orderList.add(criteriaBuilder.desc(root.get(Employee_.FIRST_NAME)));
+			orderList.add(criteriaBuilder.desc(root.get(Employee_.LAST_NAME)));
+		}
+
+		criteriaQuery.distinct(true);
+		criteriaQuery.orderBy(orderList);
+
+		CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
+		Root<Employee> countRoot = countQuery.from(Employee.class);
+		Join<Employee, User> countUserJoin = countRoot.join(Employee_.user);
+
+		List<Predicate> countPredicates = buildPredicates(employeeFilterDto, criteriaBuilder, countRoot, countUserJoin);
+		countQuery.where(countPredicates.toArray(new Predicate[0]));
+		countQuery.select(criteriaBuilder.countDistinct(countRoot));
+
+		Long totalRows = entityManager.createQuery(countQuery).getSingleResult();
+
+		TypedQuery<Employee> query = entityManager.createQuery(criteriaQuery);
+		query.setFirstResult(pageable.getPageNumber() * pageable.getPageSize());
+		query.setMaxResults(pageable.getPageSize());
+
+		return new PageImpl<>(query.getResultList(), pageable, totalRows);
+	}
+
+	private List<Predicate> buildPredicates(EmployeeFilterDtoV2 employeeFilterDto, CriteriaBuilder criteriaBuilder,
+			Root<Employee> root, Join<Employee, User> userJoin) {
+		List<Predicate> predicates = new ArrayList<>();
+
+		predicates.add(criteriaBuilder.notEqual(root.get(Employee_.ACCOUNT_STATUS), AccountStatus.DELETED));
+
+		if (employeeFilterDto.getTeam() != null && !employeeFilterDto.getTeam().isEmpty()) {
+			Join<Employee, EmployeeTeam> employeeTeam = root.join(Employee_.employeeTeams);
+			predicates.add(employeeTeam.get(EmployeeTeam_.TEAM).get(Team_.TEAM_ID).in(employeeFilterDto.getTeam()));
+		}
+
+		if (employeeFilterDto.getNationality() != null && !employeeFilterDto.getNationality().isEmpty()) {
+			Join<Employee, EmployeePersonalInfo> personalInfoJoin = root.join(Employee_.personalInfo, JoinType.LEFT);
+			predicates
+				.add(personalInfoJoin.get(EmployeePersonalInfo_.NATIONALITY).in(employeeFilterDto.getNationality()));
+		}
+
+		if (employeeFilterDto.getGender() != null) {
+			predicates.add(criteriaBuilder.equal(root.get(Employee_.GENDER), employeeFilterDto.getGender()));
+		}
+
+		if (employeeFilterDto.getEmploymentTypes() != null && !employeeFilterDto.getEmploymentTypes().isEmpty()) {
+			predicates.add(root.get(Employee_.EMPLOYMENT_TYPE).in(employeeFilterDto.getEmploymentTypes()));
+		}
+
+		if (employeeFilterDto.getAccountStatus() != null && !employeeFilterDto.getAccountStatus().isEmpty()) {
+			predicates.add(root.get(Employee_.ACCOUNT_STATUS).in(employeeFilterDto.getAccountStatus()));
+		}
+
+		if (employeeFilterDto.getEmploymentAllocations() != null
+				&& !employeeFilterDto.getEmploymentAllocations().isEmpty()) {
+			predicates.add(root.get(Employee_.EMPLOYMENT_ALLOCATION).in(employeeFilterDto.getEmploymentAllocations()));
+		}
+
+		if (employeeFilterDto.getSearchKeyword() != null && !employeeFilterDto.getSearchKeyword().isEmpty()) {
+			predicates.add(findByEmailName(employeeFilterDto.getSearchKeyword(), criteriaBuilder, root, userJoin));
+		}
+
+		if (employeeFilterDto.getPermissions() != null && !employeeFilterDto.getPermissions().isEmpty()) {
+			Join<Employee, EmployeeRole> roleJoin = root.join(Employee_.employeeRole);
+
+			Predicate attendanceRolePredicate = roleJoin.get(EmployeeRole_.ATTENDANCE_ROLE)
+				.in(employeeFilterDto.getPermissions());
+			Predicate peopleRolePredicate = roleJoin.get(EmployeeRole_.PEOPLE_ROLE)
+				.in(employeeFilterDto.getPermissions());
+			Predicate leaveRolePredicate = roleJoin.get(EmployeeRole_.LEAVE_ROLE)
+				.in(employeeFilterDto.getPermissions());
+
+			Predicate rolePredicate = criteriaBuilder.or(attendanceRolePredicate, peopleRolePredicate,
+					leaveRolePredicate);
+			predicates.add(rolePredicate);
+			predicates.add(criteriaBuilder.equal(roleJoin.get(EmployeeRole_.IS_SUPER_ADMIN), false));
+		}
+
+		return predicates;
 	}
 
 	private Predicate findByEmailName(String keyword, CriteriaBuilder criteriaBuilder, Root<Employee> employee,
