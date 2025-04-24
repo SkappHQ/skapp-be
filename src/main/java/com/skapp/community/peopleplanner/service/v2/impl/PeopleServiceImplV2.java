@@ -5,8 +5,8 @@ import com.skapp.community.common.payload.response.ResponseEntityDto;
 import com.skapp.community.common.util.transformer.PageTransformer;
 import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.model.Team;
-import com.skapp.community.peopleplanner.payload.request.EmployeeBasicDetailsResponseDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDtoV2;
+import com.skapp.community.peopleplanner.payload.response.EmployeeManagerResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeDirectoryResponseDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeDirectoryTeamResponseDto;
 import com.skapp.community.peopleplanner.repository.EmployeeDao;
@@ -59,16 +59,19 @@ public class PeopleServiceImplV2 implements PeopleServiceV2 {
 		dto.setJobFamily(employee.getJobFamily() != null ? employee.getJobFamily().getName() : null);
 		dto.setJobTitle(employee.getJobTitle() != null ? employee.getJobTitle().getName() : null);
 		dto.setEmail(employee.getUser().getEmail());
+		dto.setIsActive(employee.getUser().getIsActive());
 
 		if (employee.getEmployeeManagers() != null) {
-			List<EmployeeBasicDetailsResponseDto> managers = employee.getEmployeeManagers().stream().map(em -> {
+			List<EmployeeManagerResponseDto> managers = employee.getEmployeeManagers().stream().map(em -> {
 				Employee manager = em.getManager();
-				EmployeeBasicDetailsResponseDto managerDto = new EmployeeBasicDetailsResponseDto();
+				EmployeeManagerResponseDto managerDto = new EmployeeManagerResponseDto();
 				managerDto.setEmployeeId(manager.getEmployeeId());
 				managerDto.setFirstName(manager.getFirstName());
 				managerDto.setLastName(manager.getLastName());
 				managerDto.setMiddleName(manager.getMiddleName());
 				managerDto.setAuthPic(manager.getAuthPic());
+				managerDto.setIsPrimaryManager(em.getIsPrimaryManager());
+				managerDto.setManagerType(em.getManagerType());
 				return managerDto;
 			}).toList();
 			dto.setManagers(managers);

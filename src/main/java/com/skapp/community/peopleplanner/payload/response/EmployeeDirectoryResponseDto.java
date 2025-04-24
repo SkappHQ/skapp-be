@@ -1,6 +1,5 @@
 package com.skapp.community.peopleplanner.payload.response;
 
-import com.skapp.community.peopleplanner.payload.request.EmployeeBasicDetailsResponseDto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,7 +23,9 @@ public class EmployeeDirectoryResponseDto {
 
 	private String jobTitle;
 
-	private List<EmployeeBasicDetailsResponseDto> managers;
+	private Boolean isActive;
+
+	private List<EmployeeManagerResponseDto> managers;
 
 	private List<EmployeeDirectoryTeamResponseDto> teams;
 
