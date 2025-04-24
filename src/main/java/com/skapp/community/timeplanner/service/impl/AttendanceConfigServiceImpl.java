@@ -24,13 +24,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AttendanceConfigServiceImpl implements AttendanceConfigService {
 
+	public static final String DEFAULT_CONFIG_VALUE = "false";
+
 	@NonNull
 	private final AttendanceConfigDao attendanceConfigDao;
 
 	@NonNull
 	private final MessageUtil messageUtil;
-
-	public static final String DEFAULT_CONFIG_VALUE = "false";
 
 	@Override
 	public void setDefaultAttendanceConfig() {

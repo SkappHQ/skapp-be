@@ -11,6 +11,12 @@ import java.util.Collection;
 @Builder
 public class SkappUserDetails implements UserDetails {
 
+	private static final boolean ACCOUNT_NON_EXPIRED = true;
+
+	private static final boolean ACCOUNT_NON_LOCKED = true;
+
+	private static final boolean CREDENTIALS_NON_EXPIRED = true;
+
 	private final String username;
 
 	private final String password;
@@ -18,12 +24,6 @@ public class SkappUserDetails implements UserDetails {
 	private final boolean enabled;
 
 	private final Collection<? extends GrantedAuthority> authorities;
-
-	private static final boolean ACCOUNT_NON_EXPIRED = true;
-
-	private static final boolean ACCOUNT_NON_LOCKED = true;
-
-	private static final boolean CREDENTIALS_NON_EXPIRED = true;
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -72,6 +72,29 @@ public class OrganizationServiceImpl implements OrganizationService {
 	@Value("${encryptDecryptAlgorithm.secret}")
 	private String encryptSecret;
 
+	private static void setOrganizationDetails(UpdateOrganizationRequestDto organizationDto,
+			Organization organization) {
+		if (organizationDto.getOrganizationName() != null && !organizationDto.getOrganizationName().isBlank()) {
+			organization.setOrganizationName(organizationDto.getOrganizationName());
+		}
+
+		if (organizationDto.getCountry() != null && !organizationDto.getCountry().isBlank()) {
+			organization.setCountry(organizationDto.getCountry());
+		}
+
+		if (organizationDto.getThemeColor() != null && !organizationDto.getThemeColor().isBlank()) {
+			organization.setThemeColor(organizationDto.getThemeColor());
+		}
+
+		if (organizationDto.getOrganizationWebsite() != null) {
+			organization.setOrganizationWebsite(organizationDto.getOrganizationWebsite());
+		}
+
+		if (organizationDto.getOrganizationLogo() != null) {
+			organization.setOrganizationLogo(organizationDto.getOrganizationLogo());
+		}
+	}
+
 	@Override
 	public ResponseEntityDto saveOrganization(OrganizationDto organizationDto) {
 		User currentUser = userService.getCurrentUser();
@@ -191,29 +214,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 		}
 		else {
 			return new ResponseEntityDto(false, "Organization is not updated successfully");
-		}
-	}
-
-	private static void setOrganizationDetails(UpdateOrganizationRequestDto organizationDto,
-			Organization organization) {
-		if (organizationDto.getOrganizationName() != null && !organizationDto.getOrganizationName().isBlank()) {
-			organization.setOrganizationName(organizationDto.getOrganizationName());
-		}
-
-		if (organizationDto.getCountry() != null && !organizationDto.getCountry().isBlank()) {
-			organization.setCountry(organizationDto.getCountry());
-		}
-
-		if (organizationDto.getThemeColor() != null && !organizationDto.getThemeColor().isBlank()) {
-			organization.setThemeColor(organizationDto.getThemeColor());
-		}
-
-		if (organizationDto.getOrganizationWebsite() != null) {
-			organization.setOrganizationWebsite(organizationDto.getOrganizationWebsite());
-		}
-
-		if (organizationDto.getOrganizationLogo() != null) {
-			organization.setOrganizationLogo(organizationDto.getOrganizationLogo());
 		}
 	}
 

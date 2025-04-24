@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS `organization`
     `organization_website`   varchar(2083) DEFAULT NULL,
     `theme_color`            varchar(9)    DEFAULT NULL,
     `organization_time_zone` varchar(100)  DEFAULT NULL,
-    `app_url` varchar(255) DEFAULT NULL,
+    `app_url`                varchar(255)  DEFAULT NULL,
     PRIMARY KEY (`organization_id`),
     UNIQUE KEY `UK_organization_name` (`organization_name`)
 ) ENGINE = InnoDB;

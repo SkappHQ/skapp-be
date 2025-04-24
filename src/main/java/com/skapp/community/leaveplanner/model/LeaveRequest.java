@@ -85,6 +85,6 @@ public class LeaveRequest extends Auditable<String> {
 	private Boolean isAutoApproved = false;
 
 	@OneToMany(mappedBy = "leaveRequest", cascade = CascadeType.ALL)
-	Set<LeaveRequestAttachment> attachments;
+	private Set<LeaveRequestAttachment> attachments;
 
 }

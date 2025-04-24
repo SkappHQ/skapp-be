@@ -27,7 +27,7 @@ public class CurrentEmployeeDto {
 
 	private Set<EmployeeTeam> teams;
 
-	Set<EmployeeManager> managers;
+	private Set<EmployeeManager> managers;
 
 	private EmploymentAllocation employmentAllocation;
 

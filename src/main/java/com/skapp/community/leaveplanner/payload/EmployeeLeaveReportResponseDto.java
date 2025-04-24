@@ -13,6 +13,8 @@ import java.util.List;
 @AllArgsConstructor
 public class EmployeeLeaveReportResponseDto {
 
+	List<LeaveEntitlementReportDto> leaveEntitlementReportDtos;
+
 	private Long employeeId;
 
 	private String firstName;
@@ -20,7 +22,5 @@ public class EmployeeLeaveReportResponseDto {
 	private String lastName;
 
 	private String authPic;
-
-	List<LeaveEntitlementReportDto> leaveEntitlementReportDtos;
 
 }

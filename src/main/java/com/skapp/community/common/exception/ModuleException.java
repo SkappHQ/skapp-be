@@ -12,19 +12,9 @@ import java.util.concurrent.atomic.AtomicReference;
 @Getter
 public class ModuleException extends RuntimeException {
 
-	private final transient MessageConstant messageKey;
-
 	private static final AtomicReference<MessageUtil> messageUtil = new AtomicReference<>();
 
-	@Component
-	public static class MessageUtilInjector implements ApplicationContextAware {
-
-		@Override
-		public void setApplicationContext(ApplicationContext applicationContext) {
-			messageUtil.set(applicationContext.getBean(MessageUtil.class));
-		}
-
-	}
+	private final transient MessageConstant messageKey;
 
 	public ModuleException(MessageConstant messageKey) {
 		super(getMessageUtil().getMessage(messageKey.getMessageKey()));
@@ -42,6 +32,16 @@ public class ModuleException extends RuntimeException {
 			throw new IllegalStateException("MessageUtil not initialized");
 		}
 		return util;
+	}
+
+	@Component
+	public static class MessageUtilInjector implements ApplicationContextAware {
+
+		@Override
+		public void setApplicationContext(ApplicationContext applicationContext) {
+			messageUtil.set(applicationContext.getBean(MessageUtil.class));
+		}
+
 	}
 
 }

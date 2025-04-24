@@ -13,10 +13,10 @@ public enum ModuleType {
 
 	COMMON("common"), ATTENDANCE("attendance"), PEOPLE("people"), LEAVE("leave"), ESIGN("esignature");
 
-	private final String displayName;
-
 	private static final Map<String, ModuleType> DISPLAY_NAME_MAP = Stream.of(values())
 		.collect(Collectors.toMap(ModuleType::getDisplayName, module -> module));
+
+	private final String displayName;
 
 	public static ModuleType fromDisplayName(String displayName) {
 		ModuleType moduleType = DISPLAY_NAME_MAP.get(displayName.toLowerCase());

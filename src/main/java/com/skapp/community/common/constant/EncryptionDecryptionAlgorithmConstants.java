@@ -1,9 +1,9 @@
 package com.skapp.community.common.constant;
 
-public final class EncryptionDecryptionAlgorithmConstants {
+import lombok.NoArgsConstructor;
 
-	private EncryptionDecryptionAlgorithmConstants() {
-	}
+@NoArgsConstructor
+public final class EncryptionDecryptionAlgorithmConstants {
 
 	public static final String ALGORITHM = "AES";
 

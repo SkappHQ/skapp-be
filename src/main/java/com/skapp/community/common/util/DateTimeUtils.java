@@ -59,14 +59,14 @@ public class DateTimeUtils {
 
 	public static final float MILLISECONDS_IN_AN_HOUR = 1000 * 60 * 60.0f;
 
+	public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+		.withZone(ZoneId.of("UTC"));
+
 	// Default UTC ZoneId
 	private static final ZoneId UTC_ZONE_ID = ZoneOffset.UTC;
 
 	// DateTimeFormatter for parsing and formatting
 	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-	public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
-		.withZone(ZoneId.of("UTC"));
 
 	private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 

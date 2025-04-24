@@ -283,7 +283,6 @@ public class HolidayServiceImpl implements HolidayService {
 							? LeaveRequestStatus.CANCELLED : LeaveRequestStatus.REVOKED);
 				}
 			}
-
 			else if (isMultiple) {
 				leaveRequest.setDurationDays((float) (leaveRequest.getDurationDays() - 0.5));
 			}
