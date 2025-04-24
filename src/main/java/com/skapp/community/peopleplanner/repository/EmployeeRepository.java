@@ -6,6 +6,7 @@ import com.skapp.community.leaveplanner.payload.EmployeesOnLeaveFilterDto;
 import com.skapp.community.peopleplanner.model.Employee;
 import com.skapp.community.peopleplanner.payload.request.EmployeeExportFilterDto;
 import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDto;
+import com.skapp.community.peopleplanner.payload.request.EmployeeFilterDtoV2;
 import com.skapp.community.peopleplanner.payload.request.PermissionFilterDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeCountDto;
 import com.skapp.community.peopleplanner.payload.response.EmployeeManagerDto;
@@ -86,5 +87,7 @@ public interface EmployeeRepository {
 	Long findAllActiveAndPendingEmployeesCount();
 
 	Employee findFirstSuperAdmin();
+
+	Page<Employee> findEmployeesV2(EmployeeFilterDtoV2 employeeFilterDto, Pageable pageable);
 
 }
