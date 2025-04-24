@@ -20,7 +20,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +41,7 @@ public class PeopleServiceImplV2 implements PeopleServiceV2 {
 		List<EmployeeDirectoryResponseDto> responseDtos = employees.getContent()
 			.stream()
 			.map(this::mapToEmployeeDirectoryResponseDto)
-			.collect(Collectors.toList());
+			.toList();
 
 		PageDto pageDto = pageTransformer.transform(employees);
 		pageDto.setItems(responseDtos);
