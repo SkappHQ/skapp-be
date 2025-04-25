@@ -1279,7 +1279,8 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 		TypedQuery<Employee> typedQuery = entityManager.createQuery(criteriaQuery);
 		typedQuery.setMaxResults(1);
-		return typedQuery.getSingleResult();
+		List<Employee> results = typedQuery.getResultList();
+		return results.isEmpty() ? null : results.getFirst();
 	}
 
 	private Predicate findByEmailName(String keyword, CriteriaBuilder criteriaBuilder, Root<Employee> employee,
