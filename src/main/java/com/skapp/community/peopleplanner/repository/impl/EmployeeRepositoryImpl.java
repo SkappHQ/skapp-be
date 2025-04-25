@@ -1026,6 +1026,15 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 	@Override
 	public Long countEmployeesByManagerId(Long managerId) {
+		return countEmployeesByManagerIdAndType(managerId, null);
+	}
+
+	@Override
+	public Long countEmployeesByPrimaryManagerId(Long managerId) {
+		return countEmployeesByManagerIdAndType(managerId, ManagerType.PRIMARY);
+	}
+
+	private Long countEmployeesByManagerIdAndType(Long managerId, ManagerType managerType) {
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 
 		CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
@@ -1038,6 +1047,10 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		Join<Employee, User> userJoin = root.join(Employee_.user);
 		predicates.add(criteriaBuilder.notEqual(userJoin.get(User_.isActive), false));
 		predicates.add(criteriaBuilder.equal(empMan.get(Employee_.employeeId), managerId));
+
+		if (managerType != null) {
+			predicates.add(criteriaBuilder.equal(empMan.get(EmployeeManager_.MANAGER_TYPE), managerType));
+		}
 
 		Predicate[] predArray = new Predicate[predicates.size()];
 		predicates.toArray(predArray);

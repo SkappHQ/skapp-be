@@ -2388,9 +2388,17 @@ public class PeopleServiceImpl implements PeopleService {
 		}
 
 		List<EmployeeTeam> employeeTeams = employeeTeamDao.findEmployeeTeamsByEmployee(employee);
-		employeeTeamDao.deleteAll(employeeTeams);
-		employee.setEmployeeTeams(null);
+		if (!employeeTeams.isEmpty()) {
+			employeeTeamDao.deleteAll(employeeTeams);
+		}
 
+		List<EmployeeManager> employeeManagers = employeeManagerDao.findByManager(employee);
+		if (!employeeManagers.isEmpty()) {
+			employeeManagerDao.deleteAll(employeeManagers);
+		}
+
+		employee.setEmployeeTeams(null);
+		employee.setEmployeeManagers(null);
 		employee.setJobTitle(null);
 		employee.setJobFamily(null);
 		employee.setAccountStatus(status);

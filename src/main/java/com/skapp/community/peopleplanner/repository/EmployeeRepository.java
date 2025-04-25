@@ -76,6 +76,8 @@ public interface EmployeeRepository {
 
 	Long countEmployeesByManagerId(Long managerId);
 
+	Long countEmployeesByPrimaryManagerId(Long managerId);
+
 	List<Employee> findEmployeeByName(String keyword);
 
 	PrimarySecondaryOrTeamSupervisorResponseDto isPrimarySecondaryOrTeamSupervisor(Employee employee,
