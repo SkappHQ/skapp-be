@@ -60,6 +60,7 @@ public class PeopleServiceImplV2 implements PeopleServiceV2 {
 		dto.setJobTitle(employee.getJobTitle() != null ? employee.getJobTitle().getName() : null);
 		dto.setEmail(employee.getUser().getEmail());
 		dto.setIsActive(employee.getUser().getIsActive());
+		dto.setAccountStatus(employee.getAccountStatus());
 
 		if (employee.getEmployeeManagers() != null) {
 			List<EmployeeManagerResponseDto> managers = employee.getEmployeeManagers().stream().map(em -> {
