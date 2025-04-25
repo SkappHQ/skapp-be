@@ -2383,7 +2383,7 @@ public class PeopleServiceImpl implements PeopleService {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_TEAM_EMPLOYEE_SUPERVISING_TEAMS);
 		}
 
-		if (employeeDao.countEmployeesByManagerId(user.getUserId()) > 0) {
+		if (employeeDao.countEmployeesByPrimaryManagerId(user.getUserId()) > 0) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EMPLOYEE_SUPERVISING_EMPLOYEES);
 		}
 

@@ -1049,7 +1049,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 		predicates.add(criteriaBuilder.equal(empMan.get(Employee_.employeeId), managerId));
 
 		if (managerType != null) {
-			predicates.add(criteriaBuilder.equal(empMan.get(EmployeeManager_.MANAGER_TYPE), managerType));
+			predicates.add(criteriaBuilder.equal(empJoin.get(EmployeeManager_.MANAGER_TYPE), managerType));
 		}
 
 		Predicate[] predArray = new Predicate[predicates.size()];
