@@ -86,8 +86,6 @@ public interface EmployeeRepository {
 
 	Long findAllActiveAndPendingEmployeesCount();
 
-	Employee findFirstSuperAdmin();
-
 	Page<Employee> findEmployeesV2(EmployeeFilterDtoV2 employeeFilterDto, Pageable pageable);
 
 }
