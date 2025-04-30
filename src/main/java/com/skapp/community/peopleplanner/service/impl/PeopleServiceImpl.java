@@ -2369,13 +2369,22 @@ public class PeopleServiceImpl implements PeopleService {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_TEAM_EMPLOYEE_SUPERVISING_TEAMS);
 		}
 
-		if (employeeDao.countEmployeesByManagerId(user.getUserId()) > 0) {
+		if (employeeDao.countEmployeesByPrimaryManagerId(user.getUserId()) > 0) {
 			throw new ModuleException(CommonMessageConstant.COMMON_ERROR_EMPLOYEE_SUPERVISING_EMPLOYEES);
 		}
 
 		List<EmployeeTeam> employeeTeams = employeeTeamDao.findEmployeeTeamsByEmployee(employee);
-		employeeTeamDao.deleteAll(employeeTeams);
-		employee.setEmployeeTeams(null);
+
+		if (!employeeTeams.isEmpty()) {
+			employeeTeamDao.deleteAll(employeeTeams);
+			employee.setEmployeeTeams(null);
+		}
+
+		List<EmployeeManager> employeeManagers = employeeManagerDao.findByManager(employee);
+		if (!employeeManagers.isEmpty()) {
+			employeeManagerDao.deleteAll(employeeManagers);
+			employee.setEmployeeManagers(null);
+		}
 
 		employee.setJobTitle(null);
 		employee.setJobFamily(null);
