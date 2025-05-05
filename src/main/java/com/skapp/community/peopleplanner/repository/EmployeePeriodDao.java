@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface EmployeePeriodDao extends JpaRepository<EmployeePeriod, Long> {
 
-	Optional<EmployeePeriod> findEmployeePeriodByEmployee_EmployeeId(Long employeeId);
+	List<EmployeePeriod> findEmployeePeriodByEmployee_EmployeeId(Long employeeId);
 
 	Optional<EmployeePeriod> findEmployeePeriodByEmployee_EmployeeIdAndIsActiveTrue(Long employeeId);
 

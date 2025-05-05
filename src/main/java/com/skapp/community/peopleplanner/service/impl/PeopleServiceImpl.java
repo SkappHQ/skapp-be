@@ -1168,7 +1168,7 @@ public class PeopleServiceImpl implements PeopleService {
 
 		EmployeeDetailedResponseDto employeeDetailedResponseDto = peopleMapper
 			.employeeToEmployeeDetailedResponseDto(employee.get());
-		Optional<EmployeePeriod> period = employeePeriodDao
+		List<EmployeePeriod> period = employeePeriodDao
 			.findEmployeePeriodByEmployee_EmployeeId(employee.get().getEmployeeId());
 
 		if (employee.get().getEmployeeRole() != null) {
@@ -1176,9 +1176,9 @@ public class PeopleServiceImpl implements PeopleService {
 				.setEmployeeRole(peopleMapper.employeeRoleToEmployeeRoleResponseDto(employee.get().getEmployeeRole()));
 		}
 
-		if (period.isPresent()) {
+		if (!period.isEmpty()) {
 			EmployeePeriodResponseDto periodResponseDto = peopleMapper
-				.employeePeriodToEmployeePeriodResponseDto(period.get());
+				.employeePeriodToEmployeePeriodResponseDto(period.getFirst());
 			employeeDetailedResponseDto.setPeriodResponseDto(periodResponseDto);
 		}
 
