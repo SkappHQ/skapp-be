@@ -5,6 +5,7 @@ import com.skapp.community.common.exception.ModuleException;
 import com.skapp.community.common.model.User;
 import com.skapp.community.common.repository.UserDao;
 import com.skapp.community.common.service.UserService;
+import com.skapp.enterprise.common.payload.request.AuthenticationDetailsDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -39,6 +40,18 @@ public class UserServiceImpl implements UserService {
 			return auth.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toSet());
 		}
 		return Collections.emptySet();
+	}
+
+	@Override
+	public String getCurrentDeviceId() {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		if (auth != null && auth.getDetails() instanceof AuthenticationDetailsDto details) {
+			if (details.getAdditionalDetails() != null) {
+				return details.getAdditionalDetails().getDeviceId();
+			}
+		}
+
+		return null;
 	}
 
 }

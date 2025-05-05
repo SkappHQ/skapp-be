@@ -132,7 +132,7 @@ public class JwtServiceImpl implements JwtService {
 		return claimsResolvers.apply(claims);
 	}
 
-	private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails, Long expirationTime) {
+	protected String generateToken(Map<String, Object> extraClaims, UserDetails userDetails, Long expirationTime) {
 		Map<String, Object> claims = new HashMap<>();
 		if (extraClaims != null) {
 			claims.putAll(extraClaims);
@@ -176,7 +176,7 @@ public class JwtServiceImpl implements JwtService {
 		return extractClaim(token, Claims::getExpiration);
 	}
 
-	private Claims extractAllClaims(String token) {
+	protected Claims extractAllClaims(String token) {
 		return Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload();
 	}
 

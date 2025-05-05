@@ -27,4 +27,6 @@ public class AuthConstants {
 
 	public static final String DEFAULT_USER_VERSION = "1.0.0";
 
+	public static final String UNKNOWN = "unknown";
+
 }
