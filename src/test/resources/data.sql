@@ -89,25 +89,88 @@ VALUES (default, YEAR(CURRENT_TIMESTAMP) || '-03-06', 'Poya Day', 'FULL_DAY', tr
 
 INSERT INTO time_config(id, day_of_week, time_blocks, total_hours, is_week_start_day, start_hour, start_minute)
 VALUES (default, 'TUESDAY',
-        '[{"hours": 4.0, "timeBlock": "MORNING_HOURS"},{"hours": 4.0, "timeBlock": "EVENING_HOURS"}]', 8.0, false, 8,
+        '[
+          {
+            "hours": 4.0,
+            "timeBlock": "MORNING_HOURS"
+          },
+          {
+            "hours": 4.0,
+            "timeBlock": "EVENING_HOURS"
+          }
+        ]', 8.0, false, 8,
         30),
        (default, 'MONDAY',
-        '[{"hours": 4.0, "timeBlock": "MORNING_HOURS"},{"hours": 4.0, "timeBlock": "EVENING_HOURS"}]', 8.0, true, 8,
+        '[
+          {
+            "hours": 4.0,
+            "timeBlock": "MORNING_HOURS"
+          },
+          {
+            "hours": 4.0,
+            "timeBlock": "EVENING_HOURS"
+          }
+        ]', 8.0, true, 8,
         30),
        (default, 'WEDNESDAY',
-        '[{"hours": 4.0, "timeBlock": "MORNING_HOURS"},{"hours": 4.0, "timeBlock": "EVENING_HOURS"}]', 8.0, false, 8,
+        '[
+          {
+            "hours": 4.0,
+            "timeBlock": "MORNING_HOURS"
+          },
+          {
+            "hours": 4.0,
+            "timeBlock": "EVENING_HOURS"
+          }
+        ]', 8.0, false, 8,
         30),
        (default, 'FRIDAY',
-        '[{"hours": 4.0, "timeBlock": "MORNING_HOURS"},{"hours": 4.0, "timeBlock": "EVENING_HOURS"}]', 8.0, false, 8,
+        '[
+          {
+            "hours": 4.0,
+            "timeBlock": "MORNING_HOURS"
+          },
+          {
+            "hours": 4.0,
+            "timeBlock": "EVENING_HOURS"
+          }
+        ]', 8.0, false, 8,
         30),
        (default, 'THURSDAY',
-        '[{"hours": 4.0, "timeBlock": "MORNING_HOURS"},{"hours": 4.0, "timeBlock": "EVENING_HOURS"}]', 8.0, false, 8,
+        '[
+          {
+            "hours": 4.0,
+            "timeBlock": "MORNING_HOURS"
+          },
+          {
+            "hours": 4.0,
+            "timeBlock": "EVENING_HOURS"
+          }
+        ]', 8.0, false, 8,
         30),
        (default, 'SATURDAY',
-        '[{"hours": 4.0, "timeBlock": "MORNING_HOURS"},{"hours": 4.0, "timeBlock": "EVENING_HOURS"}]', 8.0, false, 8,
+        '[
+          {
+            "hours": 4.0,
+            "timeBlock": "MORNING_HOURS"
+          },
+          {
+            "hours": 4.0,
+            "timeBlock": "EVENING_HOURS"
+          }
+        ]', 8.0, false, 8,
         30),
        (default, 'SUNDAY',
-        '[{"hours": 4.0, "timeBlock": "MORNING_HOURS"},{"hours": 4.0, "timeBlock": "EVENING_HOURS"}]', 8.0, false, 8,
+        '[
+          {
+            "hours": 4.0,
+            "timeBlock": "MORNING_HOURS"
+          },
+          {
+            "hours": 4.0,
+            "timeBlock": "EVENING_HOURS"
+          }
+        ]', 8.0, false, 8,
         30);
 
 INSERT INTO `time_record`(time_record_id, created_by, created_date, last_modified_by, last_modified_date, date,
@@ -150,45 +213,45 @@ VALUES (default, '1402452a-39c0-4a8d-a50d-3e4bfa71a15d', CURRENT_TIMESTAMP,
         '2025-02-26', 'MONDAY', 1708909708000, 1708949308000, false, 6.5, 3.5, 0, 1, true);
 
 INSERT INTO time_slot (time_slot_id, start_time, end_time, type, is_active_now, is_manual, time_record_id)
-VALUES (default, 1708912800000, 1708920000000, 'WORK', false, false, 1),  -- 2024-2-26 730am - 930am
+VALUES (default, 1708912800000, 1708920000000, 'WORK', false, false, 1), -- 2024-2-26 730am - 930am
        (default, 1708920000000, 1708921800000, 'BREAK', false, false, 1), -- 2024-2-26 930am - 10am
-       (default, 1708921800000, 1708929000000, 'WORK', false, false, 1),  -- 2024-2-26 10am - 12pm
+       (default, 1708921800000, 1708929000000, 'WORK', false, false, 1), -- 2024-2-26 10am - 12pm
        (default, 1708929000000, 1708932600000, 'BREAK', false, false, 1), -- 2024-2-26 12pm - 1pm
-       (default, 1708932600000, 1708939800000, 'WORK', false, false, 1),  -- 2024-2-26 1pm - 3pm
+       (default, 1708932600000, 1708939800000, 'WORK', false, false, 1), -- 2024-2-26 1pm - 3pm
        (default, 1708939800000, 1708947000000, 'BREAK', false, false, 1), -- 2024-2-26 3pm - 5pm
-       (default, 1708947000000, 1708948800000, 'WORK', false, false, 1),  -- 2024-2-26 5pm - 530pm
+       (default, 1708947000000, 1708948800000, 'WORK', false, false, 1), -- 2024-2-26 5pm - 530pm
        (default, 1708947000000, null, 'WORK', true, false, 2),
-       (default, 1709006400000, 1709013600000, 'WORK', false, false, 3),  -- 2024-2-27 930am - 1130
+       (default, 1709006400000, 1709013600000, 'WORK', false, false, 3), -- 2024-2-27 930am - 1130
        (default, 1709013600000, 1709015400000, 'BREAK', false, false, 3), -- 2024-2-27 1130am - 1200
-       (default, 1709015400000, 1709024400000, 'WORK', false, false, 3),  -- 2024-2-27 1200pm - 230pm
+       (default, 1709015400000, 1709024400000, 'WORK', false, false, 3), -- 2024-2-27 1200pm - 230pm
        (default, 1709024400000, 1709028000000, 'BREAK', false, false, 3), -- 2024-2-27 230pm - 330pm
-       (default, 1709028000000, 1709035200000, 'WORK', false, false, 3),  -- 2024-2-27 330pm - 530pm
-       (default, 1709006400000, 1709011800000, 'WORK', false, false, 4),  -- 2024-2-27 930am - 1100
+       (default, 1709028000000, 1709035200000, 'WORK', false, false, 3), -- 2024-2-27 330pm - 530pm
+       (default, 1709006400000, 1709011800000, 'WORK', false, false, 4), -- 2024-2-27 930am - 1100
        (default, 1709011800000, 1709015400000, 'BREAK', false, false, 4), -- 2024-2-27 1100am - 1200
-       (default, 1709015400000, 1709024400000, 'WORK', false, false, 4),  -- 2024-2-27 1200pm - 230pm
+       (default, 1709015400000, 1709024400000, 'WORK', false, false, 4), -- 2024-2-27 1200pm - 230pm
        (default, 1709024400000, 1709026200000, 'BREAK', false, false, 4), -- 2024-2-27 230pm - 300pm
-       (default, 1709026200000, 1709035200000, 'WORK', false, false, 4),  -- 2024-2-27 300pm - 530pm
-       (default, 1709092800000, 1709121600000, 'WORK', false, false, 5),  -- 2024-2-28 930pm - 530pm
-       (default, 1709092800000, 1709098200000, 'WORK', false, false, 6),  -- 2024-2-28 930am - 1100
+       (default, 1709026200000, 1709035200000, 'WORK', false, false, 4), -- 2024-2-27 300pm - 530pm
+       (default, 1709092800000, 1709121600000, 'WORK', false, false, 5), -- 2024-2-28 930pm - 530pm
+       (default, 1709092800000, 1709098200000, 'WORK', false, false, 6), -- 2024-2-28 930am - 1100
        (default, 1709098200000, 1709101800000, 'BREAK', false, false, 6), -- 2024-2-28 1100am - 1200
-       (default, 1709101800000, 1709110800000, 'WORK', false, false, 6),  -- 2024-2-28 1200pm - 230pm
+       (default, 1709101800000, 1709110800000, 'WORK', false, false, 6), -- 2024-2-28 1200pm - 230pm
        (default, 1709110800000, 1709112600000, 'BREAK', false, false, 6), -- 2024-2-28 230pm - 300pm
-       (default, 1709112600000, 1709121600000, 'WORK', false, false, 6),  -- 2024-2-28 300pm - 530pm
-       (default, 1709179200000, 1709186400000, 'WORK', false, false, 7),  -- 2024-2-29 930am - 1130
+       (default, 1709112600000, 1709121600000, 'WORK', false, false, 6), -- 2024-2-28 300pm - 530pm
+       (default, 1709179200000, 1709186400000, 'WORK', false, false, 7), -- 2024-2-29 930am - 1130
        (default, 1709186400000, 1709188200000, 'BREAK', false, false, 7), -- 2024-2-29 1130am - 1200
-       (default, 1709188200000, 1709197200000, 'WORK', false, false, 7),  -- 2024-2-29 1200pm - 230pm
+       (default, 1709188200000, 1709197200000, 'WORK', false, false, 7), -- 2024-2-29 1200pm - 230pm
        (default, 1709197200000, 1709200800000, 'BREAK', false, false, 7), -- 2024-2-29 230pm - 330pm
-       (default, 1709200800000, 1709208000000, 'WORK', false, false, 7),  -- 2024-2-29 330pm - 530pm
-       (default, 1709092800000, 1709098200000, 'WORK', false, false, 8),  -- 2024-2-28 930am - 1100
+       (default, 1709200800000, 1709208000000, 'WORK', false, false, 7), -- 2024-2-29 330pm - 530pm
+       (default, 1709092800000, 1709098200000, 'WORK', false, false, 8), -- 2024-2-28 930am - 1100
        (default, 1709098200000, 1709101800000, 'BREAK', false, false, 8), -- 2024-2-28 1100am - 1200
-       (default, 1709101800000, 1709110800000, 'WORK', false, false, 8),  -- 2024-2-28 1200pm - 230pm
+       (default, 1709101800000, 1709110800000, 'WORK', false, false, 8), -- 2024-2-28 1200pm - 230pm
        (default, 1709110800000, 1709112600000, 'BREAK', false, false, 8), -- 2024-2-28 230pm - 300pm
-       (default, 1709112600000, 1709121600000, 'WORK', false, false, 8),  -- 2024-2-28 300pm - 530pm
-       (default, 1709179200000, 1709186400000, 'WORK', false, false, 9),  -- 2024-2-29 930am - 1130
+       (default, 1709112600000, 1709121600000, 'WORK', false, false, 8), -- 2024-2-28 300pm - 530pm
+       (default, 1709179200000, 1709186400000, 'WORK', false, false, 9), -- 2024-2-29 930am - 1130
        (default, 1709186400000, 1709188200000, 'BREAK', false, false, 9), -- 2024-2-29 1130am - 1200
-       (default, 1709188200000, 1709197200000, 'WORK', false, false, 9),  -- 2024-2-29 1200pm - 230pm
+       (default, 1709188200000, 1709197200000, 'WORK', false, false, 9), -- 2024-2-29 1200pm - 230pm
        (default, 1709197200000, 1709200800000, 'BREAK', false, false, 9), -- 2024-2-29 230pm - 330pm
-       (default, 1709200800000, 1709208000000, 'WORK', false, false, 9),  -- 2024-2-29 330pm - 530pm
+       (default, 1709200800000, 1709208000000, 'WORK', false, false, 9), -- 2024-2-29 330pm - 530pm
        (default, 1709208228000, null, 'WORK', false, false, 10); -- 2024-2-29 330pm - 530pm
 
 INSERT INTO time_request (time_request_id, requested_start_time, requested_end_time, initial_clock_in,
