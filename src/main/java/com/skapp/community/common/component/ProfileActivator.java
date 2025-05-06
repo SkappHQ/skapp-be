@@ -21,4 +21,15 @@ public class ProfileActivator {
 		return false;
 	}
 
+	public boolean isEpPrdProfile() {
+		String[] profiles = environment.getActiveProfiles();
+		for (String profile : profiles) {
+			if (profile.startsWith("ep-prd")) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 }
