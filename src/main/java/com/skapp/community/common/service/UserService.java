@@ -10,4 +10,6 @@ public interface UserService {
 
 	Set<String> getCurrentUserRoles();
 
+	String getCurrentDeviceId();
+
 }
