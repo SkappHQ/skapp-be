@@ -11,6 +11,8 @@ public class PeopleConstants {
 
 	public static final String DELETED_PREFIX = "DELETED_";
 
+	public static final String ID = "id";
+
 	public static final int MAXIMUM_HOLIDAYS_PER_DAY = 3;
 
 	public static final int MAX_NAME_LENGTH = 50;
