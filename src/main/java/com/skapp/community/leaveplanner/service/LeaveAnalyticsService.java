@@ -46,7 +46,7 @@ public interface LeaveAnalyticsService {
 
 	ResponseEntityDto getIndividualsByManager(EmployeeFilterDto employeeFilterDto);
 
-	ResponseEntityDto getEmployeeLeaveEntitlements(@NonNull Long id,
+	ResponseEntityDto getEmployeeLeaveEntitlements(@NonNull Long employeeId,
 			LeaveEntitlementsFilterDto leaveEntitlementsFilterDto);
 
 	ResponseEntityDto getOrganizationalLeaveAnalytics();

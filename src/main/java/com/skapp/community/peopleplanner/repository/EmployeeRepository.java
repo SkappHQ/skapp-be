@@ -50,7 +50,7 @@ public interface EmployeeRepository {
 
 	Long findAllActiveEmployeesCount();
 
-	List<Employee> findManagersByEmployeeIdAndLoggedInManagerId(@NonNull Long id, Long employeeId);
+	List<Employee> findManagersByEmployeeIdAndLoggedInManagerId(@NonNull Long employeeId, Long managerId);
 
 	List<EmployeeLeaveRequestDto> getEmployeesOnLeaveByTeam(EmployeesOnLeaveFilterDto filterDto, Long currentUserId);
 
