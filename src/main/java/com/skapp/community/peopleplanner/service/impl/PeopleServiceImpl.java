@@ -106,6 +106,7 @@ import com.skapp.community.peopleplanner.service.PeopleService;
 import com.skapp.community.peopleplanner.service.RolesService;
 import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.type.BulkItemStatus;
+import com.skapp.community.peopleplanner.type.EmployeePeriodSort;
 import com.skapp.community.peopleplanner.type.EmploymentType;
 import com.skapp.community.peopleplanner.util.Validations;
 import lombok.NonNull;
@@ -1168,17 +1169,17 @@ public class PeopleServiceImpl implements PeopleService {
 
 		EmployeeDetailedResponseDto employeeDetailedResponseDto = peopleMapper
 			.employeeToEmployeeDetailedResponseDto(employee.get());
-		Optional<EmployeePeriod> period = employeePeriodDao
-			.findEmployeePeriodByEmployee_EmployeeId(employee.get().getEmployeeId());
+		List<EmployeePeriod> period = employeePeriodDao.findEmployeePeriodByEmployee_EmployeeId(
+				employee.get().getEmployeeId(), Sort.by(Sort.Direction.DESC, EmployeePeriodSort.ID.getSortField()));
 
 		if (employee.get().getEmployeeRole() != null) {
 			employeeDetailedResponseDto
 				.setEmployeeRole(peopleMapper.employeeRoleToEmployeeRoleResponseDto(employee.get().getEmployeeRole()));
 		}
 
-		if (period.isPresent()) {
+		if (!period.isEmpty()) {
 			EmployeePeriodResponseDto periodResponseDto = peopleMapper
-				.employeePeriodToEmployeePeriodResponseDto(period.get());
+				.employeePeriodToEmployeePeriodResponseDto(period.getFirst());
 			employeeDetailedResponseDto.setPeriodResponseDto(periodResponseDto);
 		}
 
