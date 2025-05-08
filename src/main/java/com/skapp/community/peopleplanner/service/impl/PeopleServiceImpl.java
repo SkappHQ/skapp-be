@@ -484,7 +484,7 @@ public class PeopleServiceImpl implements PeopleService {
 			.map(EmployeePersonalDetailsDto::getSocialMedia)
 			.orElse(null);
 
-		if (requestDto.getPersonal() != null && requestDto.getPersonal().getHealthAndOther() != null) {
+		if (requestSocialMedia != null) {
 			CommonModuleUtils.setIfExists(requestSocialMedia::getLinkedIn, socialMedia::setLinkedIn);
 			CommonModuleUtils.setIfExists(requestSocialMedia::getFacebook, socialMedia::setFacebook);
 			CommonModuleUtils.setIfExists(requestSocialMedia::getInstagram, socialMedia::setInstagram);
@@ -498,7 +498,7 @@ public class PeopleServiceImpl implements PeopleService {
 			.map(node -> CommonModuleUtils.jsonNodeToValue(node, EmployeeExtraInfoDto.class, mapper))
 			.orElseGet(EmployeeExtraInfoDto::new);
 
-		if (requestDto.getPersonal() != null) {
+		if (requestDto.getPersonal() != null && requestDto.getPersonal().getHealthAndOther() != null) {
 			var healthAndOther = requestDto.getPersonal().getHealthAndOther();
 			CommonModuleUtils.setIfExists(healthAndOther::getAllergies, extraInfo::setAllergies);
 			CommonModuleUtils.setIfExists(healthAndOther::getTShirtSize, extraInfo::setTShirtSize);
