@@ -590,24 +590,22 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 
 	@Override
 	public List<Employee> findManagersByEmployeeIdAndLoggedInManagerId(@NonNull Long employeeId, Long managerId) {
-		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-		CriteriaQuery<Employee> criteriaQuery = criteriaBuilder.createQuery(Employee.class);
-		Root<Employee> root = criteriaQuery.from(Employee.class);
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Employee> query = cb.createQuery(Employee.class);
+
+		Root<EmployeeManager> root = query.from(EmployeeManager.class);
+
+		Join<EmployeeManager, Employee> managerJoin = root.join(EmployeeManager_.manager);
+		Join<Employee, User> userJoin = managerJoin.join(Employee_.user);
 
 		List<Predicate> predicates = new ArrayList<>();
+		predicates.add(cb.equal(root.get(EmployeeManager_.employee).get(Employee_.employeeId), employeeId));
+		predicates.add(cb.equal(managerJoin.get(Employee_.employeeId), managerId));
+		predicates.add(cb.notEqual(userJoin.get(User_.isActive), false));
 
-		Join<Employee, EmployeeManager> managers = root.join(Employee_.employeeManagers);
-		Join<EmployeeManager, Employee> employeeJoin = managers.join(EmployeeManager_.employee);
-		Join<Employee, User> userJoin = root.join(Employee_.user);
+		query.select(managerJoin).distinct(true).where(predicates.toArray(new Predicate[0]));
 
-		predicates.add(criteriaBuilder.equal(employeeJoin.get(Employee_.employeeId), employeeId));
-		predicates.add(criteriaBuilder.equal(root.get(Employee_.employeeId), managerId));
-		predicates.add(criteriaBuilder.notEqual(userJoin.get(User_.isActive), false));
-
-		criteriaQuery.where(predicates.toArray(new Predicate[0]));
-
-		TypedQuery<Employee> query = entityManager.createQuery(criteriaQuery);
-		return query.getResultList();
+		return entityManager.createQuery(query).getResultList();
 	}
 
 	@Override
