@@ -484,7 +484,7 @@ public class PeopleServiceImpl implements PeopleService {
 			.map(EmployeePersonalDetailsDto::getSocialMedia)
 			.orElse(null);
 
-		if (requestSocialMedia != null) {
+		if (requestDto.getPersonal() != null && requestDto.getPersonal().getHealthAndOther() != null) {
 			CommonModuleUtils.setIfExists(requestSocialMedia::getLinkedIn, socialMedia::setLinkedIn);
 			CommonModuleUtils.setIfExists(requestSocialMedia::getFacebook, socialMedia::setFacebook);
 			CommonModuleUtils.setIfExists(requestSocialMedia::getInstagram, socialMedia::setInstagram);
