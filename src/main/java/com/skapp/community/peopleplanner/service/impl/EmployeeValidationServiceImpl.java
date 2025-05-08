@@ -20,6 +20,7 @@ import com.skapp.community.peopleplanner.repository.TeamDao;
 import com.skapp.community.peopleplanner.service.EmployeeValidationService;
 import com.skapp.community.peopleplanner.type.AccountStatus;
 import com.skapp.community.peopleplanner.util.Validations;
+import com.skapp.enterprise.common.service.ValidationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -44,6 +45,8 @@ public class EmployeeValidationServiceImpl implements EmployeeValidationService 
 	private final UserDao userDao;
 
 	private final JobFamilyDao jobFamilyDao;
+
+	private final ValidationService validationService;
 
 	@Override
 	public void validateCreateEmployeeRequestEmploymentDetails(EmployeeEmploymentDetailsDto employmentDetailsDto,
@@ -200,6 +203,9 @@ public class EmployeeValidationServiceImpl implements EmployeeValidationService 
 						|| createEmployeeRequestDto.getEmployment().getEmploymentDetails().getEmail().isEmpty())) {
 			throw new ValidationException(PeopleMessageConstant.PEOPLE_ERROR_EMAIL_REQUIRED);
 		}
+
+		validationService
+			.validateBusinessEMail(createEmployeeRequestDto.getEmployment().getEmploymentDetails().getEmail());
 
 		if ((user.getEmail() != null && user.getEmployee() != null
 				&& user.getEmployee().getAccountStatus() != AccountStatus.PENDING)
