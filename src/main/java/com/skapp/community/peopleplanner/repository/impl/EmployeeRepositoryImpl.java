@@ -1263,9 +1263,11 @@ public class EmployeeRepositoryImpl implements EmployeeRepository {
 				.in(employeeFilterDto.getPermissions());
 			Predicate leaveRolePredicate = roleJoin.get(EmployeeRole_.LEAVE_ROLE)
 				.in(employeeFilterDto.getPermissions());
+			Predicate esignRolePredicate = roleJoin.get(EmployeeRole_.ESIGN_ROLE)
+				.in(employeeFilterDto.getPermissions());
 
 			Predicate rolePredicate = criteriaBuilder.or(attendanceRolePredicate, peopleRolePredicate,
-					leaveRolePredicate);
+					leaveRolePredicate, esignRolePredicate);
 			predicates.add(rolePredicate);
 			predicates.add(criteriaBuilder.equal(roleJoin.get(EmployeeRole_.IS_SUPER_ADMIN), false));
 		}
