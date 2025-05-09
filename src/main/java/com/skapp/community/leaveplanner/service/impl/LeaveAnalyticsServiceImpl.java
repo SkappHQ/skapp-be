@@ -1500,12 +1500,12 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 	}
 
 	@Override
-	public ResponseEntityDto getEmployeeLeaveEntitlements(@NonNull Long id,
+	public ResponseEntityDto getEmployeeLeaveEntitlements(@NonNull Long employeeId,
 			LeaveEntitlementsFilterDto leaveEntitlementsFilterDto) {
 		log.info("getEmployeeLeaveEntitlements: execution started");
 
 		User currentUser = userService.getCurrentUser();
-		Optional<Employee> employee = employeeDao.findById(id);
+		Optional<Employee> employee = employeeDao.findById(employeeId);
 
 		if (employee.isEmpty()) {
 			throw new EntityNotFoundException(PeopleMessageConstant.PEOPLE_ERROR_EMPLOYEE_NOT_FOUND);
@@ -1514,17 +1514,17 @@ public class LeaveAnalyticsServiceImpl implements LeaveAnalyticsService {
 		Role leaveRole = currentUser.getEmployee().getEmployeeRole().getLeaveRole();
 
 		if (leaveRole.equals(Role.LEAVE_ADMIN)) {
-			HashMap<Long, LeaveEntitlementResponseDto> responseDtoList = processedLeaveEntitlements(id,
+			HashMap<Long, LeaveEntitlementResponseDto> responseDtoList = processedLeaveEntitlements(employeeId,
 					leaveEntitlementsFilterDto);
 			return new ResponseEntityDto(false, responseDtoList.values());
 		}
 
 		if (leaveRole.equals(Role.LEAVE_MANAGER)) {
-			List<Employee> employeeManagers = employeeDao.findManagersByEmployeeIdAndLoggedInManagerId(id,
+			List<Employee> employeeManagers = employeeDao.findManagersByEmployeeIdAndLoggedInManagerId(employeeId,
 					currentUser.getEmployee().getEmployeeId());
 
 			if (!employeeManagers.isEmpty()) {
-				HashMap<Long, LeaveEntitlementResponseDto> responseDtoList = processedLeaveEntitlements(id,
+				HashMap<Long, LeaveEntitlementResponseDto> responseDtoList = processedLeaveEntitlements(employeeId,
 						leaveEntitlementsFilterDto);
 				return new ResponseEntityDto(false, responseDtoList.values());
 			}
