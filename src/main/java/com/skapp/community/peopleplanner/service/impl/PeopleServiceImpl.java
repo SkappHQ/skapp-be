@@ -223,8 +223,6 @@ public class PeopleServiceImpl implements PeopleService {
 		employeeValidationService.validateCreateEmployeeRequestEmploymentDetails(requestDto.getEmployment(), user);
 		rolesService.validateRoles(requestDto.getSystemPermissions(), user);
 
-		enterpriseValidations(requestDto.getEmployment().getEmploymentDetails().getEmail());
-
 		employee.setUser(createUserEntity(user, requestDto));
 		user.setEmployee(createEmployeeEntity(employee, requestDto));
 
@@ -249,8 +247,6 @@ public class PeopleServiceImpl implements PeopleService {
 		CreateEmployeeRequestDto createEmployeeRequestDto = createEmployeeRequest(employeeQuickAddDto);
 		employeeValidationService.validateCreateEmployeeRequestRequiredFields(createEmployeeRequestDto, user);
 		rolesService.validateRoles(employeeQuickAddDto.getUserRoles(), user);
-
-		enterpriseValidations(employeeQuickAddDto.getEmail());
 
 		user.setEmployee(createEmployeeEntity(employee, createEmployeeRequestDto));
 		employee.setUser(createUserEntity(user, createEmployeeRequestDto));
@@ -281,8 +277,6 @@ public class PeopleServiceImpl implements PeopleService {
 		employeeValidationService.validateCreateEmployeeRequestEmploymentDetails(requestDto.getEmployment(), user);
 		employeeValidationService.validateCreateEmployeeRequestPersonalDetails(requestDto.getPersonal(), user);
 		rolesService.validateRoles(requestDto.getSystemPermissions(), user);
-
-		enterpriseValidations(requestDto.getEmployment().getEmploymentDetails().getEmail());
 
 		employee.setUser(createUserEntity(user, requestDto));
 		user.setEmployee(createEmployeeEntity(employee, requestDto));
@@ -394,6 +388,13 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	private User createUserEntity(User user, CreateEmployeeRequestDto requestDto) {
+		if (requestDto.getEmployment() != null && requestDto.getEmployment().getEmploymentDetails() != null) {
+			String email = requestDto.getEmployment().getEmploymentDetails().getEmail();
+			if (email != null && !email.isEmpty()) {
+				enterpriseValidations(email);
+			}
+		}
+
 		if (user.getUserId() != null) {
 			CommonModuleUtils.setIfExists(() -> createNotificationSettings(requestDto.getSystemPermissions(), user),
 					user::setSettings);
