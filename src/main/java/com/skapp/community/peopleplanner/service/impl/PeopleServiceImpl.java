@@ -146,11 +146,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static com.skapp.community.common.util.Validation.ADDRESS_REGEX;
-import static com.skapp.community.common.util.Validation.ALPHANUMERIC_REGEX;
-import static com.skapp.community.common.util.Validation.NAME_REGEX;
-import static com.skapp.community.common.util.Validation.VALID_NIN_NUMBER_REGEXP;
-
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -228,6 +223,8 @@ public class PeopleServiceImpl implements PeopleService {
 		employeeValidationService.validateCreateEmployeeRequestEmploymentDetails(requestDto.getEmployment(), user);
 		rolesService.validateRoles(requestDto.getSystemPermissions(), user);
 
+		enterpriseValidations(requestDto.getEmployment().getEmploymentDetails().getEmail());
+
 		employee.setUser(createUserEntity(user, requestDto));
 		user.setEmployee(createEmployeeEntity(employee, requestDto));
 
@@ -252,6 +249,8 @@ public class PeopleServiceImpl implements PeopleService {
 		CreateEmployeeRequestDto createEmployeeRequestDto = createEmployeeRequest(employeeQuickAddDto);
 		employeeValidationService.validateCreateEmployeeRequestRequiredFields(createEmployeeRequestDto, user);
 		rolesService.validateRoles(employeeQuickAddDto.getUserRoles(), user);
+
+		enterpriseValidations(employeeQuickAddDto.getEmail());
 
 		user.setEmployee(createEmployeeEntity(employee, createEmployeeRequestDto));
 		employee.setUser(createUserEntity(user, createEmployeeRequestDto));
@@ -283,6 +282,8 @@ public class PeopleServiceImpl implements PeopleService {
 		employeeValidationService.validateCreateEmployeeRequestPersonalDetails(requestDto.getPersonal(), user);
 		rolesService.validateRoles(requestDto.getSystemPermissions(), user);
 
+		enterpriseValidations(requestDto.getEmployment().getEmploymentDetails().getEmail());
+
 		employee.setUser(createUserEntity(user, requestDto));
 		user.setEmployee(createEmployeeEntity(employee, requestDto));
 
@@ -290,6 +291,10 @@ public class PeopleServiceImpl implements PeopleService {
 
 		addUpdatedEmployeeTimeLineRecords(currentEmployeeDto, requestDto);
 		return new ResponseEntityDto(false, requestDto);
+	}
+
+	protected void enterpriseValidations(String email) {
+		// This method is a placeholder for any enterprise-specific validations
 	}
 
 	private CreateEmployeeRequestDto createEmployeeRequest(EmployeeQuickAddDto dto) {
@@ -1614,7 +1619,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	public void validateNIN(String nin, List<String> errors) {
-		if (!nin.trim().matches(VALID_NIN_NUMBER_REGEXP))
+		if (!nin.trim().matches(Validation.VALID_NIN_NUMBER_REGEXP))
 			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_NIN));
 
 		if (nin.length() > PeopleConstants.MAX_NIN_LENGTH)
@@ -1623,7 +1628,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	public void validatePassportNumber(String passportNumber, List<String> errors) {
-		if (passportNumber != null && (!passportNumber.trim().matches(ALPHANUMERIC_REGEX))) {
+		if (passportNumber != null && (!passportNumber.trim().matches(Validation.ALPHANUMERIC_REGEX))) {
 			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_PASSPORT));
 		}
 
@@ -1644,7 +1649,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	public void validateSocialSecurityNumber(String socialSecurityNumber, List<String> errors) {
-		if (socialSecurityNumber != null && (!socialSecurityNumber.trim().matches(ALPHANUMERIC_REGEX))) {
+		if (socialSecurityNumber != null && (!socialSecurityNumber.trim().matches(Validation.ALPHANUMERIC_REGEX))) {
 			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_SSN));
 		}
 
@@ -1654,7 +1659,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	public void validateAddressInBulk(String addressLine, List<String> errors) {
-		if (!addressLine.trim().matches(ADDRESS_REGEX))
+		if (!addressLine.trim().matches(Validation.ADDRESS_REGEX))
 			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_ADDRESS));
 
 		if (addressLine.length() > PeopleConstants.MAX_ADDRESS_LENGTH)
@@ -1684,7 +1689,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	public void validateFirstName(String firstName, List<String> errors) {
-		if (firstName != null && (!firstName.trim().matches(NAME_REGEX))) {
+		if (firstName != null && (!firstName.trim().matches(Validation.NAME_REGEX))) {
 			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_FIRST_NAME));
 		}
 
@@ -1695,7 +1700,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	public void validateLastName(String lastName, List<String> errors) {
-		if (lastName != null && (!lastName.trim().matches(NAME_REGEX))) {
+		if (lastName != null && (!lastName.trim().matches(Validation.NAME_REGEX))) {
 			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_LAST_NAME));
 		}
 
@@ -1705,7 +1710,7 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	public void validateEmergencyContactName(String name, List<String> errors) {
-		if (name != null && (!name.trim().matches(NAME_REGEX))) {
+		if (name != null && (!name.trim().matches(Validation.NAME_REGEX))) {
 			errors.add(messageUtil.getMessage(CommonMessageConstant.COMMON_ERROR_VALIDATION_EMERGENCY_CONTACT_NAME));
 		}
 
@@ -1761,8 +1766,8 @@ public class PeopleServiceImpl implements PeopleService {
 	}
 
 	/**
-	 * Validate the current user count with user limit. This method is only available for
-	 * Pro tenants.
+	 * Validate the current user count with the user limit. This method is only available
+	 * for Pro tenants.
 	 * @return eligibility for a new user upload.
 	 */
 	protected boolean checkUserCountExceeded() {

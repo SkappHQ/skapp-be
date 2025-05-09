@@ -72,7 +72,7 @@ public class EmployeeValidationServiceImpl implements EmployeeValidationService 
 				}
 
 				if (employmentDetailsDto.getEmploymentDetails() != null) {
-					// Check if primary supervisor exists
+					// Check if a primary supervisor exists
 					if (user.getUserId() == null
 							&& employmentDetailsDto.getEmploymentDetails().getPrimarySupervisor() != null
 							&& employmentDetailsDto.getEmploymentDetails()
